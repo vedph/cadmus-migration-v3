@@ -1,8 +1,8 @@
-# Cadmus Migration V2
+# Cadmus Migration V3
 
 Tools for migrating (importing/exporting) Cadmus data. Export tools also include "preview", i.e. a human-friendly, highly customizable output for each Cadmus object, to be integrated in the editor itself.
 
-👉 This is the second generation of Cadmus migration components. For compatibility reasons, the previous generation can be still be reached at its [original repository](https://github.com/vedph/cadmus-migration). Cadmus API from major version 11 and UI from major version 13 have been updated to this new version.
+👉 This is the third generation of Cadmus migration components. For compatibility reasons, the previous generation can be still be reached at its [original repository](https://github.com/vedph/cadmus-migration-v2). This is a complete refactoring of the export section to merge with Proteus and GVE projects. Project Proteus.Rendering is copied from GVE; when stable, it will be moved in the Proteus solution.
 
 👀 [Cadmus Page](https://myrmex.github.io/overview/cadmus/)
 
@@ -15,6 +15,14 @@ Main projects:
 - `Cadmus.Import.Proteus`: Proteus-based components for importing Cadmus items and parts from sources handled with Proteus readers.
 
 ## History
+
+### 7.0.0
+
+- 2025-05-01: ⚠️ first commit of V3.
+
+---
+
+### 6.0.1
 
 - 2025-04-16: use IsAccepted in `TeiHelper` to distinguish between `lem` and `rdg` in `TeiAppLinearTextTreeRenderer` (and `TeiAppParallelTextTreeRenderer`).`
 - 2025-04-11:
