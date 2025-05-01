@@ -29,7 +29,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
     /// Splits a node at newline characters, handling all newlines in the text.
     /// </summary>
     /// <param name="node">The node to split.</param>
-    /// <param name="skipInitialNewline">True to skip an initial newline if 
+    /// <param name="skipInitialNewline">True to skip an initial newline if
     /// present.</param>
     /// <returns>The head of the split chain.</returns>
     private static TreeNode<ExportedSegment> SplitNode(
@@ -79,7 +79,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
             {
                 // take text up to newline (excluded)
                 next.Data!.Text = text[start..i];
-                head.Data.AddFeature(CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
+                next.Data.AddFeature(CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
             }
 
             // link nodes
