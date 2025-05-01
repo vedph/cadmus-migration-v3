@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <Version>7.0.0</Version>
+    <FileVersion>7.0.0</FileVersion>
+    <AssemblyVersion>7.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Assets\SampleConfig.json" />
+    <Content Remove="Assets\SampleFragment.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\SampleStyles.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\SampleConfig.json" />
+    <EmbeddedResource Include="Assets\SampleFragment.json" />
+    <EmbeddedResource Include="Assets\SampleStyles.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.4" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cadmus.Export.ML\Cadmus.Export.ML.csproj" />
+    <ProjectReference Include="..\Cadmus.Export\Cadmus.Export.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+</Project>

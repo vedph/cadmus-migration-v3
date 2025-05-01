@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Authors>Daniele Fusi</Authors>
+		<Company>Fusi</Company>
+		<Product>Proteus text rendering.</Product>
+		<Description>Proteus text rendering components.</Description>
+		<Copyright>by Daniele Fusi 2025</Copyright>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<PackageTags>Proteus</PackageTags>
+		<Version>0.0.2</Version>
+		<FileVersion>0.0.2</FileVersion>
+		<AssemblyVersion>0.0.2</AssemblyVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Fusi.Tools" Version="7.0.5" />
+		<PackageReference Include="Fusi.Tools.Configuration" Version="7.0.5" />
+		<PackageReference Include="Proteus.Core" Version="7.0.3" />
+		<PackageReference Include="Proteus.Text.Xml" Version="7.0.3" />
+	</ItemGroup>
+
+</Project>

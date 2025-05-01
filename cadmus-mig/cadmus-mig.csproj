@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<Version>6.0.0</Version>
+		<FileVersion>6.0.0</FileVersion>
+		<AssemblyVersion>6.0.0</AssemblyVersion>
+		<RootNamespace>Cadmus.Migration.Cli</RootNamespace>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="appsettings.json" />
+		<None Remove="plugins\README.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="plugins\README.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cadmus.Cli.Core" Version="9.0.0" />
+		<PackageReference Include="Cadmus.Philology.Parts" Version="9.0.3" />
+		<PackageReference Include="McMaster.NETCore.Plugins" Version="2.0.0" />
+		<PackageReference Include="Serilog" Version="4.2.0" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.1" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="Spectre.Console" Version="0.50.0" />
+		<PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Cadmus.Export.ML\Cadmus.Export.ML.csproj" />
+		<ProjectReference Include="..\Cadmus.Export\Cadmus.Export.csproj" />
+	</ItemGroup>
+
+</Project>

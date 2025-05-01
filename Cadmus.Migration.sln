@@ -1,0 +1,105 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Export.ML", "Cadmus.Export.ML\Cadmus.Export.ML.csproj", "{90C7192A-0BF1-400F-90F9-2E12C067DDF6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Export.ML.Test", "Cadmus.Export.ML.Test\Cadmus.Export.ML.Test.csproj", "{B416CE9D-4185-4DD6-A7E1-A4EC3F3677DC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5202FC97-CA57-47FC-9ADD-7EFC2DFFEE43}"
+	ProjectSection(SolutionItems) = preProject
+		Pack.bat = Pack.bat
+		Push.bat = Push.bat
+		PushLocal.bat = PushLocal.bat
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Export", "Cadmus.Export\Cadmus.Export.csproj", "{1001D72A-C1F5-46FF-B1CA-F1342F2789F0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Export.Test", "Cadmus.Export.Test\Cadmus.Export.Test.csproj", "{E1E79988-EF2D-44C8-BFB2-0C97C83B186C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cadmus-mig", "cadmus-mig\cadmus-mig.csproj", "{A084F6FC-4C77-4562-84D3-BF48FFA5E172}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CadmusPreviewBuilder", "CadmusPreviewBuilder\CadmusPreviewBuilder.csproj", "{07C921F1-9D3C-4A6A-B47D-34EA818D732D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Import", "Cadmus.Import\Cadmus.Import.csproj", "{2F730716-34A2-4FB7-84E0-5BFBCCF2764D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Import.Test", "Cadmus.Import.Test\Cadmus.Import.Test.csproj", "{378DA435-4D59-4BC9-917E-B23FA4B27212}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Import.Excel", "Cadmus.Import.Excel\Cadmus.Import.Excel.csproj", "{88C72095-2A9D-4A8B-9630-D1467958B338}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Import.Excel.Test", "Cadmus.Import.Excel.Test\Cadmus.Import.Excel.Test.csproj", "{E2BF072E-EAE3-4E14-A65A-6E6CB3F99541}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cadmus.Import.Proteus", "Cadmus.Import.Proteus\Cadmus.Import.Proteus.csproj", "{A20D9D0D-7C17-4333-BFFE-9F6F5CDA21A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cadmus.Import.Proteus.Test", "Cadmus.Import.Proteus.Test\Cadmus.Import.Proteus.Test.csproj", "{9291A254-F73E-471A-9526-B52FE034B0E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proteus.Rendering", "Proteus.Rendering\Proteus.Rendering.csproj", "{A609C109-2337-90BD-BA9F-839EB8568DA3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{90C7192A-0BF1-400F-90F9-2E12C067DDF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90C7192A-0BF1-400F-90F9-2E12C067DDF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90C7192A-0BF1-400F-90F9-2E12C067DDF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90C7192A-0BF1-400F-90F9-2E12C067DDF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B416CE9D-4185-4DD6-A7E1-A4EC3F3677DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B416CE9D-4185-4DD6-A7E1-A4EC3F3677DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B416CE9D-4185-4DD6-A7E1-A4EC3F3677DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B416CE9D-4185-4DD6-A7E1-A4EC3F3677DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1001D72A-C1F5-46FF-B1CA-F1342F2789F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1001D72A-C1F5-46FF-B1CA-F1342F2789F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1001D72A-C1F5-46FF-B1CA-F1342F2789F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1001D72A-C1F5-46FF-B1CA-F1342F2789F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1E79988-EF2D-44C8-BFB2-0C97C83B186C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1E79988-EF2D-44C8-BFB2-0C97C83B186C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1E79988-EF2D-44C8-BFB2-0C97C83B186C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1E79988-EF2D-44C8-BFB2-0C97C83B186C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A084F6FC-4C77-4562-84D3-BF48FFA5E172}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A084F6FC-4C77-4562-84D3-BF48FFA5E172}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A084F6FC-4C77-4562-84D3-BF48FFA5E172}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A084F6FC-4C77-4562-84D3-BF48FFA5E172}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07C921F1-9D3C-4A6A-B47D-34EA818D732D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07C921F1-9D3C-4A6A-B47D-34EA818D732D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07C921F1-9D3C-4A6A-B47D-34EA818D732D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07C921F1-9D3C-4A6A-B47D-34EA818D732D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F730716-34A2-4FB7-84E0-5BFBCCF2764D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F730716-34A2-4FB7-84E0-5BFBCCF2764D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F730716-34A2-4FB7-84E0-5BFBCCF2764D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F730716-34A2-4FB7-84E0-5BFBCCF2764D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{378DA435-4D59-4BC9-917E-B23FA4B27212}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{378DA435-4D59-4BC9-917E-B23FA4B27212}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{378DA435-4D59-4BC9-917E-B23FA4B27212}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{378DA435-4D59-4BC9-917E-B23FA4B27212}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88C72095-2A9D-4A8B-9630-D1467958B338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88C72095-2A9D-4A8B-9630-D1467958B338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88C72095-2A9D-4A8B-9630-D1467958B338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88C72095-2A9D-4A8B-9630-D1467958B338}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2BF072E-EAE3-4E14-A65A-6E6CB3F99541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2BF072E-EAE3-4E14-A65A-6E6CB3F99541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2BF072E-EAE3-4E14-A65A-6E6CB3F99541}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2BF072E-EAE3-4E14-A65A-6E6CB3F99541}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A20D9D0D-7C17-4333-BFFE-9F6F5CDA21A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A20D9D0D-7C17-4333-BFFE-9F6F5CDA21A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A20D9D0D-7C17-4333-BFFE-9F6F5CDA21A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A20D9D0D-7C17-4333-BFFE-9F6F5CDA21A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9291A254-F73E-471A-9526-B52FE034B0E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9291A254-F73E-471A-9526-B52FE034B0E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9291A254-F73E-471A-9526-B52FE034B0E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9291A254-F73E-471A-9526-B52FE034B0E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A609C109-2337-90BD-BA9F-839EB8568DA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A609C109-2337-90BD-BA9F-839EB8568DA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A609C109-2337-90BD-BA9F-839EB8568DA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A609C109-2337-90BD-BA9F-839EB8568DA3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4726F7EA-8AE3-4FE7-807A-27732D1AB5F3}
+	EndGlobalSection
+EndGlobal

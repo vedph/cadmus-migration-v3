@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>7.0.0</Version>
+		<FileVersion>7.0.0</FileVersion>
+		<AssemblyVersion>7.0.0</AssemblyVersion>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Authors>Daniele Fusi</Authors>
+		<Company>Fusi</Company>
+		<Product>Cadmus</Product>
+		<Description>Cadmus export components.</Description>
+		<Copyright>by Daniele Fusi 2022</Copyright>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<PackageTags>Cadmus</PackageTags>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Assets\Iso639.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Assets\Iso639.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cadmus.Core" Version="8.0.7" />
+		<PackageReference Include="Cadmus.General.Parts" Version="7.0.4" />
+		<PackageReference Include="Cadmus.Mongo" Version="8.0.7" />
+		<PackageReference Include="Cadmus.Philology.Parts" Version="9.0.3" />
+		<PackageReference Include="Fusi.Microsoft.Extensions.Configuration.InMemoryJson" Version="4.0.0" />
+		<PackageReference Include="Fusi.Tools" Version="7.0.5" />
+		<PackageReference Include="Fusi.Tools.Configuration" Version="7.0.5" />
+		<PackageReference Include="Fusi.Xml" Version="6.0.0" />
+		<PackageReference Include="Fusi.Xml.Extras" Version="6.0.2" />
+		<PackageReference Include="JmesPath.Net" Version="1.0.330" />
+		<PackageReference Include="Markdig" Version="0.41.1" />
+		<PackageReference Include="Proteus.Core" Version="7.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Proteus.Rendering\Proteus.Rendering.csproj" />
+	</ItemGroup>
+
+</Project>
