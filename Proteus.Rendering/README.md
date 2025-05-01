@@ -11,9 +11,11 @@ The code in this library is mostly derived from `Cadmus.Migration`, with the nec
 Rendering is done from a text tree, whose nodes contain a payload of type `ExportedSegment`, representing a segment of the text being exported. This is generic enough to be used both in Cadmus and in GVE.
 
 - text tree filters:
-  - `CompositeTextTreeFilter`
+  - `CompositeTextTreeFilter`: wrapper for an inner filter.
 - text tree renderers:
-  - `CompositeTextTreeRenderer`
+  - `TextTreeRenderer<HandledType>`: base class for text tree renderers.
+  - `GroupTextTreeRenderer<HandledType>`: base class for text tree renderers with grouping.
+  - `CompositeTextTreeRenderer`: wrapper for an inner text tree renderer.
 
 ## GVE Export
 
