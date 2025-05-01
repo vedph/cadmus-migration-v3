@@ -8,6 +8,13 @@ Currently this is being developed to provide all the generic, reusable models an
 
 The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution.
 
+Rendering is done from a text tree, whose nodes contain a payload of type `ExportedSegment`, representing a segment of the text being exported. This is generic enough to be used both in Cadmus and in GVE.
+
+- text tree filters:
+  - `CompositeTextTreeFilter`
+- text tree renderers:
+  - `CompositeTextTreeRenderer`
+
 ## GVE Export
 
 The general flow for exporting GVE as covered by this library is summarized here. The main components used for GVE rendering currently are:
