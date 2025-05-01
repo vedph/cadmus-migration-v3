@@ -180,7 +180,9 @@ public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer
                     foreach (string tag in node.Data.Features.Where(
                         f => f.Name == "tag").Select(f => f.Value!))
                     {
-                        textVariants[node.Data.Text!].Add(tag);
+                        if (!textVariants.ContainsKey(node.Data.Text!))
+                            textVariants[node.Data.Text] = [];
+                        textVariants[node.Data.Text].Add(tag);
                     }
                 }
                 y = node.GetY();

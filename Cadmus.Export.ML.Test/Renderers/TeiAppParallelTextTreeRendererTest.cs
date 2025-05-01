@@ -47,7 +47,17 @@ public sealed class TeiAppParallelTextTreeRendererTest
             Source = item
         });
 
-        Assert.Equal("<p n=\"1\" xmlns=\"http://www.tei-c.org/ns/1.0\">TODO</p>",
+        Assert.Equal("<p n=\"1\" xmlns=\"http://www.tei-c.org/ns/1.0\">" +
+            "<app>" +
+              "<lem>illuc</lem>" +
+              "<rdg>illud</rdg>" +
+              "<rdg>illic</rdg>" +
+            "</app>" +
+            " unde negant redire " +
+            "<app>" +
+              "<rdg>quemquam</rdg>" +
+              "<rdg>umquam</rdg>" +
+            "</app></p>",
             xml);
     }
 }
