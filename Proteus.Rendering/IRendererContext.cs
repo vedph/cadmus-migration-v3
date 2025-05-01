@@ -3,7 +3,8 @@
 namespace Proteus.Rendering;
 
 /// <summary>
-/// Renderer context. This includes a generic metadata dictionary.
+/// Renderer context. This includes a generic metadata dictionary plus some
+/// mapping functions to map source identifiers into numeric IDs.
 /// </summary>
 public interface IRendererContext : IHasDataDictionary
 {
