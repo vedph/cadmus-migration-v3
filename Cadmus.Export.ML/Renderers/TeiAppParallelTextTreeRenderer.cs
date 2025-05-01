@@ -1,6 +1,5 @@
 ﻿using Cadmus.Core;
-using Cadmus.General.Parts;
-using Cadmus.Philology.Parts;
+using Cadmus.Export.Renderers;
 using Fusi.Tools.Configuration;
 using Fusi.Tools.Data;
 using MongoDB.Driver;
@@ -19,8 +18,7 @@ namespace Cadmus.Export.ML.Renderers;
 /// <para>Tag: <c>it.vedph.text-tree-renderer.tei-app-parallel</c>.</para>
 /// </summary>
 [Tag("it.vedph.text-tree-renderer.tei-app-parallel")]
-public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer,
-    ICadmusTextTreeRenderer,
+public sealed class TeiAppParallelTextTreeRenderer : CadmusTextTreeRenderer,
     IConfigurable<TeiAppParallelTextTreeRendererOptions>
 {
     private TeiAppHelper _tei;
@@ -88,7 +86,7 @@ public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer
     /// <param name="context">The rendering context.</param>
     /// <returns>Rendition.</returns>
     /// <exception cref="ArgumentNullException">tree or context</exception>
-    protected override string DoRender(TreeNode<ExportedSegment> tree,
+    protected override string DoCadmusRender(TreeNode<ExportedSegment> tree,
         CadmusRendererContext context)
     {
         ArgumentNullException.ThrowIfNull(tree);

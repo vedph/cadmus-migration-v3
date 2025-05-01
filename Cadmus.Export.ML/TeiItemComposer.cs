@@ -46,7 +46,8 @@ public abstract class TeiItemComposer : ItemComposer
         if (tree == null) return;
 
         // render text from tree
-        string result = TextTreeRenderer.Render(tree, Context);
-        WriteOutput(PartBase.BASE_TEXT_ROLE_ID, result);
+        string? result = TextTreeRenderer.Render(tree, Context);
+        if (!string.IsNullOrEmpty(result))
+            WriteOutput(PartBase.BASE_TEXT_ROLE_ID, result);
     }
 }

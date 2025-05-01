@@ -150,7 +150,7 @@ public sealed class TeiOffLinearTextTreeRendererTest
         Assert.Equal(" XX", xx.Data.Text);
 
         // act
-        string xml = renderer.Render(tree, new CadmusRendererContext
+        string? xml = renderer.Render(tree, new CadmusRendererContext
         {
             Source = item
         });

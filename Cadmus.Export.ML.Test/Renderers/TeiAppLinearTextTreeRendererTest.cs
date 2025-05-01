@@ -147,7 +147,7 @@ public sealed class TeiAppLinearTextTreeRendererTest
 
         (TreeNode<ExportedSegment>? tree, IItem item) = GetTreeAndItem();
 
-        string xml = renderer.Render(tree, new CadmusRendererContext
+        string? xml = renderer.Render(tree, new CadmusRendererContext
         {
             Source = item
         });
@@ -169,7 +169,7 @@ public sealed class TeiAppLinearTextTreeRendererTest
 
         (TreeNode<ExportedSegment>? tree, IItem item) = GetTreeAndItem();
 
-        string xml = renderer.Render(tree, new CadmusRendererContext
+        string? xml = renderer.Render(tree, new CadmusRendererContext
         {
             Source = item
         });

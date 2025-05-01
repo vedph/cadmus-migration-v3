@@ -104,8 +104,8 @@ public sealed class FSPlainTextItemComposer : ItemComposer, IItemComposer,
         if (tree == null) return;
 
         // render blocks
-        string result = TextTreeRenderer.Render(tree, Context);
-        WriteOutput(_fileName, result);
+        string? result = TextTreeRenderer.Render(tree, Context);
+        if (result != null) WriteOutput(_fileName, result);
 
         // item tail if any
         if (!string.IsNullOrEmpty(_options!.ItemTail))

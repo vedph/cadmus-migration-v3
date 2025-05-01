@@ -10,7 +10,7 @@ namespace Cadmus.Export.ML;
 /// <summary>
 /// Base class for TEI standoff item composers. This deals with text items,
 /// using an <see cref="ITextPartFlattener"/> to flatten it with all its
-/// layers, and an <see cref="ICadmusTextTreeRenderer"/> to render the resulting
+/// layers, and an <see cref="ITextTreeRenderer{String}"/> to render the resulting
 /// text blocks into XML. It then uses a number of <see cref="IJsonRenderer"/>'s
 /// to render each layer's fragment in its own XML document. So, ultimately
 /// this produces several XML documents, one for the base text and as many
@@ -65,8 +65,9 @@ public abstract class TeiOffItemComposer : ItemComposer
         if (tree == null) return;
 
         // render text from tree
-        string result = TextTreeRenderer.Render(tree, Context);
-        WriteOutput(PartBase.BASE_TEXT_ROLE_ID, result);
+        string? result = TextTreeRenderer.Render(tree, Context);
+        if (!string.IsNullOrEmpty(result))
+            WriteOutput(PartBase.BASE_TEXT_ROLE_ID, result);
 
         // render layers
         foreach (IPart layerPart in GetLayerParts(item))

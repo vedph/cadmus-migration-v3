@@ -2,7 +2,6 @@
 using Cadmus.Export.Renderers;
 using Fusi.Tools.Configuration;
 using Fusi.Tools.Data;
-using Fusi.Tools.Text;
 using Proteus.Core.Text;
 using Proteus.Rendering;
 using System;
@@ -19,12 +18,8 @@ namespace Cadmus.Export.ML.Renderers;
 /// </summary>
 [Tag("it.vedph.text-tree-renderer.tei-off-linear")]
 public sealed class TeiOffLinearTextTreeRenderer : CadmusTextTreeRenderer,
-    ICadmusTextTreeRenderer,
     IConfigurable<XmlTextTreeRendererOptions>
 {
-    private int _group;
-    private string? _pendingGroupId;
-
     private XmlTextTreeRendererOptions _options;
 
     /// <summary>
@@ -46,37 +41,13 @@ public sealed class TeiOffLinearTextTreeRenderer : CadmusTextTreeRenderer,
     }
 
     /// <summary>
-    /// Resets the state of this renderer. This is called once before
-    /// starting the rendering process.
-    /// </summary>
-    /// <param name="context">The context.</param>
-    public override void Reset(CadmusRendererContext context)
-    {
-        _group = 0;
-        _pendingGroupId = null;
-    }
-
-    /// <summary>
-    /// Called when items group has changed.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    /// <param name="prevGroupId">The previous group identifier.</param>
-    /// <param name="context">The context.</param>
-    public override void OnGroupChanged(IItem item, string? prevGroupId,
-        CadmusRendererContext context)
-    {
-        _group++;
-        _pendingGroupId = item.GroupId;
-    }
-
-    /// <summary>
     /// Renders the specified tree.
     /// </summary>
     /// <param name="tree">The tree.</param>
     /// <param name="context">The rendering context.</param>
     /// <returns>Rendition.</returns>
     /// <exception cref="ArgumentNullException">tree or context</exception>
-    protected override string DoRender(TreeNode<ExportedSegment> tree,
+    protected override string DoCadmusRender(TreeNode<ExportedSegment> tree,
         CadmusRendererContext context)
     {
         ArgumentNullException.ThrowIfNull(tree);
@@ -163,20 +134,6 @@ public sealed class TeiOffLinearTextTreeRenderer : CadmusTextTreeRenderer,
         // if there is a pending group ID:
         // - if there is a current group, prepend tail.
         // - prepend head.
-        if (_pendingGroupId != null)
-        {
-            if (_group > 0 && !string.IsNullOrEmpty(_options.GroupTailTemplate))
-            {
-                xml = TextTemplate.FillTemplate(
-                    _options.GroupTailTemplate, context.Data) + xml;
-            }
-            if (!string.IsNullOrEmpty(_options.GroupHeadTemplate))
-            {
-                xml = TextTemplate.FillTemplate(
-                    _options.GroupHeadTemplate, context.Data) + xml;
-            }
-        }
-
-        return xml;
+        return WrapXml(xml, context);
     }
 }

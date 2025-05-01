@@ -177,7 +177,7 @@ public abstract class ItemComposer
         Output = output ?? new ItemComposition();
 
         // render head
-        string head = TextTreeRenderer.RenderHead(Context);
+        string? head = TextTreeRenderer.RenderHead(Context);
         if (!string.IsNullOrEmpty(head)) WriteOutput("head", head);
     }
 
@@ -319,7 +319,7 @@ public abstract class ItemComposer
     public virtual void Close()
     {
         // render tail
-        string tail = TextTreeRenderer!.RenderTail(Context);
+        string? tail = TextTreeRenderer!.RenderTail(Context);
         if (!string.IsNullOrEmpty(tail)) WriteOutput("tail", tail);
 
         if (!_externalOutput && Output != null)

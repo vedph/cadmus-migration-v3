@@ -42,7 +42,7 @@ public sealed class TeiAppParallelTextTreeRendererTest
         });
 
         // act
-        string xml = renderer.Render(tree, new CadmusRendererContext
+        string? xml = renderer.Render(tree, new CadmusRendererContext
         {
             Source = item
         });

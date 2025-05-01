@@ -22,7 +22,7 @@ namespace Cadmus.Export.Renderers;
 /// <seealso cref="ICadmusTextTreeRenderer" />
 [Tag("it.vedph.text-tree-renderer.payload-linear")]
 public sealed class PayloadLinearTextTreeRenderer : CadmusTextTreeRenderer,
-    ICadmusTextTreeRenderer, IConfigurable<PayloadLinearTextTreeRendererOptions>
+    IConfigurable<PayloadLinearTextTreeRendererOptions>
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -49,7 +49,7 @@ public sealed class PayloadLinearTextTreeRenderer : CadmusTextTreeRenderer,
     /// <param name="context">The rendering context.</param>
     /// <returns>Rendition.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    protected override string DoRender(TreeNode<ExportedSegment> tree,
+    protected override string DoCadmusRender(TreeNode<ExportedSegment> tree,
         CadmusRendererContext context)
     {
         ArgumentNullException.ThrowIfNull(tree);

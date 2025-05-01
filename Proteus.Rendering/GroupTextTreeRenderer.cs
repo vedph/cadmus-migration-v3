@@ -10,8 +10,16 @@ namespace Proteus.Rendering;
 public abstract class GroupTextTreeRenderer<HandledType> :
     TextTreeRenderer<HandledType>
 {
-    private int _group;
-    private string? _pendingGroupId;
+    /// <summary>
+    /// Gets or sets the group ordinal. This is incremented each time a
+    /// group changes.
+    /// </summary>
+    protected int GroupOrdinal { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the pending group ID. This is set when a group changes.
+    /// </summary>
+    protected string? PendingGroupId { get; private set; }
 
     /// <summary>
     /// Gets or sets the group head template. This must be set by the derived
@@ -32,8 +40,8 @@ public abstract class GroupTextTreeRenderer<HandledType> :
     /// <param name="context">The context.</param>
     public override void Reset(IRendererContext context)
     {
-        _group = 0;
-        _pendingGroupId = null;
+        GroupOrdinal = 0;
+        PendingGroupId = null;
     }
 
     /// <summary>
@@ -51,21 +59,9 @@ public abstract class GroupTextTreeRenderer<HandledType> :
     public override void OnGroupChanged(IRendererContext context,
         string? prevGroupId)
     {
-        _group++;
-        _pendingGroupId = GetGroupId(context);
+        GroupOrdinal++;
+        PendingGroupId = GetGroupId(context);
     }
-
-    // TODO: possibly implement in derived renderers handling string
-    //public override HandledType? RenderTail(IRendererContext context)
-    //{
-    //    // close a group if any
-    //    if (_group > 0 && !string.IsNullOrEmpty(GroupTailTemplate))
-    //    {
-    //        return TextTemplate.FillTemplate(
-    //            GroupTailTemplate, context.Data);
-    //    }
-    //    return default;
-    //}
 
     /// <summary>
     /// Wraps the received XML in the group head and tail templates, if any.
@@ -78,9 +74,9 @@ public abstract class GroupTextTreeRenderer<HandledType> :
         // if there is a pending group ID:
         // - if there is a current group, prepend tail.
         // - prepend head.
-        if (_pendingGroupId != null)
+        if (PendingGroupId != null)
         {
-            if (_group > 0 && !string.IsNullOrEmpty(GroupTailTemplate))
+            if (GroupOrdinal > 0 && !string.IsNullOrEmpty(GroupTailTemplate))
             {
                 return TextTemplate.FillTemplate(
                     GroupTailTemplate, context.Data) + xml;
