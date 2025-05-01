@@ -64,13 +64,17 @@ public class AnnotatedTextRange(int start, int end, params IList<string>? frIds)
     }
 
     /// <summary>
-    /// Merges the ranges.
+    /// Merges the specified ranges in the specified boundaries. Each range
+    /// is linked to zero or more fragment IDs. When merging, we must get ranges
+    /// which fully cover the specified boundaries, and represent sorted and
+    /// adjacent spans of text. When two ranges are separated by a gap, a new
+    /// range will be created, linked to no fragment IDs, to fill it.
     /// </summary>
     /// <param name="start">The start text index.</param>
     /// <param name="end">The end text index.</param>
     /// <param name="ranges">The ranges to merge.</param>
     /// <returns>Merged ranges.</returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentNullException">ranges</exception>
     /// <exception cref="ArgumentException">Start must not be greater than end
     /// </exception>
     public static IList<AnnotatedTextRange> MergeRanges(int start, int end,
