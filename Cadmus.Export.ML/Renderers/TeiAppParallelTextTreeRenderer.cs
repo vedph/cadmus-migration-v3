@@ -164,7 +164,7 @@ public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer
                 if (node.Data.Features?.Count > 0)
                 {
                     foreach (string tag in node.Data.Features.Where(
-                        f => f.Name == "tag").Select(f => f.Value))
+                        f => f.Name == "tag").Select(f => f.Value!))
                     {
                         tags.Add(tag);
                     }
