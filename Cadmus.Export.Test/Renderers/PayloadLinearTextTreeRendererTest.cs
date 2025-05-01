@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System;
 using Xunit;
 using Proteus.Rendering;
+using System.Text.Json;
 
 namespace Cadmus.Export.Test.Renderers;
 
@@ -145,18 +146,55 @@ public sealed class PayloadLinearTextTreeRendererTest
         string json = renderer.Render(tree, new CadmusRendererContext());
 
         Assert.StartsWith("[[", json);
-        Assert.Equal("[[{\"Range\":" +
-            "{\"Start\":0,\"End\":4,\"FragmentIds\":" +
-            "[\"it.vedph.token-text-layer:fr.it.vedph.apparatus@0\"]," +
-            "\"Text\":\"illuc\"},\"IsBeforeEol\":false," +
-            "\"Text\":\"illuc\"}," +
-            "{\"Range\":{\"Start\":5,\"End\":24,\"FragmentIds\":[]," +
-            "\"Text\":\" unde negant redire \"}," +
-            "\"IsBeforeEol\":false,\"Text\":\" unde negant redire \"}," +
-            "{\"Range\":{\"Start\":25,\"End\":32,\"FragmentIds\":" +
-            "[\"it.vedph.token-text-layer:fr.it.vedph.apparatus@1\"]," +
-            "\"Text\":\"quemquam\"},\"IsBeforeEol\":false," +
-            "\"Text\":\"quemquam\"}]]", json);
+
+        JsonDocument doc = JsonDocument.Parse(json);
+
+        // array includes a single item which is another array (row)
+        Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+        JsonElement row = doc.RootElement[0];
+        Assert.Equal(JsonValueKind.Array, row.ValueKind);
+
+        // row contains 3 items
+        Assert.Equal(3, row.GetArrayLength());
+
+        // item 0 = "illuc" with payload 0-4 for fragment ID 0
+        JsonElement item = row[0];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal("illuc", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        JsonElement payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(0, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(4, payload.GetProperty("End").GetInt32());
+        // Payloads[0]/FragmentIds
+        Assert.Equal(1, payload.GetProperty("FragmentIds").GetArrayLength());
+        Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.apparatus@0",
+            payload.GetProperty("FragmentIds")[0].GetString());
+
+        // item 1 = " unde negant redire " with payload 5-24 for no fragments
+        item = row[1];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal(" unde negant redire ", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(5, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(24, payload.GetProperty("End").GetInt32());
+        Assert.Equal(0, payload.GetProperty("FragmentIds").GetArrayLength());
+
+        // item 2 = "quemquam" with payload 25-32 for fragment ID 1
+        item = row[2];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal("quemquam", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(25, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(32, payload.GetProperty("End").GetInt32());
+        // Payloads[0]/FragmentIds
+        Assert.Equal(1, payload.GetProperty("FragmentIds").GetArrayLength());
+        Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.apparatus@1",
+            payload.GetProperty("FragmentIds")[0].GetString());
     }
 
     [Fact]
@@ -172,18 +210,54 @@ public sealed class PayloadLinearTextTreeRendererTest
         string json = renderer.Render(tree, new CadmusRendererContext());
 
         Assert.StartsWith("[{", json);
-        Assert.Equal("[{\"Range\":" +
-            "{\"Start\":0,\"End\":4,\"FragmentIds\":" +
-            "[\"it.vedph.token-text-layer:fr.it.vedph.apparatus@0\"]," +
-            "\"Text\":\"illuc\"},\"IsBeforeEol\":false," +
-            "\"Text\":\"illuc\"}," +
-            "{\"Range\":{\"Start\":5,\"End\":24,\"FragmentIds\":[]," +
-            "\"Text\":\" unde negant redire \"}," +
-            "\"IsBeforeEol\":false,\"Text\":\" unde negant redire \"}," +
-            "{\"Range\":{\"Start\":25,\"End\":32,\"FragmentIds\":" +
-            "[\"it.vedph.token-text-layer:fr.it.vedph.apparatus@1\"]," +
-            "\"Text\":\"quemquam\"},\"IsBeforeEol\":false," +
-            "\"Text\":\"quemquam\"}]", json);
+
+        JsonDocument doc = JsonDocument.Parse(json);
+
+        // array includes a single item which is an object
+        Assert.Equal(JsonValueKind.Array, doc.RootElement.ValueKind);
+        JsonElement row = doc.RootElement;
+
+        // row contains 3 items
+        Assert.Equal(3, row.GetArrayLength());
+
+        // item 0 = "illuc" with payload 0-4 for fragment ID 0
+        JsonElement item = row[0];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal("illuc", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        JsonElement payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(0, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(4, payload.GetProperty("End").GetInt32());
+        // Payloads[0]/FragmentIds
+        Assert.Equal(1, payload.GetProperty("FragmentIds").GetArrayLength());
+        Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.apparatus@0",
+            payload.GetProperty("FragmentIds")[0].GetString());
+
+        // item 1 = " unde negant redire " with payload 5-24 for no fragments
+        item = row[1];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal(" unde negant redire ", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(5, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(24, payload.GetProperty("End").GetInt32());
+        Assert.Equal(0, payload.GetProperty("FragmentIds").GetArrayLength());
+
+        // item 2 = "quemquam" with payload 25-32 for fragment ID 1
+        item = row[2];
+        Assert.Equal(JsonValueKind.Object, item.ValueKind);
+        // Text
+        Assert.Equal("quemquam", item.GetProperty("Text").GetString());
+        // Payloads[0]/Start, Payloads[0]/End
+        payload = item.GetProperty("Payloads")[0];
+        Assert.Equal(25, payload.GetProperty("Start").GetInt32());
+        Assert.Equal(32, payload.GetProperty("End").GetInt32());
+        // Payloads[0]/FragmentIds
+        Assert.Equal(1, payload.GetProperty("FragmentIds").GetArrayLength());
+        Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.apparatus@1",
+            payload.GetProperty("FragmentIds")[0].GetString());
     }
 
     // TODO: add multiple lines tests

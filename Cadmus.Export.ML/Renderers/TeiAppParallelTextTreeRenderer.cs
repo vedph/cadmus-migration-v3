@@ -117,11 +117,11 @@ public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer
         if (textPart == null) return "";    // should not happen
 
         // get apparatus layer part
-        TokenTextLayerPart<ApparatusLayerFragment>? layerPart =
-            (context.Source as IItem)!.Parts.FirstOrDefault(p =>
-                p.TypeId == "it.vedph.token-text-layer" &&
-                p.RoleId == "fr.it.vedph.apparatus")
-            as TokenTextLayerPart<ApparatusLayerFragment>;
+        //TokenTextLayerPart<ApparatusLayerFragment>? layerPart =
+        //    (context.Source as IItem)!.Parts.FirstOrDefault(p =>
+        //        p.TypeId == "it.vedph.token-text-layer" &&
+        //        p.RoleId == "fr.it.vedph.apparatus")
+        //    as TokenTextLayerPart<ApparatusLayerFragment>;
 
         // create root element
         XElement root = new(rootName);
@@ -178,7 +178,7 @@ public sealed class TeiAppParallelTextTreeRenderer : CadmusGroupTextTreeRenderer
                 if (node.Data.Features?.Count > 0)
                 {
                     foreach (string tag in node.Data.Features.Where(
-                        f => f.Name == "tag").Select(f => f.Value))
+                        f => f.Name == "tag").Select(f => f.Value!))
                     {
                         textVariants[node.Data.Text!].Add(tag);
                     }
