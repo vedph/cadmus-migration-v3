@@ -18,10 +18,10 @@ namespace Cadmus.Export.Filters;
 /// get the desired name and locale. This is a quick filter used when you
 /// just deal with ISO639 codes without recurring to a thesaurus, nor
 /// requiring localization.
-/// <para>Tag: <c>cadmus.text-filter.str.iso639</c>.
+/// <para>Tag: <c>it.vedph.text-filter.str.iso639</c>.
 /// Old tag: <c>it.vedph.renderer-filter.iso639</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.str.iso639")]
+[Tag("it.vedph.text-filter.str.iso639")]
 public sealed class Iso639TextFilter : TextFilter<string>,
     IConfigurable<Iso639FilterOptions>
 {

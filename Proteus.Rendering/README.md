@@ -6,7 +6,7 @@ The `Proteus.Rendering` library is a collection of rendering utilities and compo
 
 Currently this is being developed to provide all the generic, reusable models and logic for rendering data into text, in order to serve both the GVE (`Gve.Migration` project in this solution) and Cadmus (`Cadmus.Migration` solution) export subsystems.
 
-The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution and the `Cadmus.Migration` project will be refactored to use it.
+The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution.
 
 ## GVE Export
 

@@ -16,10 +16,10 @@ namespace Cadmus.Export.Filters;
 /// it uses a regular expression pattern representing each thesaurus entry
 /// ID with its thesaurus ID, and replaces it with the corresponding value
 /// when found, otherwise with the raw entry ID.
-/// <para>Tag: <c>cadmus.text-filter.mongo-thesaurus</c>.
+/// <para>Tag: <c>it.vedph.text-filter.mongo-thesaurus</c>.
 /// Old tag: <c>it.vedph.renderer-filter.mongo-thesaurus</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.mongo-thesaurus")]
+[Tag("it.vedph.text-filter.mongo-thesaurus")]
 public sealed class MongoThesTextFilter : TextFilter<string>,
     IConfigurable<MongoThesRendererFilterOptions>
 {

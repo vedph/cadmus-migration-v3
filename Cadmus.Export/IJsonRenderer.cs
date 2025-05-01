@@ -9,7 +9,7 @@ namespace Cadmus.Export;
 /// Renderer for any object represented by JSON (like a part or a fragment).
 /// This takes as input the JSON code, and renders it into some output format.
 /// </summary>
-public interface ICadmusJsonRenderer
+public interface IJsonRenderer
 {
     /// <summary>
     /// The filters.

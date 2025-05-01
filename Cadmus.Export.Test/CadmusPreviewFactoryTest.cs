@@ -37,7 +37,7 @@ public sealed class CadmusPreviewFactoryTest
     {
         CadmusRenderingFactory factory = TestHelper.GetFactory();
 
-        ICadmusJsonRenderer? renderer = factory.GetJsonRenderer("it.vedph.token-text");
+        IJsonRenderer? renderer = factory.GetJsonRenderer("it.vedph.token-text");
 
         Assert.NotNull(renderer);
         Assert.Equal(3, renderer.Filters.Count);

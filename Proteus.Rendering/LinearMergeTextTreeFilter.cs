@@ -13,9 +13,9 @@ namespace Proteus.Rendering;
 /// nodes into a single one whose text is the concatenation of the text of
 /// all the merged nodes. Merging is done by checking the features of the
 /// nodes.
-/// <para>Tag: <c>text-tree-filter.linear-merge</c>.</para>
+/// <para>Tag: <c>it.vedph.text-tree-filter.linear-merge</c>.</para>
 /// </summary>
-[Tag("text-tree-filter.linear-merge")]
+[Tag("it.vedph.text-tree-filter.linear-merge")]
 public sealed class LinearMergeTextTreeFilter : ITextTreeFilter,
     IConfigurable<MergeTextTreeFilterOptions>
 {

@@ -47,7 +47,7 @@ public interface IItemComposer
     /// Each key is built from the part type ID, optionally followed by
     /// <c>:</c> and its role ID when present.
     /// </summary>
-    IDictionary<string, ICadmusJsonRenderer> JsonRenderers { get; }
+    IDictionary<string, IJsonRenderer> JsonRenderers { get; }
 
     /// <summary>
     /// Gets the ordinal item number. This is set to 0 when opening the

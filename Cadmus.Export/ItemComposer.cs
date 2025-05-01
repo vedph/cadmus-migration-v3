@@ -56,7 +56,7 @@ public abstract class ItemComposer
     /// <summary>
     /// Gets the JSON renderers.
     /// </summary>
-    public IDictionary<string, ICadmusJsonRenderer> JsonRenderers { get; init; }
+    public IDictionary<string, IJsonRenderer> JsonRenderers { get; init; }
 
     /// <summary>
     /// Gets the ordinal item number. This is set to 0 when opening the
@@ -87,7 +87,7 @@ public abstract class ItemComposer
     {
         ContextSuppliers = [];
         TextTreeFilters = [];
-        JsonRenderers = new Dictionary<string, ICadmusJsonRenderer>();
+        JsonRenderers = new Dictionary<string, IJsonRenderer>();
         Context = new CadmusRendererContext();
     }
 

@@ -17,10 +17,10 @@ namespace Cadmus.Export.ML.Renderers;
 /// base text referenced by the apparatus entries.
 /// </summary>
 /// <seealso cref="Export.Renderers.CadmusJsonRenderer" />
-/// <seealso cref="ICadmusJsonRenderer" />
+/// <seealso cref="IJsonRenderer" />
 [Tag("it.vedph.json-renderer.tei-off.apparatus")]
 public sealed class TeiOffApparatusJsonRenderer : MLJsonRenderer,
-    ICadmusJsonRenderer, IConfigurable<AppLinearTextTreeRendererOptions>
+    IJsonRenderer, IConfigurable<AppLinearTextTreeRendererOptions>
 {
     private readonly JsonSerializerOptions _jsonOptions;
     private TeiAppHelper _tei;

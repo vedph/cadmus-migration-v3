@@ -2,7 +2,7 @@
   "RendererFilters": [
     {
       "Keys": "thes-filter",
-      "Id": "cadmus.text-filter.mongo-thesaurus"
+      "Id": "it.vedph.text-filter.mongo-thesaurus"
     },
     {
       "Keys": "rep-filter",
@@ -18,7 +18,7 @@
     },
     {
       "Keys": "md-filter",
-      "Id": "cadmus.text-filter.markdown",
+      "Id": "it.vedph.text-filter.markdown",
       "Options": {
         "MarkdownOpen": "<_md>",
         "MarkdownClose": "</_md>",

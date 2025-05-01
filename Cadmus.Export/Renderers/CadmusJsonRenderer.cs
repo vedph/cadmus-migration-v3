@@ -5,7 +5,7 @@ using Proteus.Rendering;
 namespace Cadmus.Export.Renderers;
 
 /// <summary>
-/// Base class for <see cref="ICadmusJsonRenderer"/>'s.
+/// Base class for <see cref="IJsonRenderer"/>'s.
 /// </summary>
 public abstract class CadmusJsonRenderer : FilteredRenderer
 {

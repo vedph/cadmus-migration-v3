@@ -12,10 +12,10 @@ namespace Proteus.Rendering;
 /// children of the root will be blank nodes, each representing the sub-tree
 /// root. The inner filter of this composite filter will be applied to each
 /// such sub-tree.
-/// <para>Tag: <c>text-tree-filter.composite</c>.</para>
+/// <para>Tag: <c>it.vedph.text-tree-filter.composite</c>.</para>
 /// </summary>
 /// <seealso cref="ITextTreeFilter" />
-[Tag("text-tree-filter.composite")]
+[Tag("it.vedph.text-tree-filter.composite")]
 public sealed class CompositeTextTreeFilter : ITextTreeFilter,
     IHasCompositeComponent<ITextTreeFilter>
 {

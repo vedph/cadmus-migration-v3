@@ -152,7 +152,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
         foreach (Type it in new[]
         {
             typeof(ICadmusRendererContextSupplier),
-            typeof(ICadmusJsonRenderer),
+            typeof(IJsonRenderer),
             typeof(ICadmusTextTreeRenderer),
             typeof(ITextPartFlattener),
             typeof(ITextTreeFilter),
@@ -235,7 +235,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
     /// </summary>
     /// <param name="key">The key of the requested renderer.</param>
     /// <returns>Renderer or null if not found.</returns>
-    public ICadmusJsonRenderer? GetJsonRenderer(string key)
+    public IJsonRenderer? GetJsonRenderer(string key)
     {
         IList<ComponentFactoryConfigEntry> entries =
             ComponentFactoryConfigEntry.ReadComponentEntries(
@@ -245,7 +245,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
             entries.FirstOrDefault(e => e.Keys?.Contains(key) == true);
         if (entry == null) return null;
 
-        ICadmusJsonRenderer? renderer = GetComponent<ICadmusJsonRenderer>(
+        IJsonRenderer? renderer = GetComponent<IJsonRenderer>(
             entry.Tag!, entry.OptionsPath);
         if (renderer == null) return null;
 
@@ -394,7 +394,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
         {
             foreach (string cKey in section.Get<string[]>()!)
             {
-                ICadmusJsonRenderer? renderer = GetJsonRenderer(cKey);
+                IJsonRenderer? renderer = GetJsonRenderer(cKey);
                 if (renderer != null) composer.JsonRenderers[cKey] = renderer;
             }
         }

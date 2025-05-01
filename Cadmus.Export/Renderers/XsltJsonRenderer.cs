@@ -25,7 +25,7 @@ namespace Cadmus.Export.Renderers;
 /// <para>Tag: <c>it.vedph.json-renderer.xslt</c>.</para>
 /// </summary>
 [Tag("it.vedph.json-renderer.xslt")]
-public sealed class XsltJsonRenderer : CadmusJsonRenderer, ICadmusJsonRenderer,
+public sealed class XsltJsonRenderer : CadmusJsonRenderer, IJsonRenderer,
     IConfigurable<XsltJsonRendererOptions>
 {
     // https://jmespath.org/tutorial.html

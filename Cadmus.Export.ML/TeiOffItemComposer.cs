@@ -11,7 +11,7 @@ namespace Cadmus.Export.ML;
 /// Base class for TEI standoff item composers. This deals with text items,
 /// using an <see cref="ITextPartFlattener"/> to flatten it with all its
 /// layers, and an <see cref="ICadmusTextTreeRenderer"/> to render the resulting
-/// text blocks into XML. It then uses a number of <see cref="ICadmusJsonRenderer"/>'s
+/// text blocks into XML. It then uses a number of <see cref="IJsonRenderer"/>'s
 /// to render each layer's fragment in its own XML document. So, ultimately
 /// this produces several XML documents, one for the base text and as many
 /// documents as its layers.
@@ -73,7 +73,7 @@ public abstract class TeiOffItemComposer : ItemComposer
         {
             // get the renderer for the layer type
             string id = $"{layerPart.TypeId}:{layerPart.RoleId}";
-            if (JsonRenderers.TryGetValue(id, out ICadmusJsonRenderer? renderer))
+            if (JsonRenderers.TryGetValue(id, out IJsonRenderer? renderer))
             {
                 // render layer
                 string json = JsonSerializer.Serialize(layerPart, _jsonOptions);

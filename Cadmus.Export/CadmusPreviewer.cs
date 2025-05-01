@@ -21,7 +21,7 @@ public sealed class CadmusPreviewer
     private readonly CadmusRenderingFactory _factory;
     private readonly BlockLinearTextTreeFilter _blockFilter;
     // cache
-    private readonly Dictionary<string, ICadmusJsonRenderer> _jsonRenderers;
+    private readonly Dictionary<string, IJsonRenderer> _jsonRenderers;
     private readonly Dictionary<string, ITextPartFlattener> _flatteners;
 
     /// <summary>
@@ -71,11 +71,11 @@ public sealed class CadmusPreviewer
     public HashSet<string> GetComposerKeys()
         => _factory.GetComposerKeys();
 
-    private ICadmusJsonRenderer? GetRendererFromKey(string key)
+    private IJsonRenderer? GetRendererFromKey(string key)
     {
-        ICadmusJsonRenderer? renderer;
+        IJsonRenderer? renderer;
 
-        if (_jsonRenderers.TryGetValue(key, out ICadmusJsonRenderer? value))
+        if (_jsonRenderers.TryGetValue(key, out IJsonRenderer? value))
         {
             renderer = value;
         }
@@ -128,7 +128,7 @@ public sealed class CadmusPreviewer
         if (typeId == null) return "";
 
         // get the renderer targeting the part type ID
-        ICadmusJsonRenderer? renderer = GetRendererFromKey(typeId);
+        IJsonRenderer? renderer = GetRendererFromKey(typeId);
 
         // render
         return renderer != null ? renderer.Render(json, context) : "";
@@ -215,7 +215,7 @@ public sealed class CadmusPreviewer
         // the target ID is the combination of these two IDs
         string key = $"{typeId}|{roleId}";
 
-        ICadmusJsonRenderer? renderer = GetRendererFromKey(key);
+        IJsonRenderer? renderer = GetRendererFromKey(key);
 
         // extract the targeted fragment
         if (!doc.RootElement.TryGetProperty("fragments",

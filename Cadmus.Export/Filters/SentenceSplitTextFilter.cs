@@ -13,10 +13,10 @@ namespace Cadmus.Export.Filters;
 /// into sentences, so that each line corresponds to a single sentence.
 /// Sentence splitting is performed on the basis of a list of end-of-sentence
 /// markers.
-/// <para>Tag: <c>cadmus.text-filter.sentence-split</c>.
+/// <para>Tag: <c>it.vedph.text-filter.sentence-split</c>.
 /// Old tag: <c>it.vedph.renderer-filter.sentence-split</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.sentence-split")]
+[Tag("it.vedph.text-filter.sentence-split")]
 public sealed class SentenceSplitTextFilter : TextFilter<string>,
     IConfigurable<SentenceSplitRendererFilterOptions>
 {

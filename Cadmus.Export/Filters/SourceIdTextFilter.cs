@@ -13,10 +13,10 @@ namespace Cadmus.Export.Filters;
 /// For instance, a segment source ID with form <c>seg/itemId/nodeId</c> is mapped
 /// to a target ID like <c>seg123</c>. This assumes that the source ID is prefixed
 /// by the map name (e.g. <c>seg</c>) followed by a slash.
-/// <para>Tag: <c>cadmus.text-filter.source-id</c>.
+/// <para>Tag: <c>it.vedph.text-filter.source-id</c>.
 /// Old tag: <c>it.vedph.renderer-filter.source-id</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.source-id")]
+[Tag("it.vedph.text-filter.source-id")]
 public sealed class SourceIdTextFilter : TextFilter<string>,
     IConfigurable<SourceIdRendererFilterOptions>
 {

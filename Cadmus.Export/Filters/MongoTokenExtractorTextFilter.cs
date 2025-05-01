@@ -17,10 +17,10 @@ namespace Cadmus.Export.Filters;
 /// Mongo-based text extractor for token-based text parts.
 /// This replaces all the text locations matched via a specified regular
 /// expression pattern with the corresponding text from the base text part.
-/// <para>Tag: <c>cadmus.text-filter.mongo-token-extractor</c>.
+/// <para>Tag: <c>it.vedph.text-filter.mongo-token-extractor</c>.
 /// Old tag: <c>it.vedph.renderer-filter.mongo-token-extractor</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.mongo-token-extractor")]
+[Tag("it.vedph.text-filter.mongo-token-extractor")]
 public sealed class MongoTokenExtractorTextFilter : TextFilter<string>,
     IConfigurable<MongoTokenExtractorRendererFilterOptions>
 {

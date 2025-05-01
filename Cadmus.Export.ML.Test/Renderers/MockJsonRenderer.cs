@@ -6,7 +6,7 @@ namespace Cadmus.Export.ML.Test.Renderers;
 
 internal sealed class MockJsonRenderer(Func<string, IRendererContext,
     TreeNode<ExportedSegment>?, string> renderFunc) :
-    Export.Renderers.CadmusJsonRenderer, ICadmusJsonRenderer
+    Export.Renderers.CadmusJsonRenderer, IJsonRenderer
 {
     private readonly Func<string, CadmusRendererContext,
         TreeNode<ExportedSegment>?, string> _renderFunc =

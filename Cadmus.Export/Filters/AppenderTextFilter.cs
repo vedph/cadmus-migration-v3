@@ -6,11 +6,11 @@ using System;
 namespace Cadmus.Export.Filters;
 
 /// <summary>
-/// Appender renderer filter. This just appends the specified text.
-/// <para>Tag: <c>cadmus.text-filter.str.appender</c>.
+/// Appender text filter. This just appends the specified text.
+/// <para>Tag: <c>it.vedph.text-filter.str.appender</c>.
 /// Old tag: <c>it.vedph.renderer-filter.appender</c>.</para>
 /// </summary>
-[Tag("cadmus.text-filter.str.appender")]
+[Tag("it.vedph.text-filter.str.appender")]
 public sealed class AppenderTextFilter : TextFilter<string>,
     IConfigurable<AppenderRendererFilterOptions>
 {

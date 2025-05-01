@@ -10,9 +10,9 @@ namespace Cadmus.Export.Renderers;
 /// text.
 /// <para>Tag: <c>it.vedph.json-renderer.null</c>.</para>
 /// </summary>
-/// <seealso cref="ICadmusJsonRenderer" />
+/// <seealso cref="IJsonRenderer" />
 [Tag("it.vedph.json-renderer.null")]
-public sealed class NullJsonRenderer : CadmusJsonRenderer, ICadmusJsonRenderer
+public sealed class NullJsonRenderer : CadmusJsonRenderer, IJsonRenderer
 {
     /// <summary>
     /// Renders the specified JSON code.
