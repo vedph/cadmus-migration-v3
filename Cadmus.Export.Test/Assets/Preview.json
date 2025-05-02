@@ -2,7 +2,7 @@
   "TextFilters": [
     {
       "Keys": "thes-filter",
-      "Id": "it.vedph.text-filter.mongo-thesaurus"
+      "Id": "it.vedph.text-filter.str.mongo-thesaurus"
     },
     {
       "Keys": "rep-filter",
@@ -18,7 +18,7 @@
     },
     {
       "Keys": "md-filter",
-      "Id": "it.vedph.text-filter.markdown",
+      "Id": "it.vedph.text-filter.str.markdown",
       "Options": {
         "MarkdownOpen": "<_md>",
         "MarkdownClose": "</_md>",
