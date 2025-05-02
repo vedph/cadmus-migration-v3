@@ -9,6 +9,7 @@ set src=-Source https://api.nuget.org/v3/index.json
 %nu% push .\Cadmus.Import\bin\Debug\*.nupkg %src% -SkipDuplicate
 %nu% push .\Cadmus.Import.Proteus\bin\Debug\*.nupkg %src% -SkipDuplicate
 %nu% push .\Cadmus.Import.Excel\bin\Debug\*.nupkg %src% -SkipDuplicate
+%nu% push .\Proteus.Rendering\bin\Debug\*.nupkg %src% -SkipDuplicate
 
 echo COMPLETED
 echo on

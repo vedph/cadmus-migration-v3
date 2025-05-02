@@ -5,6 +5,7 @@ del .\Cadmus.Export.ML\bin\Debug\*.*nupkg
 del .\Cadmus.Import\bin\Debug\*.*nupkg
 del .\Cadmus.Import.Proteus\bin\Debug\*.*nupkg
 del .\Cadmus.Import.Excel\bin\Debug\*.*nupkg
+del .\Proteus.Rendering\bin\Debug\*.*nupkg
 
 cd .\Cadmus.Export
 dotnet pack -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
@@ -19,6 +20,9 @@ cd .\Cadmus.Import.Proteus
 dotnet pack -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 cd..
 cd .\Cadmus.Import.Excel
+dotnet pack -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+cd..
+cd .\Proteus.Rendering
 dotnet pack -c Debug -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 cd..
 
