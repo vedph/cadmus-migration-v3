@@ -8,7 +8,14 @@ Currently this is being developed to provide all the generic, reusable models an
 
 The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution.
 
-Rendering is done from a text tree, whose nodes contain a payload of type `ExportedSegment`, representing a segment of the text being exported. This is generic enough to be used both in Cadmus and in GVE.
+Text rendering essentially is a 4-steps process:
+
+1. **build tree**: starting from your specific data source (an item in Cadmus, a snapshot in GVE) build a linear (=single branch) tree representing the text with some annotations. In this tree, each text segment is a node, having any number of name=value pairs, named _features_. Nodes are stacked so that each following segment is a child node of the previous one. The node payload type is `ExportedSegment`, generic enough to be used both in Cadmus and in GVE.
+2. **filter tree**: variously filter this tree using text tree filters, adjusting the tree structure to the desired output. So, this starts from a linear tree, but it can lead to a multiple-branches tree.
+3. **render output**: render the text tree into some output format, like XML.
+4. **filter output**: optionally filter the output using text filters.
+
+This generic library contains shared components:
 
 - text tree filters:
   - `ITextTreeFilter`: interface for text tree filters.
@@ -16,7 +23,7 @@ Rendering is done from a text tree, whose nodes contain a payload of type `Expor
   - `LinearMergeTextTreeFilter`: merger for a linear text tree.
 
 - text tree renderers:
-  - `IRendererContext` for the data context of a renderer.
+  - `IRendererContext` interface for the data context of a renderer.
   - `ITextTreeRenderer`: interface for text tree renderers.
   - `TextTreeRenderer<HandledType>`: base class for text tree renderers.
   - `GroupTextTreeRenderer<HandledType>`: base class for text tree renderers with grouping.
