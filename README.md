@@ -13,6 +13,7 @@ Main projects:
 - `Cadmus.Import`: core components for thesauri import.
 - `Cadmus.Import.Excel`: Excel (XLSX or XLS) thesauri importers.
 - `Cadmus.Import.Proteus`: Proteus-based components for importing Cadmus items and parts from sources handled with Proteus readers.
+- [Proteus.Rendering](Proteus.Rendering/README.md): Proteus rendering components, to be moved into the Proteus solution once stable.
 
 ## History
 
