@@ -1,7 +1,6 @@
 ﻿using Cadmus.Core;
 using Fusi.Tools.Data;
 using Proteus.Rendering;
-using System.Xml.Linq;
 
 namespace Cadmus.Export.ML;
 
@@ -11,11 +10,6 @@ namespace Cadmus.Export.ML;
 /// <seealso cref="ItemComposer" />
 public abstract class TeiItemComposer : ItemComposer
 {
-    /// <summary>
-    /// The TEI namespace.
-    /// </summary>
-    public readonly XNamespace TEI_NS = "http://www.tei-c.org/ns/1.0";
-
     /// <summary>
     /// The text flow metadata key (<c>flow-key</c>).
     /// </summary>

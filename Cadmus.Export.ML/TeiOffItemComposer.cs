@@ -3,7 +3,6 @@ using Fusi.Tools.Data;
 using Proteus.Rendering;
 using System;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace Cadmus.Export.ML;
 
@@ -20,11 +19,6 @@ namespace Cadmus.Export.ML;
 public abstract class TeiOffItemComposer : ItemComposer
 {
     private readonly JsonSerializerOptions _jsonOptions;
-
-    /// <summary>
-    /// The TEI namespace.
-    /// </summary>
-    public readonly XNamespace TEI_NS = "http://www.tei-c.org/ns/1.0";
 
     /// <summary>
     /// The text flow metadata key (<c>flow-key</c>).

@@ -1,4 +1,5 @@
 ﻿using Cadmus.Core;
+using Cadmus.Export.Renderers;
 using Fusi.Tools.Data;
 using Proteus.Core.Text;
 using Proteus.Rendering;
@@ -10,10 +11,10 @@ namespace Cadmus.Export.ML.Renderers;
 
 /// <summary>
 /// Base class for JSON renderers targeting markup languages. This adds
-/// more specialized shared logic to <see cref="Export.Renderers.CadmusJsonRenderer"/>.
+/// more specialized shared logic to <see cref="CadmusJsonRenderer"/>.
 /// </summary>
-/// <seealso cref="Export.Renderers.CadmusJsonRenderer" />
-public abstract class MLJsonRenderer : Export.Renderers.CadmusJsonRenderer
+/// <seealso cref="CadmusJsonRenderer" />
+public abstract class MLJsonRenderer : CadmusJsonRenderer
 {
     /// <summary>
     /// Finds the tree nodes representing the boundaries for the specified
