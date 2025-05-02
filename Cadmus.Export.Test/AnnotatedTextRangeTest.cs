@@ -7,13 +7,13 @@ namespace Cadmus.Export.Test;
 public sealed class AnnotatedTextRangeTest
 {
     [Fact]
-    public void MergeRanges_NoRanges_ReturnsSimpleRange()
+    public void GetConsecutiveRanges_NoRanges_ReturnsSimpleRange()
     {
         const int start = 0;
         const int end = 10;
         IList<AnnotatedTextRange> ranges = [];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         Assert.Single(result);
@@ -23,25 +23,25 @@ public sealed class AnnotatedTextRangeTest
     }
 
     [Fact]
-    public void MergeRanges_InvalidStartEnd_ThrowsArgumentException()
+    public void GetConsecutiveRanges_InvalidStartEnd_ThrowsArgumentException()
     {
         const int start = 10;
         const int end = 5;
         IList<AnnotatedTextRange> ranges = [];
 
         Assert.Throws<ArgumentException>(() =>
-            AnnotatedTextRange.MergeRanges(start, end, ranges));
+            AnnotatedTextRange.GetConsecutiveRanges(start, end, ranges));
     }
 
     [Fact]
-    public void MergeRanges_NullRanges_ThrowsArgumentNullException()
+    public void GetConsecutiveRanges_NullRanges_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            AnnotatedTextRange.MergeRanges(0, 10, null!));
+            AnnotatedTextRange.GetConsecutiveRanges(0, 10, null!));
     }
 
     [Fact]
-    public void MergeRanges_SingleRange_ReturnsOriginalRange()
+    public void GetConsecutiveRanges_SingleRange_ReturnsOriginalRange()
     {
         const int start = 0;
         const int end = 10;
@@ -50,7 +50,7 @@ public sealed class AnnotatedTextRangeTest
             new(start, end, "fr1")
         ];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         Assert.Single(result);
@@ -61,7 +61,7 @@ public sealed class AnnotatedTextRangeTest
     }
 
     [Fact]
-    public void MergeRanges_RangesWithGaps_FillsGaps()
+    public void GetConsecutiveRanges_RangesWithGaps_FillsGaps()
     {
         const int start = 0;
         const int end = 10;
@@ -71,7 +71,7 @@ public sealed class AnnotatedTextRangeTest
             new(7, 10, "fr2")
         ];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         Assert.Equal(3, result.Count);
@@ -93,7 +93,7 @@ public sealed class AnnotatedTextRangeTest
     }
 
     [Fact]
-    public void MergeRanges_RangesOutsideRequestedSpan_IgnoresOutsideRanges()
+    public void GetConsecutiveRanges_RangesOutsideRequestedSpan_IgnoresOutsideRanges()
     {
         const int start = 5;
         const int end = 15;
@@ -104,7 +104,7 @@ public sealed class AnnotatedTextRangeTest
             new(16, 20, "fr3")
         ];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         Assert.Equal(3, result.Count);
@@ -127,7 +127,7 @@ public sealed class AnnotatedTextRangeTest
     }
 
     [Fact]
-    public void MergeRanges_PartiallyOutsideRanges_AdjustsRangeBoundaries()
+    public void GetConsecutiveRanges_PartiallyOutsideRanges_AdjustsRangeBoundaries()
     {
         const int start = 5;
         const int end = 15;
@@ -138,7 +138,7 @@ public sealed class AnnotatedTextRangeTest
             new(13, 18, "fr3")
         ];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         Assert.Equal(3, result.Count);
@@ -163,7 +163,7 @@ public sealed class AnnotatedTextRangeTest
     }
 
     [Fact]
-    public void MergeRanges_MultipleFragmentIds_SortsFragmentIds()
+    public void GetConsecutiveRanges_MultipleFragmentIds_SortsFragmentIds()
     {
         const int start = 0;
         const int end = 10;
@@ -174,7 +174,7 @@ public sealed class AnnotatedTextRangeTest
             new(6, 10, "fr5", "fr4")
         ];
 
-        IList<AnnotatedTextRange> result = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> result = AnnotatedTextRange.GetConsecutiveRanges(
             start, end, ranges);
 
         // there should be 4 ranges with different fragment ID combinations

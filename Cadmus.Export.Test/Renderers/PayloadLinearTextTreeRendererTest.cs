@@ -124,7 +124,7 @@ public sealed class PayloadLinearTextTreeRendererTest
             textPart, [appPart]);
 
         // merge ranges
-        IList<AnnotatedTextRange> mergedRanges = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> mergedRanges = AnnotatedTextRange.GetConsecutiveRanges(
             0, tr.Item1.Length - 1, tr.Item2);
         // assign text to merged ranges
         foreach (AnnotatedTextRange range in mergedRanges)

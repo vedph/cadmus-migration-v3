@@ -26,7 +26,7 @@ public sealed class FragmentTextRangeTest
     [Fact]
     public void MergeRanges_SingleFragments_Ok()
     {
-        IList<AnnotatedTextRange> ranges = AnnotatedTextRange.MergeRanges(
+        IList<AnnotatedTextRange> ranges = AnnotatedTextRange.GetConsecutiveRanges(
             0, 17, GetRangesWithSingleFr());
         Assert.Equal(6, ranges.Count);
 
