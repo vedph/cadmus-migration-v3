@@ -32,8 +32,8 @@ namespace Cadmus.Export.Config;
 /// other sections.</description>
 /// </item>
 /// <item>
-/// <term><c>RendererFilters</c></term>
-/// <description>List of renderer filters, each named with a key, and having
+/// <term><c>TextFilters</c></term>
+/// <description>List of text filters, each named with a key, and having
 /// its component ID and eventual options. The key is an arbitrary string,
 /// used in the scope of the configuration to reference each filter from
 /// other sections.</description>
@@ -207,13 +207,13 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
     public HashSet<string> GetComposerKeys()
         => CollectKeys("ItemComposers");
 
-    private List<ITextFilter> GetRendererFilters(string path)
+    private List<ITextFilter> GetTextFilters(string path)
     {
         IConfigurationSection filterKeys = Configuration.GetSection(path);
         if (filterKeys.Exists())
         {
             string[] keys = filterKeys.Get<string[]>() ?? [];
-            return [.. GetRendererFilters(keys)];
+            return [.. GetTextFilters(keys)];
         }
         return [];
     }
@@ -250,7 +250,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
         if (renderer == null) return null;
 
         // add filters if specified in Options:FilterKeys
-        foreach (ITextFilter filter in GetRendererFilters(
+        foreach (ITextFilter filter in GetTextFilters(
             entry.OptionsPath + ":FilterKeys"))
         {
             renderer.Filters.Add(filter);
@@ -279,7 +279,7 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
         if (renderer == null) return null;
 
         // add filters if specified in Options:FilterKeys
-        renderer.Filters.AddRange(GetRendererFilters(
+        renderer.Filters.AddRange(GetTextFilters(
             entry.OptionsPath + ":FilterKeys"));
 
         return renderer;
@@ -308,8 +308,8 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
     }
 
     /// <summary>
-    /// Gets the JSON renderer filters matching any of the specified keys.
-    /// Filters are listed under section <c>RendererFilters</c>, each with
+    /// Gets the text filters matching any of the specified keys.
+    /// Filters are listed under section <c>TextFilters</c>, each with
     /// one or more keys.
     /// Then, these keys are used to include post-rendition filters by
     /// listing one or more of them in the <c>FilterKeys</c> option,
@@ -317,8 +317,8 @@ public class CadmusRenderingFactory(IHost host) : ComponentFactory(host)
     /// </summary>
     /// <param name="keys">The desired keys.</param>
     /// <returns>Dictionary with keys and filters.</returns>
-    public IList<ITextFilter> GetRendererFilters(IList<string> keys) =>
-        GetRequiredComponents<ITextFilter>("RendererFilters", null, keys);
+    public IList<ITextFilter> GetTextFilters(IList<string> keys) =>
+        GetRequiredComponents<ITextFilter>("TextFilters", null, keys);
 
     /// <summary>
     /// Gets an item composer by key.

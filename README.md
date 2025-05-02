@@ -8,7 +8,7 @@ Tools for migrating (importing/exporting) Cadmus data. Export tools also include
 
 Main projects:
 
-- `Cadmus.Export`: general purpose components used to export Cadmus data.
+- [Cadmus.Export](Cadmus.Export/README.md): general purpose components used to export Cadmus data.
 - `Cadmus.Export.ML`: markup related components used to export Cadmus data into some markup language, typically XML.
 - `Cadmus.Import`: core components for thesauri import.
 - `Cadmus.Import.Excel`: Excel (XLSX or XLS) thesauri importers.
@@ -18,7 +18,10 @@ Main projects:
 
 ### 7.0.0
 
-- 2025-05-01: ⚠️ first commit of V3.
+- 2025-05-01: ⚠️ first commit of V3. Note: BREAKING change for Cadmus preview configurations:
+  - use `:` instead of `|` for type ID + role ID separator, e.g. `it.vedph.token-text-layer:fr.it.vedph.apparatus` rather than `it.vedph.token-text-layer|fr.it.vedph.apparatus`.
+  - component tags have been changed where uniformation was required.
+  - section `RendererFilters` renamed into `TextFilters`.
 
 ---
 

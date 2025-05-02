@@ -1,5 +1,5 @@
 ﻿{
-  "RendererFilters": [
+  "TextFilters": [
     {
       "Keys": "thes-filter",
       "Id": "it.vedph.text-filter.mongo-thesaurus"
@@ -35,11 +35,11 @@
       }
     },
     {
-      "Keys": "it.vedph.token-text-layer|fr.it.vedph.comment",
+      "Keys": "it.vedph.token-text-layer:fr.it.vedph.comment",
       "Id": "it.vedph.json-renderer.null"
     },
     {
-      "Keys": "it.vedph.token-text-layer|fr.it.vedph.orthography",
+      "Keys": "it.vedph.token-text-layer:fr.it.vedph.orthography",
       "Id": "it.vedph.json-renderer.null"
     }
   ],
@@ -69,8 +69,8 @@
         "TextPartFlattenerKey": "it.vedph.token-text",
         "TextTreeRendererKey": "tei-standoff",
         "JsonRendererKeys": [
-          "it.vedph.token-text-layer|fr.it.vedph.comment",
-          "it.vedph.token-text-layer|fr.it.vedph.orthography"
+          "it.vedph.token-text-layer:fr.it.vedph.comment",
+          "it.vedph.token-text-layer:fr.it.vedph.orthography"
         ]
       }
     }

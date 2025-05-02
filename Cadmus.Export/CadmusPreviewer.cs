@@ -17,6 +17,13 @@ namespace Cadmus.Export;
 /// </summary>
 public sealed class CadmusPreviewer
 {
+    /// <summary>
+    /// The separator used in the keys of the JSON renderers in the configuration
+    /// document. This is used to separate the part type ID from the role ID
+    /// and corresponds to <c>:</c>.
+    /// </summary>
+    public const char RENDERER_KEY_SEPARATOR = ':';
+
     private readonly ICadmusRepository? _repository;
     private readonly CadmusRenderingFactory _factory;
     private readonly BlockLinearTextTreeFilter _blockFilter;
@@ -213,7 +220,7 @@ public sealed class CadmusPreviewer
         if (roleId == null) return "";
 
         // the target ID is the combination of these two IDs
-        string key = $"{typeId}|{roleId}";
+        string key = $"{typeId}{RENDERER_KEY_SEPARATOR}{roleId}";
 
         IJsonRenderer? renderer = GetRendererFromKey(key);
 
@@ -272,7 +279,7 @@ public sealed class CadmusPreviewer
     /// <param name="textPartId">The text part identifier.</param>
     /// <param name="layerPartIds">The IDs of the layers to include in the
     /// rendition.</param>
-    /// <returns>Rendition.</returns>
+    /// <returns>Array of segments.</returns>
     /// <exception cref="ArgumentNullException">textPartId or layerPartIds
     /// </exception>
     public IList<ExportedSegment> BuildTextSegments(string textPartId,
@@ -321,29 +328,30 @@ public sealed class CadmusPreviewer
             part, layerParts);
 
         // merge ranges
-        IList<AnnotatedTextRange> mergedRanges = AnnotatedTextRange.GetConsecutiveRanges(
-            0, tr.Item1.Length - 1, tr.Item2);
+        IList<AnnotatedTextRange> mergedRanges =
+            AnnotatedTextRange.GetConsecutiveRanges(
+                0, tr.Item1.Length - 1, tr.Item2);
 
         // assign text to merged ranges
         foreach (AnnotatedTextRange range in mergedRanges)
             range.AssignText(tr.Item1);
 
         // build a linear tree from merged ranges
-        TreeNode<ExportedSegment> tree = CadmusTextTreeBuilder.BuildTreeFromRanges(
-            mergedRanges, tr.Item1);
+        TreeNode<ExportedSegment> tree =
+            CadmusTextTreeBuilder.BuildTreeFromRanges(mergedRanges, tr.Item1);
         if (!tree.HasChildren) return [];
 
         // apply linear tree block filter
         tree = _blockFilter.Apply(tree, item);
 
         // collect payloads from tree nodes and return them
-        List<ExportedSegment> spans = [];
+        List<ExportedSegment> segments = [];
         tree.Traverse(node =>
         {
-            if (node.Data != null) spans.Add(node.Data);
+            if (node.Data != null) segments.Add(node.Data);
             return true;
         });
 
-        return spans;
+        return segments;
     }
 }

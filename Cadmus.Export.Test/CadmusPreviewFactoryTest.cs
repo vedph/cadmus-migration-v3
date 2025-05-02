@@ -17,8 +17,8 @@ public sealed class CadmusPreviewFactoryTest
 
         Assert.Equal(3, keys.Count);
         Assert.Contains("it.vedph.token-text", keys);
-        Assert.Contains("it.vedph.token-text-layer|fr.it.vedph.comment", keys);
-        Assert.Contains("it.vedph.token-text-layer|fr.it.vedph.orthography", keys);
+        Assert.Contains("it.vedph.token-text-layer:fr.it.vedph.comment", keys);
+        Assert.Contains("it.vedph.token-text-layer:fr.it.vedph.orthography", keys);
     }
 
     [Fact]

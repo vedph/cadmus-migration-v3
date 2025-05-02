@@ -73,7 +73,8 @@ public abstract class TeiOffItemComposer : ItemComposer
         foreach (IPart layerPart in GetLayerParts(item))
         {
             // get the renderer for the layer type
-            string id = $"{layerPart.TypeId}:{layerPart.RoleId}";
+            string id = $"{layerPart.TypeId}" +
+                $"{CadmusPreviewer.RENDERER_KEY_SEPARATOR}{layerPart.RoleId}";
             if (JsonRenderers.TryGetValue(id, out IJsonRenderer? renderer))
             {
                 // render layer
