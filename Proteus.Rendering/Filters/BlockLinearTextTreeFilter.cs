@@ -8,10 +8,13 @@ namespace Proteus.Rendering.Filters;
 /// <summary>
 /// A text tree filter which works on "linear" trees, i.e. those trees having
 /// a single branch, to split nodes at every occurrence of a LF character.
+/// <para>
 /// A linear tree has a blank root node, and then each substring of a text
 /// is a child node. So segments "A", "BC", "DE", "F" are represented by a
 /// root with blank data payload, and 4 descendants: "A" is child of root,
 /// "BC" is child of "A", "DE" is child of "BC", and "F" is child of F.
+/// </para>
+/// <para>
 /// The purpose of the filter is removing any LF from nodes while marking
 /// the previous node as the last in a line. So, when the LF is inside the
 /// node's payload, the node must be split accordingly.
@@ -24,6 +27,11 @@ namespace Proteus.Rendering.Filters;
 /// parents will be marked with the <see cref="ExportedSegment.F_EOL_TAIL"/>
 /// feature.
 /// So, after applying this filter, no node will ever include a LF in its text.
+/// </para>
+/// <para>Note that nodes split preserve their original ID and label (and
+/// IsExpanded, even if this has no meaning here and it's not used), so e.g.
+/// <c>one↵two</c> with ID=3 will be split into <c>one</c> and <c>two</c>,
+/// both with ID=3 and label=<c>one↵two</c>.</para>
 /// <para>Tag: <c>it.vedph.text-tree-filter.block-linear</c>.</para>
 /// </summary>
 /// <seealso cref="ITextTreeFilter" />
@@ -61,13 +69,23 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
             if (startIndex == 0) return node;
 
             // just skip the initial newline
-            TreeNode<ExportedSegment> result = new(node.Data.Clone());
+            TreeNode<ExportedSegment> result = new(node.Data.Clone())
+            {
+                Id = node.Id,
+                Label = node.Label,
+                IsExpanded = node.IsExpanded,
+            };
             result.Data!.Text = text[startIndex..];
             return result;
         }
 
         // create the first node with text up to the newline
-        TreeNode<ExportedSegment> head = new(node.Data.Clone());
+        TreeNode<ExportedSegment> head = new(node.Data.Clone())
+        {
+            Id = node.Id,
+            Label = node.Label,
+            IsExpanded = node.IsExpanded,
+        };
         head.Data!.Text = startIndex == 0 ? text[..i] : text[startIndex..i];
         head.Data.AddFeature(ExportedSegment.F_EOL_TAIL, "1", true);
         TreeNode<ExportedSegment> current = head;
@@ -85,7 +103,13 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
             i = text.IndexOf('\n', start);
 
             // create new node with the next segment
-            TreeNode<ExportedSegment> next = new(node.Data.Clone());
+            TreeNode<ExportedSegment> next = new(node.Data.Clone())
+            {
+                Id = node.Id,
+                Label = node.Label,
+                IsExpanded = node.IsExpanded,
+            };
+
             if (i == -1)
             {
                 // no more newlines, take rest of text
@@ -178,8 +202,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
                 {
                     // mark parent (if it's root we need to create its payload)
                     current.Data ??= new ExportedSegment();
-                    current.Data.AddFeature(
-                        ExportedSegment.F_EOL_TAIL, "1", true);
+                    current.Data.AddFeature(ExportedSegment.F_EOL_TAIL, "1", true);
 
                     if (node.Data.Text.Length > 1)
                     {

@@ -372,6 +372,33 @@ public sealed class BlockLinearTextTreeFilterTest
     }
 
     [Fact]
+    public void Apply_ConsecutiveLF_HandlesCorrectly()
+    {
+        // tree with consecutive LFs
+        TreeNode<ExportedSegment> root = new();
+        TreeNode<ExportedSegment> node = new(new ExportedSegment
+        {
+            Text = "Hello\n\n\nWorld!"
+        });
+        root.AddChild(node);
+
+        BlockLinearTextTreeFilter filter = new();
+        TreeNode<ExportedSegment> filtered = filter.Apply(root);
+
+        // first level: "Hello" with EOL_TAIL
+        Assert.Single(filtered.Children);
+        TreeNode<ExportedSegment> hello = filtered.FirstChild!;
+        Assert.Equal("Hello", hello.Data!.Text);
+        Assert.True(hello.Data!.HasFeature(ExportedSegment.F_EOL_TAIL));
+
+        // second level: "World!" without EOL_TAIL
+        Assert.Single(hello.Children);
+        TreeNode<ExportedSegment> world = hello.FirstChild!;
+        Assert.Equal("World!", world.Data!.Text);
+        Assert.False(world.Data!.HasFeature(ExportedSegment.F_EOL_TAIL));
+    }
+
+    [Fact]
     public void Apply_PreservesNodeFeatures()
     {
         // create a tree with custom node features
@@ -400,63 +427,35 @@ public sealed class BlockLinearTextTreeFilterTest
     }
 
     [Fact]
-    public void Apply_AssignsNodeIds()
+    public void Apply_PreservesNodeIdAndLabels()
     {
-        // create a tree with IDs and verify the filter assigns IDs properly
-        TreeNode<ExportedSegment> root = new();
-        TreeNode<ExportedSegment> child = new(
-            new ExportedSegment("Text\nwith\nnewlines"))
+        // create a tree with custom node IDs and labels
+        TreeNode<ExportedSegment> node = new(new ExportedSegment("Hello\nWorld"))
         {
-            Id = "5"  // Set an ID to check that new nodes get higher IDs
+            Id = "1",
+            Label = "Hello\nWorld"
         };
-        root.AddChild(child);
-
+        TreeNode<ExportedSegment> tree = new();
+        tree.AddChild(node);
         BlockLinearTextTreeFilter filter = new();
-        TreeNode<ExportedSegment> filtered = filter.Apply(root);
 
-        // extract all IDs and check they are unique and assigned properly
-        List<string> allIds = [];
-        filtered.Traverse(node => {
-            if (!string.IsNullOrEmpty(node.Id))
-                allIds.Add(node.Id);
-            return true;
-        });
+        TreeNode<ExportedSegment> filtered = filter.Apply(tree);
 
-        // we should have IDs for all nodes
-        Assert.NotEmpty(allIds);
-
-        // IDs should be unique
-        Assert.Equal(allIds.Count, allIds.Distinct().Count());
-
-        // all IDs should be parseable as integers
-        foreach (string id in allIds)
-            Assert.True(int.TryParse(id, out _));
-    }
-
-    [Fact]
-    public void Apply_ConsecutiveLF_HandlesCorrectly()
-    {
-        // tree with consecutive LFs
-        TreeNode<ExportedSegment> root = new();
-        TreeNode<ExportedSegment> node = new(new ExportedSegment
-        {
-            Text = "Hello\n\n\nWorld!"
-        });
-        root.AddChild(node);
-
-        BlockLinearTextTreeFilter filter = new();
-        TreeNode<ExportedSegment> filtered = filter.Apply(root);
-
-        // first level: "Hello" with EOL_TAIL
+        // verify that node IDs and labels are preserved in the split nodes
+        // Hello
         Assert.Single(filtered.Children);
         TreeNode<ExportedSegment> hello = filtered.FirstChild!;
         Assert.Equal("Hello", hello.Data!.Text);
+        Assert.Equal("1", hello.Id);
+        Assert.Equal("Hello\nWorld", hello.Label);
         Assert.True(hello.Data!.HasFeature(ExportedSegment.F_EOL_TAIL));
-
-        // second level: "World!" without EOL_TAIL
+        // World
         Assert.Single(hello.Children);
         TreeNode<ExportedSegment> world = hello.FirstChild!;
-        Assert.Equal("World!", world.Data!.Text);
+        Assert.Equal("World", world.Data!.Text);
+        Assert.Equal("1", world.Id);
+        Assert.Equal("Hello\nWorld", world.Label);
         Assert.False(world.Data!.HasFeature(ExportedSegment.F_EOL_TAIL));
+        Assert.False(world.HasChildren);
     }
 }

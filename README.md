@@ -23,6 +23,7 @@ Main projects:
   - ⚠️ moved `BlockLinearTextTreeFilter` from `Cadmus.Export` to `Proteus.Rendering`.
   - ⚠️ moved constant `F_EOL_TAIL` from `CadmusTextTreeBuilder` to `ExportedSegment`.
   - fixes to `BlockLinearTextTreeFilter`.
+  - renamed `MergeLinearTextTreeFilter` and its tag.
 
 ### 7.0.0
 

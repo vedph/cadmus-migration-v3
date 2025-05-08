@@ -96,8 +96,10 @@ public sealed class TeiOffLinearTextTreeRendererTest
             textPart, layerParts);
 
         // merge ranges
-        IList<AnnotatedTextRange> mergedRanges = AnnotatedTextRange.GetConsecutiveRanges(
-            0, tr.Item1.Length - 1, tr.Item2);
+        IList<AnnotatedTextRange> mergedRanges =
+            AnnotatedTextRange.GetConsecutiveRanges(
+                0, tr.Item1.Length - 1, tr.Item2);
+
         // assign text to merged ranges
         foreach (AnnotatedTextRange range in mergedRanges)
             range.AssignText(tr.Item1);
@@ -105,6 +107,7 @@ public sealed class TeiOffLinearTextTreeRendererTest
         // build a linear tree from ranges
         TreeNode<ExportedSegment> tree = CadmusTextTreeBuilder.BuildTreeFromRanges(
             mergedRanges, tr.Item1);
+
         // apply block filter
         return (new BlockLinearTextTreeFilter().Apply(tree, item), item);
     }
@@ -155,7 +158,9 @@ public sealed class TeiOffLinearTextTreeRendererTest
             Source = item
         });
 
-        // assert
+        // assert: note that the ID is duplicated for 4 because of splitting,
+        // should you need unique IDs you can add a filter to change each
+        // duplicate with a new ID
         Assert.Equal(
             $"<p source=\"^{item.Id}\" n=\"1\" xmlns=\"http://www.tei-c.org/ns/1.0\">" +
             "qu" +
@@ -164,7 +169,7 @@ public sealed class TeiOffLinearTextTreeRendererTest
             "<seg xml:id=\"seg3\">b</seg>" +
             "<seg xml:id=\"seg4\">ixit</seg></p>" +
             $"<p source=\"^{item.Id}\" n=\"2\" xmlns=\"http://www.tei-c.org/ns/1.0\">" +
-            "<seg xml:id=\"seg5\">annos</seg>" +
+            "<seg xml:id=\"seg4\">annos</seg>" +
             " XX</p>", xml);
     }
 }

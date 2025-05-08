@@ -9,17 +9,26 @@ using System.Text.RegularExpressions;
 namespace Proteus.Rendering.Filters;
 
 /// <summary>
-/// A merge filter for linear trees. This filter merges multiple
-/// nodes into a single one whose text is the concatenation of the text of
-/// all the merged nodes. Merging is done by checking the features of the
-/// nodes.
-/// <para>Tag: <c>it.vedph.text-tree-filter.linear-merge</c>.</para>
+/// A merge filter for linear trees.
+/// <para>
+/// A linear tree has a blank root node, and then each substring of a text
+/// is a child node. So segments "A", "BC", "DE", "F" are represented by a
+/// root with blank data payload, and 4 descendants: "A" is child of root,
+/// "BC" is child of "A", "DE" is child of "BC", and "F" is child of F.
+/// </para>
+/// <para>This filter merges multiple nodes into a single one, according to
+/// a specified subset of node features, which must be equal (for both their
+/// name and value) among all the merged nodes.
+/// Merged nodes will concatenate their labels and text values, and merge all
+/// their features, tags, and payloads.
+/// </para>
+/// <para>Tag: <c>it.vedph.text-tree-filter.merge-linear</c>.</para>
 /// </summary>
-[Tag("it.vedph.text-tree-filter.linear-merge")]
-public sealed class LinearMergeTextTreeFilter : ITextTreeFilter,
-    IConfigurable<MergeTextTreeFilterOptions>
+[Tag("it.vedph.text-tree-filter.merge-linear")]
+public sealed class MergeLinearTextTreeFilter : ITextTreeFilter,
+    IConfigurable<MergeLinearTextTreeFilterOptions>
 {
-    private MergeTextTreeFilterOptions _options = new();
+    private MergeLinearTextTreeFilterOptions _options = new();
 
     /// <summary>
     /// Gets or sets the logger.
@@ -86,10 +95,10 @@ public sealed class LinearMergeTextTreeFilter : ITextTreeFilter,
             // get relevant features of current node
             HashSet<string> feats = GetRelevantFeatures(current);
 
-            // if features are equal and either we don't care about LF or there
-            // is no LF at current's text end, merge current node into target
+            // if features are equal and either we don't care about LF, or there
+            // is no LF before current, merge current node into target
             if (segFeats.SetEquals(feats) &&
-                (_options.NoBreakAtLF || current.Data?.Text?.EndsWith('\n') != true))
+                (!_options.BreakAtLF || target.Data?.Text?.EndsWith('\n') != true))
             {
                 // merge into current and move to next child
                 if (current.Label != null)
@@ -120,7 +129,7 @@ public sealed class LinearMergeTextTreeFilter : ITextTreeFilter,
     /// </summary>
     /// <param name="options">The options.</param>
     /// <exception cref="ArgumentNullException">options</exception>
-    public void Configure(MergeTextTreeFilterOptions options)
+    public void Configure(MergeLinearTextTreeFilterOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         _options = options;
@@ -128,7 +137,7 @@ public sealed class LinearMergeTextTreeFilter : ITextTreeFilter,
 }
 
 /// <summary>
-/// Replacement option for the <see cref="MergeTextTreeFilterOptions"/>.
+/// Replacement option for the <see cref="MergeLinearTextTreeFilterOptions"/>.
 /// </summary>
 public class MergeTextTreeFilterRepOption
 {
@@ -159,9 +168,9 @@ public class MergeTextTreeFilterRepOption
 }
 
 /// <summary>
-/// Options for the <see cref="LinearMergeTextTreeFilter"/>.
+/// Options for the <see cref="MergeLinearTextTreeFilter"/>.
 /// </summary>
-public class MergeTextTreeFilterOptions
+public class MergeLinearTextTreeFilterOptions
 {
     private List<Regex?>? _regexes;
 
@@ -173,15 +182,17 @@ public class MergeTextTreeFilterOptions
 
     /// <summary>
     /// Gets or sets the filters to apply to features values before comparing
-    /// them. This is useful to ignore some parts of the values.
+    /// them. This is useful to ignore some parts of the values when considering
+    /// whether two nodes must be merged or not.
     /// </summary>
     public List<MergeTextTreeFilterRepOption>? ValueFilters { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating not to force a segment break after
+    /// Gets or sets a value indicating to force a segment break after
     /// any node whose text ends with (or is equal to) a LF.
+    /// Default is true.
     /// </summary>
-    public bool NoBreakAtLF { get; set; }
+    public bool BreakAtLF { get; set; } = true;
 
     /// <summary>
     /// Applies the filters defined in <see cref="ValueFilters"/>.

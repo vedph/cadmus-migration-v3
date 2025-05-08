@@ -6,5 +6,5 @@ c:\exe\nuget add .\Cadmus.Export.ML\bin\Debug\Cadmus.Export.ML.8.0.0.nupkg -sour
 c:\exe\nuget add .\Cadmus.Import\bin\Debug\Cadmus.Import.6.0.0.nupkg -source C:\Projects\_NuGet
 c:\exe\nuget add .\Cadmus.Import.Proteus\bin\Debug\Cadmus.Import.Proteus.6.0.1.nupkg -source C:\Projects\_NuGet
 c:\exe\nuget add .\Cadmus.Import.Excel\bin\Debug\Cadmus.Import.Excel.6.0.0.nupkg -source C:\Projects\_NuGet
-c:\exe\nuget add .\Proteus.Rendering\bin\Debug\Proteus.Rendering.0.0.3.nupkg -source C:\Projects\_NuGet
+c:\exe\nuget add .\Proteus.Rendering\bin\Debug\Proteus.Rendering.0.0.4.nupkg -source C:\Projects\_NuGet
 pause
