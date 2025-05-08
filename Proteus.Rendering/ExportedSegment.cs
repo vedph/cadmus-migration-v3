@@ -168,8 +168,7 @@ public class ExportedSegment
             SourceId = SourceId,
             Type = Type,
             Text = Text,
-            Features = Features?.Select(f =>
-                new StringPair(f.Name, f.Value)).ToList(),
+            Features = Features == null ? null : [.. Features],
             Tags = Tags == null ? null : [.. Tags],
             Payloads = Payloads == null? null : [.. Payloads],
         };
