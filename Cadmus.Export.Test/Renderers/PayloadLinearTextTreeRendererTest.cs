@@ -9,6 +9,7 @@ using System;
 using Xunit;
 using Proteus.Rendering;
 using System.Text.Json;
+using Proteus.Rendering.Filters;
 
 namespace Cadmus.Export.Test.Renderers;
 
@@ -143,8 +144,9 @@ public sealed class PayloadLinearTextTreeRendererTest
         (TreeNode<ExportedSegment>? tree, IItem _) = GetTreeAndItem();
         PayloadLinearTextTreeRenderer renderer = new();
 
-        string json = renderer.Render(tree, new CadmusRendererContext());
+        string? json = renderer.Render(tree, new CadmusRendererContext());
 
+        Assert.NotNull(json);
         Assert.StartsWith("[[", json);
 
         JsonDocument doc = JsonDocument.Parse(json);
@@ -207,8 +209,9 @@ public sealed class PayloadLinearTextTreeRendererTest
             FlattenLines = true
         });
 
-        string json = renderer.Render(tree, new CadmusRendererContext());
+        string? json = renderer.Render(tree, new CadmusRendererContext());
 
+        Assert.NotNull(json);
         Assert.StartsWith("[{", json);
 
         JsonDocument doc = JsonDocument.Parse(json);

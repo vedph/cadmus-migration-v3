@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 
-namespace Proteus.Rendering;
+namespace Proteus.Rendering.Filters;
 
 /// <summary>
 /// A multiple trees text tree filter. This assumes that the received tree

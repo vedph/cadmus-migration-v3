@@ -1,6 +1,6 @@
 ﻿using Fusi.Tools.Text;
 
-namespace Proteus.Rendering;
+namespace Proteus.Rendering.Renderers;
 
 /// <summary>
 /// A text tree renderer which handles items groups so that each group becomes

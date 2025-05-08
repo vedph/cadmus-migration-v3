@@ -17,12 +17,6 @@ namespace Cadmus.Export;
 /// </summary>
 public sealed class CadmusTextTreeBuilder
 {
-    /// <summary>
-    /// The name of the feature indicating that this segment was before and end
-    /// of line marker (LF) in the source text.
-    /// </summary>
-    public const string F_EOL_TAIL = "eol-tail";
-
     private readonly ITextPartFlattener _flattener;
 
     /// <summary>
@@ -157,7 +151,7 @@ public sealed class CadmusTextTreeBuilder
             // add features
             if (range.End + 1 < text.Length && text[range.End + 1] == '\n')
             {
-                child.Data.AddFeature(F_EOL_TAIL,
+                child.Data.AddFeature(ExportedSegment.F_EOL_TAIL,
                     range.Text![range.End + 1].ToString());
             }
 

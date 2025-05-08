@@ -1,6 +1,6 @@
 ﻿using Fusi.Tools.Data;
 
-namespace Proteus.Rendering;
+namespace Proteus.Rendering.Renderers;
 
 /// <summary>
 /// Base class for composite <see cref="ITextTreeRenderer{T}"/>'s. This

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Proteus.Rendering;
+namespace Proteus.Rendering.Filters;
 
 /// <summary>
 /// A merge filter for linear trees. This filter merges multiple

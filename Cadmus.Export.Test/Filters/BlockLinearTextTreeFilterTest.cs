@@ -1,7 +1,7 @@
 ﻿using Cadmus.Core;
-using Cadmus.Export.Filters;
 using Fusi.Tools.Data;
 using Proteus.Rendering;
+using Proteus.Rendering.Filters;
 using Xunit;
 
 namespace Cadmus.Export.Test.Filters;
@@ -47,13 +47,13 @@ public class BlockLinearTextTreeFilterTests
         Assert.Single(result.Children);
         TreeNode<ExportedSegment> left = result.Children[0];
         Assert.Equal("Hello", left.Data!.Text);
-        Assert.True(left.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(left.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world
         Assert.Single(left.Children);
         TreeNode<ExportedSegment> right = left.Children[0];
         Assert.Equal("world", right.Data!.Text);
-        Assert.False(right.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.False(right.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         Assert.Empty(right.Children);
     }
@@ -71,19 +71,19 @@ public class BlockLinearTextTreeFilterTests
         Assert.Single(result.Children);
         TreeNode<ExportedSegment> left = result.Children[0];
         Assert.Equal("Hello", left.Data!.Text);
-        Assert.True(left.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(left.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world\n
         Assert.Single(left.Children);
         TreeNode<ExportedSegment> middle = left.Children[0];
         Assert.Equal("world", middle.Data!.Text);
-        Assert.True(middle.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(middle.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // again
         Assert.Single(middle.Children);
         TreeNode<ExportedSegment> right = middle.Children[0];
         Assert.Equal("again", right.Data!.Text);
-        Assert.False(right.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.False(right.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         Assert.Empty(right.Children);
     }
@@ -101,13 +101,13 @@ public class BlockLinearTextTreeFilterTests
         Assert.Single(result.Children);
         TreeNode<ExportedSegment> left = result.Children[0];
         Assert.Equal("Hello", left.Data!.Text);
-        Assert.True(left.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(left.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world\n
         Assert.Single(left.Children);
         TreeNode<ExportedSegment> right = left.Children[0];
         Assert.Equal("world", right.Data!.Text);
-        Assert.True(right.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(right.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         Assert.Empty(right.Children);
     }
@@ -127,19 +127,19 @@ public class BlockLinearTextTreeFilterTests
         Assert.Single(result.Children);
         TreeNode<ExportedSegment> left = result.Children[0];
         Assert.Equal("Hello", left.Data!.Text);
-        Assert.True(left.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(left.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world\n
         Assert.Single(left.Children);
         TreeNode<ExportedSegment> right = left.Children[0];
         Assert.Equal("world", right.Data!.Text);
-        Assert.True(right.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(right.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // again
         Assert.Single(right.Children);
         TreeNode<ExportedSegment> rightChild = right.Children[0];
         Assert.Equal("again", rightChild.Data!.Text);
-        Assert.False(rightChild.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.False(rightChild.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         Assert.Empty(rightChild.Children);
     }
@@ -172,14 +172,14 @@ public class BlockLinearTextTreeFilterTests
         // check first node
         TreeNode<ExportedSegment> firstNode = result.Children[0];
         Assert.Equal("First node", firstNode.Data!.Text);
-        Assert.True(firstNode.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL),
+        Assert.True(firstNode.Data.HasFeature(ExportedSegment.F_EOL_TAIL),
             "First node should be marked with .HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL)");
         Assert.Single(firstNode.Children);
 
         // check second node (should have the leading newline removed)
         TreeNode<ExportedSegment> secondNode = firstNode.Children[0];
         Assert.Equal("Second node", secondNode.Data!.Text);
-        Assert.False(secondNode.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.False(secondNode.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // no more children
         Assert.Empty(secondNode.Children);
@@ -196,19 +196,19 @@ public class BlockLinearTextTreeFilterTests
 
         // root
         Assert.NotNull(result.Data);
-        Assert.True(result.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(result.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // Hello\n
         Assert.Single(result.Children);
         TreeNode<ExportedSegment> hello = result.Children[0];
         Assert.Equal("Hello", hello.Data!.Text);
-        Assert.True(hello.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(hello.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world
         Assert.Single(hello.Children);
         TreeNode<ExportedSegment> world = hello.Children[0];
         Assert.Equal("world", world.Data!.Text);
-        Assert.False(world.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.False(world.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         Assert.Empty(world.Children);
     }
@@ -238,23 +238,17 @@ public class BlockLinearTextTreeFilterTests
 
         // Hello\n
         Assert.Single(result.Children);
-        TreeNode<ExportedSegment> first = result.Children[0];
-        Assert.Equal("Hello", first.Data!.Text);
-        Assert.True(first.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
-
-        // \n
-        Assert.Single(first.Children);
-        TreeNode<ExportedSegment> second = first.Children[0];
-        Assert.Equal("", second.Data!.Text);
-        Assert.True(second.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        TreeNode<ExportedSegment> hello = result.FirstChild!;
+        Assert.NotNull(hello);
+        Assert.Equal("Hello", hello.Data!.Text);
+        Assert.True(hello.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // world
-        Assert.Single(second.Children);
-        TreeNode<ExportedSegment> third = second.Children[0];
-        Assert.Equal("world", third.Data!.Text);
-        Assert.False(third.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
-
-        Assert.Empty(third.Children);
+        TreeNode<ExportedSegment> world = hello.FirstChild!;
+        Assert.NotNull(world);
+        Assert.Empty(world.Children);
+        Assert.Equal("world", world.Data!.Text);
+        Assert.False(world.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
     }
 
     [Fact]
@@ -322,7 +316,7 @@ public class BlockLinearTextTreeFilterTests
         Assert.Single(space.Children);
         TreeNode<ExportedSegment> bixit = space.Children[0];
         Assert.Equal("bixit", bixit.Data!.Text);
-        Assert.True(bixit.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(bixit.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
         // annos
         Assert.Single(bixit.Children);
         TreeNode<ExportedSegment> annos = bixit.Children[0];

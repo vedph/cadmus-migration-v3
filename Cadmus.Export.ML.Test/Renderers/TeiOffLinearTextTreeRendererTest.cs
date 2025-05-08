@@ -1,11 +1,11 @@
 ﻿using Cadmus.Core;
 using Cadmus.Epigraphy.Parts;
-using Cadmus.Export.Filters;
 using Cadmus.Export.ML.Renderers;
 using Cadmus.General.Parts;
 using Cadmus.Philology.Parts;
 using Fusi.Tools.Data;
 using Proteus.Rendering;
+using Proteus.Rendering.Filters;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -141,7 +141,7 @@ public sealed class TeiOffLinearTextTreeRendererTest
         TreeNode<ExportedSegment> ixit = b.Children[0];
         Assert.NotNull(ixit.Data);
         Assert.Equal("ixit", ixit.Data.Text);
-        Assert.True(ixit.Data.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(ixit.Data.HasFeature(ExportedSegment.F_EOL_TAIL));
         TreeNode <ExportedSegment> annos = ixit.Children[0];
         Assert.NotNull(annos.Data);
         Assert.Equal("annos", annos.Data.Text);

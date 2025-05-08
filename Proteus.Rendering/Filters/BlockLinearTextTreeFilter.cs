@@ -1,19 +1,29 @@
 ﻿using Fusi.Tools.Configuration;
 using Fusi.Tools.Data;
 using Microsoft.Extensions.Logging;
-using Proteus.Rendering;
 using System;
 
-namespace Cadmus.Export.Filters;
+namespace Proteus.Rendering.Filters;
 
 /// <summary>
 /// A text tree filter which works on "linear" trees, i.e. those trees having
 /// a single branch, to split nodes at every occurrence of a LF character.
+/// A linear tree has a blank root node, and then each substring of a text
+/// is a child node. So segments "A", "BC", "DE", "F" are represented by a
+/// root with blank data payload, and 4 descendants: "A" is child of root,
+/// "BC" is child of "A", "DE" is child of "BC", and "F" is child of F.
+/// The purpose of the filter is removing any LF from nodes while marking
+/// the previous node as the last in a line. So, when the LF is inside the
+/// node's payload, the node must be split accordingly.
 /// Whenever a node is split, the resulting nodes have the same payload except
 /// for the text; the original node text is copied only up to the LF excluded;
 /// a new node with text past LF is added if this text is not empty, and this
 /// new right-half node becomes the child of the left-half node and the parent
 /// of what was the child of the original node.
+/// Any nodes containing only LF or multiple LF's will be removed, and their
+/// parents will be marked with the <see cref="ExportedSegment.F_EOL_TAIL"/>
+/// feature.
+/// So, after applying this filter, no node will ever include a LF in its text.
 /// <para>Tag: <c>it.vedph.text-tree-filter.block-linear</c>.</para>
 /// </summary>
 /// <seealso cref="ITextTreeFilter" />
@@ -33,8 +43,8 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
     /// present.</param>
     /// <returns>The head of the split chain.</returns>
     private static TreeNode<ExportedSegment> SplitNode(
-        TreeNode<ExportedSegment> node,
-        bool skipInitialNewline = false)
+           TreeNode<ExportedSegment> node,
+           bool skipInitialNewline = false)
     {
         string? text = node.Data!.Text;
         if (string.IsNullOrEmpty(text)) return node;
@@ -59,13 +69,19 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
         // create the first node with text up to the newline
         TreeNode<ExportedSegment> head = new(node.Data.Clone());
         head.Data!.Text = startIndex == 0 ? text[..i] : text[startIndex..i];
-        head.Data.AddFeature(CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
+        head.Data.AddFeature(ExportedSegment.F_EOL_TAIL, "1", true);
         TreeNode<ExportedSegment> current = head;
 
         // process remaining text
         int start = i + 1;
         while (start < text.Length)
         {
+            // skip consecutive newlines
+            while (start < text.Length && text[start] == '\n') start++;
+
+            // if we've reached the end after skipping newlines, we're done
+            if (start >= text.Length) break;
+
             i = text.IndexOf('\n', start);
 
             // create new node with the next segment
@@ -79,7 +95,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
             {
                 // take text up to newline (excluded)
                 next.Data!.Text = text[start..i];
-                next.Data.AddFeature(CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
+                next.Data.AddFeature(ExportedSegment.F_EOL_TAIL, "1", true);
             }
 
             // link nodes
@@ -150,8 +166,9 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
                 // case 1: single newline only - mark parent and skip
                 if (node.Data.Text == "\n")
                 {
-                    current.Data!.AddFeature(
-                        CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
+                    current.Data ??= new ExportedSegment();
+                    current.Data.AddFeature(
+                        ExportedSegment.F_EOL_TAIL, "1", true);
                     return true;
                 }
 
@@ -162,15 +179,15 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
                     // mark parent (if it's root we need to create its payload)
                     current.Data ??= new ExportedSegment();
                     current.Data.AddFeature(
-                        CadmusTextTreeBuilder.F_EOL_TAIL, "1", true);
+                        ExportedSegment.F_EOL_TAIL, "1", true);
 
                     if (node.Data.Text.Length > 1)
                     {
-                        // Process the text after the initial newline
+                        // process the text after the initial newline
                         TreeNode<ExportedSegment> head = SplitNode(node, true);
                         current.AddChild(head);
 
-                        // Move to the last node in the chain
+                        // move to the last node in the chain
                         current = head;
                         while (current.Children.Count > 0)
                             current = current.Children[0];
@@ -179,7 +196,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
                     return true;
                 }
 
-                // case 3: Regular case - newlines in the middle or at end
+                // case 3: regular case - newlines in the middle or at end
                 TreeNode<ExportedSegment> splitHead = SplitNode(node);
                 current.AddChild(splitHead);
 

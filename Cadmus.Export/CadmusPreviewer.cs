@@ -1,9 +1,9 @@
 ﻿using Cadmus.Core;
 using Cadmus.Core.Storage;
 using Cadmus.Export.Config;
-using Cadmus.Export.Filters;
 using Fusi.Tools.Data;
 using Proteus.Rendering;
+using Proteus.Rendering.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;

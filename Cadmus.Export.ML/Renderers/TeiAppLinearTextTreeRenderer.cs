@@ -138,7 +138,7 @@ public sealed class TeiAppLinearTextTreeRenderer : CadmusTextTreeRenderer,
             }
 
             // open a new block if needed
-            if (node.Data?.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL) == true)
+            if (node.Data?.HasFeature(ExportedSegment.F_EOL_TAIL) == true)
             {
                 block = new XElement(blockName,
                     _options.NoItemSource

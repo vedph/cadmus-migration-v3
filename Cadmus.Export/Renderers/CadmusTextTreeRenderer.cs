@@ -6,6 +6,7 @@ using Fusi.Tools.Data;
 using Fusi.Tools.Text;
 using Proteus.Core.Text;
 using Proteus.Rendering;
+using Proteus.Rendering.Renderers;
 using Proteus.Text.Plugs;
 
 namespace Cadmus.Export.Renderers;

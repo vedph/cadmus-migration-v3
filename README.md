@@ -17,6 +17,13 @@ Main projects:
 
 ## History
 
+### 8.0.0
+
+- 2025-05-08:
+  - ⚠️ moved `BlockLinearTextTreeFilter` from `Cadmus.Export` to `Proteus.Rendering`.
+  - ⚠️ moved constant `F_EOL_TAIL` from `CadmusTextTreeBuilder` to `ExportedSegment`.
+  - fixes to `BlockLinearTextTreeFilter`.
+
 ### 7.0.0
 
 - 2025-05-01: ⚠️ first commit of V3. Note: BREAKING change for Cadmus preview configurations:

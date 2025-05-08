@@ -15,6 +15,12 @@ namespace Proteus.Rendering;
 public class ExportedSegment
 {
     /// <summary>
+    /// The name of the feature indicating that this segment was before and end
+    /// of line marker (LF) in the source text.
+    /// </summary>
+    public const string F_EOL_TAIL = "eol-tail";
+
+    /// <summary>
     /// Gets or sets the source identifier for this segment. When used, this
     /// usually derives from the source item for this segment.
     /// </summary>

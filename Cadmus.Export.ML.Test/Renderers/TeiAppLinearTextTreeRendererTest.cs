@@ -1,5 +1,4 @@
 ﻿using Cadmus.Core;
-using Cadmus.Export.Filters;
 using Cadmus.Export.ML.Renderers;
 using Cadmus.General.Parts;
 using Cadmus.Philology.Parts;
@@ -8,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using Xunit;
 using Proteus.Rendering;
+using Proteus.Rendering.Filters;
 
 namespace Cadmus.Export.ML.Test.Renderers;
 

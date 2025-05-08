@@ -308,7 +308,7 @@ public sealed class CadmusPreviewerTest
         Assert.Single(range.FragmentIds);
         Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.comment@0",
             range.FragmentIds[0]);
-        Assert.True(segment.HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL));
+        Assert.True(segment.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // annos: C
         segment = spans[5];

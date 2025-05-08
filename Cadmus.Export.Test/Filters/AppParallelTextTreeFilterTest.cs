@@ -5,6 +5,7 @@ using Cadmus.Philology.Parts;
 using Fusi.Tools;
 using Fusi.Tools.Data;
 using Proteus.Rendering;
+using Proteus.Rendering.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;

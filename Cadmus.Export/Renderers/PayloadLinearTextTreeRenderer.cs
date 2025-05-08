@@ -77,7 +77,7 @@ public sealed class PayloadLinearTextTreeRenderer : CadmusTextTreeRenderer,
 
             // close inner array if EOL
             if (!_flatten && node.Data?
-                .HasFeature(CadmusTextTreeBuilder.F_EOL_TAIL) == true)
+                .HasFeature(ExportedSegment.F_EOL_TAIL) == true)
             {
                 sb.Append(']');
                 inner = false;
