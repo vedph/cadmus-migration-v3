@@ -14,14 +14,14 @@
 		<Copyright>by Daniele Fusi 2025</Copyright>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<PackageTags>Proteus</PackageTags>
-		<Version>0.0.4</Version>
-		<FileVersion>0.0.4</FileVersion>
-		<AssemblyVersion>0.0.4</AssemblyVersion>
+		<Version>0.0.5</Version>
+		<FileVersion>0.0.5</FileVersion>
+		<AssemblyVersion>0.0.5</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Fusi.Tools" Version="7.0.5" />
-		<PackageReference Include="Fusi.Tools.Configuration" Version="7.0.5" />
+		<PackageReference Include="Fusi.Tools" Version="7.0.6" />
+		<PackageReference Include="Fusi.Tools.Configuration" Version="7.0.6" />
 		<PackageReference Include="Proteus.Core" Version="7.0.3" />
 		<PackageReference Include="Proteus.Text.Xml" Version="7.0.3" />
 	</ItemGroup>

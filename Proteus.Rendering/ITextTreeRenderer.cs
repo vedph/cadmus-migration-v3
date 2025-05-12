@@ -24,11 +24,6 @@ public interface ITextTreeRenderer<THandledType> : IHasLogger
     /// <returns>Head content.</returns>
     THandledType? RenderHead(IRendererContext context);
 
-    /// <summary>
-    /// Called when items group has changed.
-    /// </summary>
-    /// <param name="context">The context.</param>
-    /// <param name="prevGroupId">The previous group identifier.</param>
     //void OnGroupChanged(IRendererContext context, string? prevGroupId);
 
     /// <summary>

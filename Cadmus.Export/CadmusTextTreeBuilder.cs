@@ -12,7 +12,8 @@ namespace Cadmus.Export;
 /// to build a linear tree of text segments from a text part and its layer parts.
 /// Each segment gets a single payload of type <see cref="AnnotatedTextRange"/>
 /// representing the source range of the text in the layer part and its
-/// corresponding fragment IDs. Also, it has a <see cref="F_EOL_TAIL"/> feature
+/// corresponding fragment IDs. Also, it has an
+/// <see cref="ExportedSegment.F_EOL_TAIL"/> feature
 /// with value=1 if the segment ended a line in the original text.
 /// </summary>
 public sealed class CadmusTextTreeBuilder

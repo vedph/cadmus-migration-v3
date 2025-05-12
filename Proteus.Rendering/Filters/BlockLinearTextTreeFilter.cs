@@ -177,7 +177,7 @@ public sealed class BlockLinearTextTreeFilter : ITextTreeFilter
     {
         ArgumentNullException.ThrowIfNull(tree);
 
-        TreeNode<ExportedSegment> root = new();
+        TreeNode<ExportedSegment> root = tree.Clone(false, false);
         TreeNode<ExportedSegment> current = root;
 
         tree.Traverse(node =>

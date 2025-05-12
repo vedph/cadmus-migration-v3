@@ -17,6 +17,12 @@ Main projects:
 
 ## History
 
+### 8.0.1
+
+- 2025-05-12:
+  - updated packages.
+  - fixed `BlockLinearTextTreeFilter` missing root node metadata.
+
 ### 8.0.0
 
 - 2025-05-08:

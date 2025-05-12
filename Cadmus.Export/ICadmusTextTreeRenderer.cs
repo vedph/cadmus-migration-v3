@@ -15,11 +15,5 @@ public interface ICadmusTextTreeRenderer : ITextTreeRenderer<string>
     /// </summary>
     List<ITextFilter> Filters { get; }
 
-    /// <summary>
-    /// Called when items group has changed.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    /// <param name="prevGroupId">The previous group identifier.</param>
-    /// <param name="context">The context.</param>
     //void OnGroupChanged(IItem item, string? prevGroupId, CadmusRendererContext context);
 }
