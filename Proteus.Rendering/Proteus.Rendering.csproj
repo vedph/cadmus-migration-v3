@@ -14,9 +14,9 @@
 		<Copyright>by Daniele Fusi 2025</Copyright>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<PackageTags>Proteus</PackageTags>
-		<Version>0.0.5</Version>
-		<FileVersion>0.0.5</FileVersion>
-		<AssemblyVersion>0.0.5</AssemblyVersion>
+		<Version>0.0.6</Version>
+		<FileVersion>0.0.6</FileVersion>
+		<AssemblyVersion>0.0.6</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -17,6 +17,10 @@ Main projects:
 
 ## History
 
+- 2025-05-21:
+  - added `CompositeOptions`.
+  - updated test packages.
+
 ### 8.0.1
 
 - 2025-05-12:
