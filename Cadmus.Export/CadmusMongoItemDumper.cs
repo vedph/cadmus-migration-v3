@@ -14,6 +14,29 @@ namespace Cadmus.Export;
 /// <summary>
 /// Cadmus MongoDB item dumper.
 /// </summary>
+/// <remarks>This is used to dump items data into one or more JSON files.
+/// Items are sorted by their sort key, and are filtered according to these
+/// criteria:
+/// <list type="bullet">
+/// <item>
+///   the items must match all the filters specified for them.
+/// </item>
+/// <item>
+///   additionally, when an item does match all the filters specified
+///   except for the time-based filters (i.e. last modified), it can be included
+///   when any of its parts, once filtered on their own filter, match the same
+///   time-based filters for their last modified property. This means that
+///   an item will be included as changed even when its last modified property
+///   is not in the filter time frame, but the last modified property of any
+///   of its parts is. So, changing an item's part will be enough to include
+///   that item among those which were changed.
+/// </item>
+/// <item>
+///   deleted items are included too, unless the <c>NoDeleted</c> option is true,
+///   provided that they match the same filters as the normal items.
+/// </item>
+/// </list>
+/// </remarks>
 public sealed class CadmusMongoItemDumper : MongoConsumerBase
 {
     private readonly CadmusMongoItemDumperOptions _options;
