@@ -2,10 +2,13 @@
 using Cadmus.Mongo;
 using Fusi.Tools;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +18,7 @@ namespace Cadmus.Export;
 /// Cadmus MongoDB item dumper.
 /// </summary>
 /// <remarks>This is used to dump items data into one or more JSON files.
-/// Items are sorted by their sort key, and are filtered according to these
+/// Items are sorted by their sort key, and filtered according to these
 /// criteria:
 /// <list type="bullet">
 /// <item>
@@ -24,10 +27,10 @@ namespace Cadmus.Export;
 /// <item>
 ///   additionally, when an item does match all the filters specified
 ///   except for the time-based filters (i.e. last modified), it can be included
-///   when any of its parts, once filtered on their own filter, match the same
+///   when any of its parts, once filtered with their own filter, match the same
 ///   time-based filters for their last modified property. This means that
-///   an item will be included as changed even when its last modified property
-///   is not in the filter time frame, but the last modified property of any
+///   an item will be included as changed even when its last-modified property
+///   is not in the filter time frame, but the last-modified property of any
 ///   of its parts is. So, changing an item's part will be enough to include
 ///   that item among those which were changed.
 /// </item>
@@ -441,7 +444,6 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             .ToCursor();
 
         // return deleted items that haven't already been returned
-        // (no need to track "latest" since an item can only be deleted once)
         while (cursor.MoveNext())
         {
             foreach (BsonDocument document in cursor.Current)
@@ -449,12 +451,17 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
                 // get the referenceId (guaranteed to exist)
                 string refId = document["referenceId"].AsString;
 
-                // skip if we already returned this item from the regular collection
+                // skip if we already returned this item from the items collection
                 if (itemIds.Contains(refId)) continue;
 
-                // change _id to referenceId as we want the original item ID
+                itemIds.Add(refId);
+
+                // modify document: set _id to referenceId and
+                // remove referenceId property
                 BsonDocument modifiedDoc = (BsonDocument)document.DeepClone();
                 modifiedDoc["_id"] = document["referenceId"];
+                modifiedDoc.Remove("referenceId");
+                // keep the status property to distinguish deleted items
 
                 yield return modifiedDoc;
             }
@@ -465,7 +472,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         {
             // filter out already returned items
             List<string> notReturnedItemIds = [..
-            additionalItemIds.Where(id => !itemIds.Contains(id))];
+                additionalItemIds.Where(id => !itemIds.Contains(id))];
 
             if (notReturnedItemIds.Count > 0)
             {
@@ -493,9 +500,13 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
                         // mark as processed
                         itemIds.Add(refId);
 
-                        // change _id to referenceId as we want the original item ID
-                        BsonDocument modifiedDoc = (BsonDocument)document.DeepClone();
+                        // modify document: set _id to referenceId
+                        // and remove referenceId property
+                        BsonDocument modifiedDoc = (BsonDocument)
+                            document.DeepClone();
                         modifiedDoc["_id"] = document["referenceId"];
+                        modifiedDoc.Remove("referenceId");
+                        // keep the status property to distinguish deleted items
 
                         yield return modifiedDoc;
                     }
@@ -504,11 +515,32 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         }
     }
 
+    private void AddItemParts(BsonDocument item)
+    {
+        // get the parts collection
+        IMongoDatabase db = Client!.GetDatabase(_options.DatabaseName);
+        IMongoCollection<BsonDocument> partsCollection =
+            db.GetCollection<BsonDocument>(MongoPart.COLLECTION);
+
+        // get the item ID
+        string itemId = item["_id"].AsString;
+
+        // find parts for this item
+        FilterDefinition<BsonDocument> filter =
+            Builders<BsonDocument>.Filter.Eq("itemId", itemId);
+        List<BsonDocument> parts = partsCollection.Find(filter).ToList();
+
+        // add _parts property with the found parts
+        item["_parts"] = new BsonArray(parts);
+    }
+
     /// <summary>
     /// Gets the items to export from the MongoDB database.
     /// </summary>
-    /// <returns></returns>
-    public IEnumerable<BsonDocument> GetItems()
+    /// <param name="includeParts">True to include parts in each item, in an
+    /// added array property named <c>_parts</c>.</param>
+    /// <returns>Items.</returns>
+    public IEnumerable<BsonDocument> GetItems(bool includeParts = true)
     {
         // get the MongoDB client and database
         EnsureClientCreated(string.Format(_options.ConnectionString,
@@ -520,8 +552,11 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
 
         // 1. regular items collection (always included)
         foreach (BsonDocument document in GetNormalItems(db, itemIds))
+        {
+            if (!_options.NoParts) AddItemParts(document);
             yield return document;
-
+        }
+            
         // 2. history items collection (only when NoDeleted is false)
         if (!_options.NoDeleted)
         {
@@ -530,15 +565,109 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         }
     }
 
-    public async Task DumpAsync(CancellationToken cancel,
-        Progress<ProgressReport>? progress = null)
+    private string BuildFileName(int nr)
+    {
+        string fileName = $"{_options.DatabaseName}";
+        if (nr > 0) fileName += $"_{nr:000}";
+        fileName += ".json";
+        return Path.Combine(_options.OutputDirectory, fileName);
+    }
+
+    private void WriteHead(StreamWriter writer, int fileNr,
+        JsonWriterSettings jsonSettings)
+    {
+        // open root object
+        writer.WriteLine("{");
+
+        // write time of dump
+        writer.WriteLine($"  \"time\": \"{DateTime.UtcNow:O}\",");
+
+        // write chunk if needed
+        if (_options.MaxItemsPerFile > 0)
+        {
+            writer.WriteLine($"  \"chunk\": {fileNr},");
+        }
+
+        // write options JSON object
+        writer.WriteLine("  \"options\": ");
+        writer.WriteLine(_options.ToJson(jsonSettings));
+        writer.WriteLine("  }");
+
+        // open items array
+        writer.WriteLine("  \"items\": [");
+    }
+
+    private static void WriteTail(StreamWriter writer)
+    {
+        // close items array and root object
+        writer.WriteLine("]");
+        writer.WriteLine("}");
+    }
+
+    /// <summary>
+    /// Dump the items to JSON files.
+    /// </summary>
+    /// <param name="cancel">The cancellation token.</param>
+    /// <param name="progress">The optional progress reporter.</param>
+    /// <returns>Count of items dumped.</returns>
+    public int Dump(CancellationToken cancel,
+        IProgress<ProgressReport>? progress = null)
     {
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
+        ProgressReport? report = progress is null? null : new ProgressReport();
 
+        int count = 0, fileNr = 0;
+        StreamWriter? writer = null;
+        JsonWriterSettings jsonSettings = new()
+        {
+            Indent = _options.Indented,
+        };
+
+        // for each matching item
         foreach (BsonDocument item in GetItems())
         {
-            // TODO
+            count++;
+
+            // create a new file if needed
+            if (writer == null || (count > _options.MaxItemsPerFile &&
+                _options.MaxItemsPerFile > 0))
+            {
+                if (writer != null) WriteTail(writer);
+                writer?.Flush();
+                writer?.Close();
+
+                string path = BuildFileName(++fileNr);
+                writer = new StreamWriter(path, false, Encoding.UTF8);
+                WriteHead(writer, fileNr, jsonSettings);
+                count = 1;
+            }
+
+            // write the item to the file as JSON
+            string json = item.ToJson(jsonSettings);
+            writer.WriteLine(json);
+
+            // check for cancellation
+            if (cancel.IsCancellationRequested) break;
+
+            // report progress if needed
+            if (progress != null && count % 100 == 0)
+            {
+                report!.Count = count;
+                progress.Report(report);
+            }
         }
+
+        if (writer != null) WriteTail(writer);
+        writer?.Flush();
+        writer?.Close();
+
+        if (progress != null)
+        {
+            report!.Count = count;
+            progress.Report(report);
+        }
+
+        return count;
     }
 }

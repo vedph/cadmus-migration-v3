@@ -29,6 +29,12 @@ public class CadmusMongoItemDumperOptions
             Environment.SpecialFolder.CommonDesktopDirectory);
 
     /// <summary>
+    /// The maximum number of items to export. If not specified (0), all items
+    /// will be exported in a single file.
+    /// </summary>
+    public int MaxItemsPerFile { get; set; }
+
+    /// <summary>
     /// True to not include parts' date in the export filters when time-based
     /// parameters are specified. When this is true, the export will consider
     /// only the modified time of the items, ignoring that of each item's parts.
@@ -39,6 +45,13 @@ public class CadmusMongoItemDumperOptions
     /// True to not include deleted items in the export.
     /// </summary>
     public bool NoDeleted { get; set; }
+
+    /// <summary>
+    /// True to not include parts in the export. When this is false, parts
+    /// are added to each non-deleted exported item in a <c>_parts</c> array
+    /// property.
+    /// </summary>
+    public bool NoParts { get; set; }
 
     /// <summary>
     /// True to indent the output JSON files.
