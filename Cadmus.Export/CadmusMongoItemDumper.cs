@@ -394,21 +394,28 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         }
     }
 
+    /// <summary>
+    /// Get the deleted items from the MongoDB database history items.
+    /// </summary>
+    /// <param name="db">The database.</param>
+    /// <param name="itemIds">The collected items IDs.</param>
+    /// <returns>Items.</returns>
     private IEnumerable<BsonDocument> GetDeletedItems(
-        IMongoDatabase db, HashSet<string> returnedItemIds)
+        IMongoDatabase db, HashSet<string> itemIds)
     {
         // collection for history items
         IMongoCollection<BsonDocument> historyItemsCollection =
             db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
 
+        // build the filter for history items
         FilterDefinitionBuilder<BsonDocument> filterBuilder =
             Builders<BsonDocument>.Filter;
 
-        // first apply base filter criteria to history items
+        // create base item filter with time constraints
         FilterDefinition<BsonDocument> historyFilter =
             BuildItemFilter(filterBuilder);
 
-        // then ensure we only retrieve deleted items (status = 2)
+        // ensure we only retrieve deleted items (status = 2)
         historyFilter = filterBuilder.And(
             historyFilter,
             filterBuilder.Eq("status", (int)EditStatus.Deleted)
@@ -424,7 +431,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
                 MongoHistoryPart.COLLECTION);
         }
 
-        // only return deleted items that haven't already been returned
+        // get cursor from filtered and sorted history items
         SortDefinition<BsonDocument> sort = Builders<BsonDocument>
             .Sort.Ascending("sortKey");
 
@@ -433,57 +440,21 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             .Sort(sort)
             .ToCursor();
 
-        // track history items by their referenceId to avoid duplicates
-        // (we want the most recent deletion record for each item)
-        Dictionary<string, BsonDocument> latestDeletedItems = [];
-
+        // return deleted items that haven't already been returned
+        // (no need to track "latest" since an item can only be deleted once)
         while (cursor.MoveNext())
         {
             foreach (BsonDocument document in cursor.Current)
             {
-                // check if this history item has a referenceId
-                if (document.TryGetValue("referenceId",
-                    out BsonValue? referenceId) && !referenceId.IsBsonNull)
-                {
-                    string refId = referenceId.AsString;
+                // get the referenceId (guaranteed to exist)
+                string refId = document["referenceId"].AsString;
 
-                    // skip if we already returned this item from the regular
-                    // collection
-                    if (returnedItemIds.Contains(refId)) continue;
+                // skip if we already returned this item from the regular collection
+                if (itemIds.Contains(refId)) continue;
 
-                    // if we have multiple history records for the same item,
-                    // keep only the most recent one based on timeModified
-                    if (latestDeletedItems.TryGetValue(refId,
-                        out BsonDocument? existingDoc))
-                    {
-                        // compare timeModified to keep the most recent one
-                        if (document.TryGetValue("timeModified",
-                                out BsonValue? currentTime) &&
-                            existingDoc.TryGetValue("timeModified",
-                                out BsonValue? existingTime) &&
-                            currentTime.ToUniversalTime() >
-                            existingTime.ToUniversalTime())
-                        {
-                            latestDeletedItems[refId] = document;
-                        }
-                    }
-                    else
-                    {
-                        // first time seeing this referenceId
-                        latestDeletedItems[refId] = document;
-                    }
-                }
-            }
-        }
-
-        // return the most recent deleted item records
-        foreach (BsonDocument document in latestDeletedItems.Values)
-        {
-            if (document.TryGetValue("referenceId", out BsonValue? referenceId))
-            {
-                // Change _id to referenceId as we want the original item ID
+                // change _id to referenceId as we want the original item ID
                 BsonDocument modifiedDoc = (BsonDocument)document.DeepClone();
-                modifiedDoc["_id"] = referenceId;
+                modifiedDoc["_id"] = document["referenceId"];
 
                 yield return modifiedDoc;
             }
@@ -492,10 +463,9 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         // add items found via history-parts collection if needed
         if (additionalItemIds.Count > 0)
         {
+            // filter out already returned items
             List<string> notReturnedItemIds = [..
-            additionalItemIds.Where(id =>
-            !returnedItemIds.Contains(id) &&
-            !latestDeletedItems.ContainsKey(id))];
+            additionalItemIds.Where(id => !itemIds.Contains(id))];
 
             if (notReturnedItemIds.Count > 0)
             {
@@ -503,11 +473,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
                 FilterDefinition<BsonDocument> additionalFilter =
                     filterBuilder.And(
                         filterBuilder.In("referenceId", notReturnedItemIds),
-                        filterBuilder.Eq("status", (int)EditStatus.Deleted)
-                );
-
-                // track additional items to get only the most recent deletion
-                Dictionary<string, BsonDocument> additionalDeletedItems = [];
+                        filterBuilder.Eq("status", (int)EditStatus.Deleted));
 
                 using IAsyncCursor<BsonDocument> additionalCursor =
                     historyItemsCollection.Find(additionalFilter)
@@ -516,50 +482,20 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
 
                 while (additionalCursor.MoveNext())
                 {
-                    foreach (BsonDocument? document in additionalCursor.Current)
+                    foreach (BsonDocument document in additionalCursor.Current)
                     {
-                        if (document.TryGetValue("referenceId",
-                            out BsonValue? referenceId) && !referenceId.IsBsonNull)
-                        {
-                            string refId = referenceId.AsString;
+                        // get the referenceId (guaranteed to exist)
+                        string refId = document["referenceId"].AsString;
 
-                            // if we have multiple history records for the
-                            // same item, keep only the most recent one
-                            if (additionalDeletedItems.TryGetValue(refId,
-                                out BsonDocument? existingDoc))
-                            {
-                                // compare timeModified to keep
-                                // the most recent one
-                                if (document.TryGetValue("timeModified",
-                                        out BsonValue? currentTime) &&
-                                    existingDoc.TryGetValue("timeModified",
-                                        out BsonValue? existingTime) &&
-                                    currentTime.ToUniversalTime() >
-                                        existingTime.ToUniversalTime())
-                                {
-                                    additionalDeletedItems[refId] = document;
-                                }
-                            }
-                            else
-                            {
-                                // first time seeing this referenceId
-                                additionalDeletedItems[refId] = document;
-                            }
-                        }
-                    }
-                }
+                        // skip if already processed
+                        if (itemIds.Contains(refId)) continue;
 
-                // return the additional items
-                foreach (BsonDocument document in additionalDeletedItems.Values)
-                {
-                    if (document.TryGetValue("referenceId",
-                        out BsonValue? referenceId))
-                    {
-                        // change _id to referenceId as we want
-                        // the original item ID
-                        BsonDocument modifiedDoc = (BsonDocument)
-                            document.DeepClone();
-                        modifiedDoc["_id"] = referenceId;
+                        // mark as processed
+                        itemIds.Add(refId);
+
+                        // change _id to referenceId as we want the original item ID
+                        BsonDocument modifiedDoc = (BsonDocument)document.DeepClone();
+                        modifiedDoc["_id"] = document["referenceId"];
 
                         yield return modifiedDoc;
                     }
