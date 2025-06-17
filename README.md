@@ -17,6 +17,9 @@ Main projects:
 
 ## History
 
+- 2025-06-17:
+  - updated packages (all the version numbers will have to be increased).
+  - adding `CadmusMongoItemDumper` to dump Cadmus items into JSON, including their state (changed, added, deleted) and deleted items, and considering also the modification time of their parts. 
 - 2025-05-21:
   - added `CompositeOptions`.
   - updated test packages.
