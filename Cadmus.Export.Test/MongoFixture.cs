@@ -34,7 +34,8 @@ public sealed class MongoFixture : IDisposable
         Database.DropCollection(MongoHistoryPart.COLLECTION);
     }
 
-    private void ProcessRecords(string collectionName, List<string[]> rawLines)
+    private void ProcessRecords<T>(string collectionName, List<string[]>
+        rawLines) where T : class
     {
         // first line should be the header
         if (rawLines.Count < 2) return;
@@ -54,32 +55,28 @@ public sealed class MongoFixture : IDisposable
                 PrepareHeaderForMatch = args => args.Header.ToLower()
             });
 
-        // read records
-        List<dynamic> records = [.. csv.GetRecords<dynamic>()];
+        // read records with typed model
+        List<T> records = [.. csv.GetRecords<T>()];
 
-        // convert to BsonDocuments
+        // Convert to BsonDocuments
         List<BsonDocument> documents = [];
-        foreach (dynamic? record in records)
+        foreach (T record in records)
         {
             BsonDocument doc = [];
 
-            // convert dynamic record to dictionary
-            IDictionary<string, object> recordDict =
-                (IDictionary<string, object>)record;
-
-            switch (collectionName)
+            switch (record)
             {
-                case "items":
-                    PopulateItemDocument(doc, recordDict);
+                case MockHistoryItem historyItem:
+                    PopulateHistoryItemDocument(doc, historyItem);
                     break;
-                case "history_items":
-                    PopulateHistoryItemDocument(doc, recordDict);
+                case MockItem item:
+                    PopulateItemDocument(doc, item);
                     break;
-                case "parts":
-                    PopulatePartDocument(doc, recordDict);
+                case MockHistoryPart historyPart:
+                    PopulateHistoryPartDocument(doc, historyPart);
                     break;
-                case "history_parts":
-                    PopulateHistoryPartDocument(doc, recordDict);
+                case MockPart part:
+                    PopulatePartDocument(doc, part);
                     break;
             }
 
@@ -107,7 +104,7 @@ public sealed class MongoFixture : IDisposable
                 // process previous collection if any
                 if (records.Count > 0 && !string.IsNullOrEmpty(currentCollection))
                 {
-                    ProcessRecords(currentCollection, records);
+                    ProcessRecordsForCollection(currentCollection, records);
                     records.Clear();
                 }
 
@@ -122,102 +119,101 @@ public sealed class MongoFixture : IDisposable
 
         // process any remaining records
         if (records.Count > 0 && !string.IsNullOrEmpty(currentCollection))
-            ProcessRecords(currentCollection, records);
+            ProcessRecordsForCollection(currentCollection, records);
     }
 
-    private static void ReadJsonContent(IDictionary<string, object> record,
-        BsonDocument doc)
+    private void ProcessRecordsForCollection(string collectionName, List<string[]> records)
     {
-        if (record.TryGetValue("content", out object? value) &&
-            !string.IsNullOrEmpty(value?.ToString()))
+        switch (collectionName)
         {
-            try
-            {
-                // ensure the JSON is valid by parsing it first
-                doc["content"] = BsonDocument.Parse(value.ToString()!);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error parsing JSON content: {ex.Message}");
-                Debug.WriteLine($"Content value: '{value}'");
-
-                // if parsing fails, use an empty document
-                doc["content"] = new BsonDocument();
-            }
-        }
-        else
-        {
-            doc["content"] = new BsonDocument();
+            case "items":
+                ProcessRecords<MockItem>(collectionName, records);
+                break;
+            case "history_items":
+                ProcessRecords<MockHistoryItem>(collectionName, records);
+                break;
+            case "parts":
+                ProcessRecords<MockPart>(collectionName, records);
+                break;
+            case "history_parts":
+                ProcessRecords<MockHistoryPart>(collectionName, records);
+                break;
+            default:
+                throw new ArgumentException($"Unknown collection: {collectionName}");
         }
     }
 
-    private static void PopulatePartDocument(BsonDocument doc,
-        IDictionary<string, object> record)
+    private static BsonDocument ParseJsonContent(string jsonContent)
     {
-        // based on the CSV structure for parts
-        // _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,content
-        doc["_id"] = record["_id"].ToString();
-        doc["itemId"] = record["itemid"].ToString();
-        doc["typeId"] = record["typeid"].ToString();
+        if (string.IsNullOrEmpty(jsonContent)) return [];
 
-        // roleId might be empty
-        if (record.TryGetValue("roleid", out object? value) &&
-            !string.IsNullOrEmpty(value?.ToString()))
+        try
         {
-            doc["roleId"] = value.ToString();
+            // ensure the JSON is valid by parsing it first
+            return BsonDocument.Parse(jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error parsing JSON content: {ex.Message}");
+            Debug.WriteLine($"Content value: '{jsonContent}'");
+
+            // if parsing fails, use an empty document
+            return [];
+        }
+    }
+
+    private static void PopulatePartDocument(BsonDocument doc, MockPart part)
+    {
+        doc["_id"] = part._id;
+        doc["itemId"] = part.ItemId;
+        doc["typeId"] = part.TypeId;
+
+        if (!string.IsNullOrEmpty(part.RoleId))
+        {
+            doc["roleId"] = part.RoleId;
         }
 
-        doc["timeCreated"] = DateTime.Parse(record["timecreated"].ToString()!)
-            .ToUniversalTime();
-        doc["creatorId"] = record["creatorid"].ToString();
-        doc["timeModified"] = DateTime.Parse(record["timemodified"].ToString()!)
-            .ToUniversalTime();
-        doc["userId"] = record["userid"].ToString();
+        doc["timeCreated"] = part.TimeCreated.ToUniversalTime();
+        doc["creatorId"] = part.CreatorId;
+        doc["timeModified"] = part.TimeModified.ToUniversalTime();
+        doc["userId"] = part.UserId;
 
-        // content is stored as JSON
-        ReadJsonContent(record, doc);
+        // Parse content JSON
+        doc["content"] = ParseJsonContent(part.Content);
     }
 
     private static void PopulateHistoryPartDocument(BsonDocument doc,
-        IDictionary<string, object> record)
+        MockHistoryPart part)
     {
         // first populate the base part fields
-        PopulatePartDocument(doc, record);
+        PopulatePartDocument(doc, part);
 
         // then add history-specific fields
-        doc["referenceId"] = record["referenceid"].ToString();
-        doc["status"] = int.Parse(record["status"].ToString()!);
-
-        // replace content if provided (since we might have already set it
-        // from PopulatePartDocument)
-        if (record.TryGetValue("content", out _))
-            ReadJsonContent(record, doc);
+        doc["referenceId"] = part.ReferenceId;
+        doc["status"] = part.Status;
     }
 
-    private static void PopulateItemDocument(BsonDocument doc,
-        IDictionary<string, object> record)
+    private static void PopulateItemDocument(BsonDocument doc, MockItem item)
     {
-        doc["_id"] = record["_id"].ToString();
-        doc["title"] = record["title"].ToString();
-        doc["description"] = record["description"].ToString();
-        doc["facetId"] = record["facetid"].ToString();
-        doc["groupId"] = record["groupid"].ToString();
-        doc["sortKey"] = record["sortkey"].ToString();
-        doc["flags"] = int.Parse(record["flags"].ToString()!);
-        doc["timeCreated"] = DateTime.Parse(record["timecreated"].ToString()!)
-            .ToUniversalTime();
-        doc["creatorId"] = record["creatorid"].ToString();
-        doc["timeModified"] = DateTime.Parse(record["timemodified"].ToString()!)
-            .ToUniversalTime();
-        doc["userId"] = record["userid"].ToString();
+        doc["_id"] = item._id;
+        doc["title"] = item.Title;
+        doc["description"] = item.Description;
+        doc["facetId"] = item.FacetId;
+        doc["groupId"] = item.GroupId;
+        doc["sortKey"] = item.SortKey;
+        doc["flags"] = item.Flags;
+        doc["timeCreated"] = item.TimeCreated.ToUniversalTime();
+        doc["creatorId"] = item.CreatorId;
+        doc["timeModified"] = item.TimeModified.ToUniversalTime();
+        doc["userId"] = item.UserId;
     }
 
     private static void PopulateHistoryItemDocument(BsonDocument doc,
-        IDictionary<string, object> record)
+        MockHistoryItem item)
     {
-        PopulateItemDocument(doc, record);
-        doc["referenceId"] = record["referenceid"].ToString();
-        doc["status"] = int.Parse(record["status"].ToString()!);
+        PopulateItemDocument(doc, item);
+        doc["referenceId"] = item.ReferenceId;
+        doc["status"] = item.Status;
     }
 
     private void InsertDocuments(string collectionName,
