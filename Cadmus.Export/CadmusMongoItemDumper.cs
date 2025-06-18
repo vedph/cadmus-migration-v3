@@ -17,30 +17,8 @@ namespace Cadmus.Export;
 /// Cadmus MongoDB item dumper.
 /// </summary>
 /// <remarks>This is used to dump items data into one or more JSON files.
-/// Items are sorted by their sort key, and filtered according to these
-/// criteria:
-/// <list type="bullet">
-/// <item>
-///   the items must match all the filters specified for them.
-/// </item>
-/// <item>
-///   additionally, when an item does match all the filters specified
-///   except for the time-based filters (i.e. last modified), it can be included
-///   when any of its parts, once filtered with their own filter, match the same
-///   time-based filters for their last modified property. This means that
-///   an item will be included as changed even when its last-modified property
-///   is not in the filter time frame, but the last-modified property of any
-///   of its parts is. So, changing an item's part will be enough to include
-///   that item among those which were changed.
-/// </item>
-/// <item>
-///   deleted items are included too, unless the <c>NoDeleted</c> option is true,
-///   provided that they match the same filters as the normal items.
-/// </item>
-/// </list>
-/// <para>Also, this dumper can be used for both full or incremental dumps.
-/// When you specify a timeframe in filters (via min/max modified), items and
-/// parts states will be calculated relative to that timeframe.</para>
+/// Items are filtered according to specified criteria, with the state of data
+/// determined at a specific timeframe when requested.
 /// <para>The source Cadmus database contains collections for items, parts,
 /// history_items, history_parts. Items have among other properties <c>_id</c>
 /// (a GUID), <c>timeCreated</c>, <c>timeModified</c>; parts have <c>_id</c>
@@ -56,7 +34,36 @@ namespace Cadmus.Export;
 /// then, on each successive update, a copy of it is stored in history with
 /// status=updated. If it gets deleted, the item/part is removed from its
 /// collection, but a copy of it before deletion is stored in the corresponding
-/// history part, with status=deleted.</remarks>
+/// history part, with status=deleted.
+/// <para>To get a snapshot of all data at a given time frame, the dumper focuses
+/// on history collections which contain all versions of items and parts with
+/// their timestamps and status.</para>
+/// <para>A more effective way of returning the data state at any timeframe is
+/// focusing on history collections only. Item and part collections just hold
+/// the latest active version of each data, while their history counterparts
+/// contain all versions with their timestamp (<c>timeModified</c>). So, the
+/// approach to get a snapshot of all data at a given time frame is:</para>
+/// <list type="number">
+/// <item>set items to filtered history items. This filters by any criteria
+/// including min and max modified time which provide the time frame when
+/// specified. Otherwise the time frame is the whole dataset.</item>
+/// <item>group items by <c>referenceId</c>. This means grouping history
+/// entries by item. Each group is the full history of the item within the
+/// boundaries defined by filter.</item>
+/// <item>for each group, select the latest entry. This is the item we want,
+/// it corresponds to the item which was active within the given timeframe.
+/// </item>
+/// <item>for each selected item collect item parts and add them to a new
+/// <c>_parts</c> array property representing the item. Also set its <c>_id</c>
+/// equal to <c>_referenceId</c> and remove <c>_referenceId</c>, renaming
+/// <c>status</c> into <c>_status</c>, including deleted.
+/// </item>
+/// </list>
+/// <para>As for get item parts, it would work in a similar way for parts:
+/// filter history parts (including the item ID filter for the item being
+/// processed), group by <c>referenceId</c>, select the latest entry from
+/// each group, and return the part with an adjusted schema.</para>
+/// </remarks>
 public sealed class CadmusMongoItemDumper : MongoConsumerBase
 {
     private readonly CadmusMongoItemDumperOptions _options;
@@ -79,53 +86,53 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     private FilterDefinition<BsonDocument> BuildBaseItemFilter(
         FilterDefinitionBuilder<BsonDocument> builder)
     {
-        if (_options.Filter == null) return builder.Empty;
+        if (_options.IsEmpty) return builder.Empty;
 
         List<FilterDefinition<BsonDocument>> filters = [];
 
-        if (!string.IsNullOrEmpty(_options.Filter.Title))
+        if (!string.IsNullOrEmpty(_options.Title))
         {
             filters.Add(builder.Regex("title",
-                new BsonRegularExpression(_options.Filter.Title, "i")));
+                new BsonRegularExpression(_options.Title, "i")));
         }
 
-        if (!string.IsNullOrEmpty(_options.Filter.Description))
+        if (!string.IsNullOrEmpty(_options.Description))
         {
             filters.Add(builder.Regex("description",
-                new BsonRegularExpression(_options.Filter.Description, "i")));
+                new BsonRegularExpression(_options.Description, "i")));
         }
 
-        if (!string.IsNullOrEmpty(_options.Filter.FacetId))
+        if (!string.IsNullOrEmpty(_options.FacetId))
         {
-            filters.Add(builder.Eq("facetId", _options.Filter.FacetId));
+            filters.Add(builder.Eq("facetId", _options.FacetId));
         }
 
-        if (!string.IsNullOrEmpty(_options.Filter.GroupId))
+        if (!string.IsNullOrEmpty(_options.GroupId))
         {
-            filters.Add(builder.Eq("groupId", _options.Filter.GroupId));
+            filters.Add(builder.Eq("groupId", _options.GroupId));
         }
 
-        if (!string.IsNullOrEmpty(_options.Filter.UserId))
+        if (!string.IsNullOrEmpty(_options.UserId))
         {
-            filters.Add(builder.Eq("userId", _options.Filter.UserId));
+            filters.Add(builder.Eq("userId", _options.UserId));
         }
 
         // flags filter with matching mode
-        if (_options.Filter.Flags.HasValue)
+        if (_options.Flags.HasValue)
         {
-            switch (_options.Filter.FlagMatching)
+            switch (_options.FlagMatching)
             {
                 case FlagMatching.BitsAllSet:
                     filters.Add(builder.BitsAllSet("flags",
-                        _options.Filter.Flags.Value));
+                        _options.Flags.Value));
                     break;
                 case FlagMatching.BitsAnySet:
                     filters.Add(builder.BitsAnySet("flags",
-                        _options.Filter.Flags.Value));
+                        _options.Flags.Value));
                     break;
                 case FlagMatching.BitsAllClear:
                     filters.Add(builder.BitsAllClear("flags",
-                        _options.Filter.Flags.Value));
+                        _options.Flags.Value));
                     break;
             }
         }
@@ -146,9 +153,9 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         FilterDefinition<BsonDocument> filter = BuildBaseItemFilter(builder);
 
         // if no filter or no time constraints, return the base filter
-        if (_options.Filter == null ||
-            (!_options.Filter.MinModified.HasValue &&
-             !_options.Filter.MaxModified.HasValue))
+        if (_options.IsEmpty ||
+            (!_options.MinModified.HasValue &&
+             !_options.MaxModified.HasValue))
         {
             return filter;
         }
@@ -160,16 +167,16 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         if (filter != builder.Empty) filters.Add(filter);
 
         // add date range filter for items
-        if (_options.Filter.MinModified.HasValue)
+        if (_options.MinModified.HasValue)
         {
             filters.Add(builder.Gte("timeModified",
-                _options.Filter.MinModified.Value));
+                _options.MinModified.Value));
         }
 
-        if (_options.Filter.MaxModified.HasValue)
+        if (_options.MaxModified.HasValue)
         {
             filters.Add(builder.Lte("timeModified",
-                _options.Filter.MaxModified.Value));
+                _options.MaxModified.Value));
         }
 
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
@@ -227,9 +234,8 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         {
             List<FilterDefinition<BsonDocument>> whiteList = [];
             foreach (string key in _options.WhitePartTypeKeys)
-            {
                 whiteList.Add(BuildPartTypeKeyFilter(builder, key));
-            }
+
             filters.Add(builder.Or(whiteList));
         }
 
@@ -238,9 +244,8 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         {
             List<FilterDefinition<BsonDocument>> blackList = [];
             foreach (string key in _options.BlackPartTypeKeys)
-            {
                 blackList.Add(BuildPartTypeKeyFilter(builder, key));
-            }
+
             filters.Add(builder.Not(builder.Or(blackList)));
         }
 
@@ -248,425 +253,92 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     }
 
     /// <summary>
-    /// Get the item IDs from the specified collection that match the
-    /// time-based filters for their parts. This is used to find items which
-    /// would not be included in the export because of a non-matching time-based
-    /// filter: here, the match is extended to the item's parts, so that
-    /// the item is included in the export if at least one of its (possibly
-    /// filtered) parts matches the time-based filter.
+    /// Gets the parts for a specific item using the history_parts collection.
     /// </summary>
     /// <param name="db">The database.</param>
-    /// <param name="collectionName">The collection name.</param>
-    /// <returns>Matching IDs.</returns>
-    private HashSet<string> GetItemsWithMatchingParts(IMongoDatabase db,
-        string collectionName)
+    /// <param name="itemId">The item ID.</param>
+    /// <returns>The list of parts for the item.</returns>
+    private List<BsonDocument> GetItemParts(IMongoDatabase db, string itemId)
     {
-        // get the parts/history-parts collection
-        IMongoCollection<BsonDocument> partsCollection =
-            db.GetCollection<BsonDocument>(collectionName);
+        // Get history_parts collection
+        IMongoCollection<BsonDocument> historyPartsCollection =
+            db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
 
-        // build the filter for parts based on the options
+        // create filter builder
         FilterDefinitionBuilder<BsonDocument> filterBuilder =
             Builders<BsonDocument>.Filter;
-        List<FilterDefinition<BsonDocument>> filters = [];
 
-        // date range filters for the parts
-        if (_options.Filter?.MinModified != null)
+        // parts must be for this item
+        FilterDefinition<BsonDocument> filter = filterBuilder.Eq("itemId", itemId);
+
+        // add time constraints if they exist
+        if (_options.MinModified.HasValue)
         {
-            filters.Add(filterBuilder.Gte("timeModified",
-                _options.Filter.MinModified.Value));
+            filter = filterBuilder.And(
+                filter,
+                filterBuilder.Lte("timeModified",
+                    _options.MinModified.Value)
+            );
         }
 
-        if (_options.Filter?.MaxModified != null)
+        if (_options.MaxModified.HasValue)
         {
-            filters.Add(filterBuilder.Lte("timeModified",
-                _options.Filter.MaxModified.Value));
+            filter = filterBuilder.And(
+                filter,
+                filterBuilder.Lte("timeModified",
+                    _options.MaxModified.Value)
+            );
         }
 
-        // apply whitelist/blacklist if specified
+        // add part type filters if specified
         if (_options.WhitePartTypeKeys?.Count > 0 ||
             _options.BlackPartTypeKeys?.Count > 0)
         {
-            filters.Add(BuildPartTypeFilters(filterBuilder));
+            filter = filterBuilder.And(filter,
+                BuildPartTypeFilters(filterBuilder));
         }
 
-        // if targeting history parts, add status filter for deleted parts
-        if (collectionName == MongoHistoryPart.COLLECTION)
-        {
-            filters.Add(filterBuilder.Eq("status", (int)EditStatus.Deleted));
-        }
-
-        // compose the final filter for parts
-        FilterDefinition<BsonDocument> filter = filters.Count > 0
-            ? filterBuilder.And(filters) : filterBuilder.Empty;
-
-        ProjectionDefinition<BsonDocument> projection =
-            Builders<BsonDocument>.Projection.Include("itemId");
-
-        // get the list of item IDs from parts that match the filter
-        // by projecting only the itemId field from results
-        HashSet<string> itemIds = [];
-        using IAsyncCursor<BsonDocument> cursor = partsCollection.Find(filter)
-            .Project(projection).ToCursor();
-
-        while (cursor.MoveNext())
-        {
-            foreach (BsonDocument document in cursor.Current)
+        // aggregate to get the latest version of each part:
+        // 1. Match the filter
+        // 2. Sort by timeModified descending to get latest versions first
+        // 3. Group by referenceId, keeping the first (latest) document
+        BsonDocument[] pipeline =
+        [
+            new BsonDocument("$match", filter.ToBsonDocument()),
+            new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+            new BsonDocument("$group", new BsonDocument
             {
-                if (document.TryGetValue("itemId", out BsonValue? itemId) &&
-                    !itemId.IsBsonNull)
-                {
-                    itemIds.Add(itemId.AsString);
-                }
+                { "_id", "$referenceId" },
+                { "doc", new BsonDocument("$first", "$$ROOT") }
+            }),
+            new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc"))
+        ];
+
+        // execute the aggregation
+        List<BsonDocument> parts = historyPartsCollection
+            .Aggregate<BsonDocument>(pipeline).ToList();
+
+        // process each part to make it suitable for export
+        foreach (BsonDocument? part in parts)
+        {
+            // set _id to referenceId and remove referenceId
+            part["_id"] = part["referenceId"];
+            part.Remove("referenceId");
+
+            // set _status based on status
+            if (part.Contains("status"))
+            {
+                part["_status"] = part["status"];
+                part.Remove("status");
             }
         }
 
-        return itemIds;
+        return parts;
     }
 
     /// <summary>
-    /// Gets items from the MongoDB database items collection.
-    /// </summary>
-    /// <param name="db">The database.</param>
-    /// <param name="itemIds">The returned items IDs.</param>
-    /// <returns>Items.</returns>
-    private IEnumerable<BsonDocument> GetNormalItems(
-        IMongoDatabase db, HashSet<string> itemIds)
-    {
-        // get items collection
-        IMongoCollection<BsonDocument> itemsCollection =
-            db.GetCollection<BsonDocument>(MongoItem.COLLECTION);
-
-        // build the filter for items
-        FilterDefinitionBuilder<BsonDocument> filterBuilder =
-            Builders<BsonDocument>.Filter;
-
-        // create base item filter without time constraints
-        FilterDefinition<BsonDocument> baseItemFilter =
-            BuildBaseItemFilter(filterBuilder);
-
-        // create the full filter with time constraints
-        FilterDefinition<BsonDocument> fullItemFilter =
-            BuildItemFilter(filterBuilder);
-
-        // get cursor from filtered and sorted collection
-        SortDefinition<BsonDocument> sort =
-            Builders<BsonDocument>.Sort.Ascending("sortKey");
-        using IAsyncCursor<BsonDocument> cursor = itemsCollection
-            .Find(fullItemFilter)
-            .Sort(sort)
-            .ToCursor();
-
-        // return items from the cursor, tracking their IDs
-        while (cursor.MoveNext())
-        {
-            foreach (BsonDocument document in cursor.Current)
-            {
-                string itemId = document["_id"].AsString;
-                itemIds.Add(itemId);
-                yield return document;
-            }
-        }
-
-        // only check for additional items if we have time-based filters
-        if (!_options.NoPartDate &&
-            (_options.Filter?.MinModified != null ||
-             _options.Filter?.MaxModified != null))
-        {
-            // get IDs of items with parts matching the time filters
-            HashSet<string> additionalItemIds =
-                GetItemsWithMatchingParts(db, MongoPart.COLLECTION);
-
-            // if we have additional items, filter out those already returned
-            if (additionalItemIds.Count > 0)
-            {
-                // filter out already returned items
-                List<string> notReturnedItemIds = [..
-                    additionalItemIds.Where(id => !itemIds.Contains(id))];
-
-                // if there additional items to return, return them while
-                // tracking their IDs
-                if (notReturnedItemIds.Count > 0)
-                {
-                    // apply the base item filters (without time constraints)
-                    // along with the ID filter for these additional items
-                    FilterDefinition<BsonDocument> additionalFilter =
-                        filterBuilder.And(baseItemFilter,
-                            filterBuilder.In("_id", notReturnedItemIds)
-                    );
-
-                    // get additional items from the items collection
-                    using IAsyncCursor<BsonDocument> additionalCursor =
-                        itemsCollection.Find(additionalFilter)
-                                       .Sort(sort)
-                                       .ToCursor();
-
-                    // return additional items while tracking their IDs
-                    while (additionalCursor.MoveNext())
-                    {
-                        foreach (BsonDocument document in additionalCursor.Current)
-                        {
-                            string itemId = document["_id"].AsString;
-                            itemIds.Add(itemId);
-                            yield return document;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Get the deleted items from the MongoDB database history items.
-    /// </summary>
-    /// <param name="db">The database.</param>
-    /// <param name="itemIds">The collected items IDs.</param>
-    /// <returns>Items.</returns>
-    private IEnumerable<BsonDocument> GetDeletedItems(
-        IMongoDatabase db, HashSet<string> itemIds)
-    {
-        // collection for history items
-        IMongoCollection<BsonDocument> historyItemsCollection =
-            db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
-
-        // build the filter for history items
-        FilterDefinitionBuilder<BsonDocument> filterBuilder =
-            Builders<BsonDocument>.Filter;
-
-        // create base item filter with time constraints
-        FilterDefinition<BsonDocument> historyFilter =
-            BuildItemFilter(filterBuilder);
-
-        // ensure we only retrieve deleted items (status = 2)
-        historyFilter = filterBuilder.And(
-            historyFilter,
-            filterBuilder.Eq("status", (int)EditStatus.Deleted)
-        );
-
-        // get additional items based on history part dates if required
-        HashSet<string> additionalItemIds = [];
-        if (!_options.NoPartDate &&
-            (_options.Filter?.MinModified != null ||
-             _options.Filter?.MaxModified != null))
-        {
-            additionalItemIds = GetItemsWithMatchingParts(db,
-                MongoHistoryPart.COLLECTION);
-        }
-
-        // get cursor from filtered and sorted history items
-        SortDefinition<BsonDocument> sort = Builders<BsonDocument>
-            .Sort.Ascending("sortKey");
-
-        using IAsyncCursor<BsonDocument> cursor = historyItemsCollection
-            .Find(historyFilter)
-            .Sort(sort)
-            .ToCursor();
-
-        // return deleted items that haven't already been returned
-        while (cursor.MoveNext())
-        {
-            foreach (BsonDocument document in cursor.Current)
-            {
-                // get the referenceId (guaranteed to exist)
-                string refId = document["referenceId"].AsString;
-
-                // skip if we already returned this item from the items collection
-                if (itemIds.Contains(refId)) continue;
-
-                itemIds.Add(refId);
-
-                // modify document: set _id to referenceId and
-                // remove referenceId property
-                BsonDocument modifiedDoc = (BsonDocument)document.DeepClone();
-                modifiedDoc["_id"] = document["referenceId"];
-                modifiedDoc.Remove("referenceId");
-                // keep the status property to distinguish deleted items
-
-                yield return modifiedDoc;
-            }
-        }
-
-        // add items found via history-parts collection if needed
-        if (additionalItemIds.Count > 0)
-        {
-            // filter out already returned items
-            List<string> notReturnedItemIds = [..
-                additionalItemIds.Where(id => !itemIds.Contains(id))];
-
-            if (notReturnedItemIds.Count > 0)
-            {
-                // find history items by their referenceId
-                FilterDefinition<BsonDocument> additionalFilter =
-                    filterBuilder.And(
-                        filterBuilder.In("referenceId", notReturnedItemIds),
-                        filterBuilder.Eq("status", (int)EditStatus.Deleted));
-
-                using IAsyncCursor<BsonDocument> additionalCursor =
-                    historyItemsCollection.Find(additionalFilter)
-                    .Sort(sort)
-                    .ToCursor();
-
-                while (additionalCursor.MoveNext())
-                {
-                    foreach (BsonDocument document in additionalCursor.Current)
-                    {
-                        // get the referenceId (guaranteed to exist)
-                        string refId = document["referenceId"].AsString;
-
-                        // skip if already processed
-                        if (itemIds.Contains(refId)) continue;
-
-                        // mark as processed
-                        itemIds.Add(refId);
-
-                        // modify document: set _id to referenceId
-                        // and remove referenceId property
-                        BsonDocument modifiedDoc = (BsonDocument)
-                            document.DeepClone();
-                        modifiedDoc["_id"] = document["referenceId"];
-                        modifiedDoc.Remove("referenceId");
-                        // keep the status property to distinguish deleted items
-
-                        yield return modifiedDoc;
-                    }
-                }
-            }
-        }
-    }
-
-    private void AddItemStatus(BsonDocument item)
-    {
-        // for deleted items from history (they already have a status)
-        if (item.Contains("status"))
-        {
-            item["_status"] = item["status"];
-            // remove status property to avoid confusion with _status
-            item.Remove("status");
-            return;
-        }
-
-        // for active items, we need to determine status based on the timeframe
-        DateTime timeCreated = item["timeCreated"].ToUniversalTime();
-        DateTime timeModified = item["timeModified"].ToUniversalTime();
-
-        // if we don't have a time filter (full dump), use simple logic
-        if (_options.Filter == null ||
-            (!_options.Filter.MinModified.HasValue &&
-             !_options.Filter.MaxModified.HasValue))
-        {
-            // if timeCreated equals timeModified, it's a newly created item
-            if (timeCreated == timeModified)
-            {
-                item["_status"] = new BsonInt32((int)EditStatus.Created);
-            }
-            else
-            {
-                // otherwise, it's an updated item
-                item["_status"] = new BsonInt32((int)EditStatus.Updated);
-            }
-            return;
-        }
-
-        // for incremental dumps, determine status relative to the timeframe
-        DateTime minTime = _options.Filter.MinModified ?? DateTime.MinValue;
-
-        // if item was created within the timeframe, mark as created
-        if (timeCreated >= minTime)
-        {
-            item["_status"] = new BsonInt32((int)EditStatus.Created);
-        }
-        // if item was modified within the timeframe, mark as updated
-        else if (timeModified >= minTime)
-        {
-            item["_status"] = new BsonInt32((int)EditStatus.Updated);
-        }
-        // this shouldn't happen as our filters would exclude it, but just in case
-        else
-        {
-            item["_status"] = new BsonInt32((int)EditStatus.Updated);
-        }
-    }
-
-    private void AddPartStatus(BsonDocument part)
-    {
-        // if this part already has a status property (from history collections),
-        // use it
-        if (part.Contains("status"))
-        {
-            part["_status"] = part["status"];
-            // remove status property to avoid confusion with _status
-            part.Remove("status");
-            return;
-        }
-
-        // for active parts, we need to determine status based on the timeframe
-        DateTime timeCreated = part["timeCreated"].ToUniversalTime();
-        DateTime timeModified = part["timeModified"].ToUniversalTime();
-
-        // if we don't have a time filter (full dump), use simple logic
-        if (_options.Filter == null ||
-            (!_options.Filter.MinModified.HasValue && !_options.Filter.MaxModified.HasValue))
-        {
-            // if timeCreated equals timeModified, it's a newly created part
-            if (timeCreated == timeModified)
-            {
-                part["_status"] = new BsonInt32((int)EditStatus.Created);
-            }
-            else
-            {
-                // otherwise, it's an updated part
-                part["_status"] = new BsonInt32((int)EditStatus.Updated);
-            }
-            return;
-        }
-
-        // for incremental dumps, determine status relative to the timeframe
-        DateTime minTime = _options.Filter.MinModified ?? DateTime.MinValue;
-
-        // if part was created within the timeframe, mark as Created
-        if (timeCreated >= minTime)
-        {
-            part["_status"] = new BsonInt32((int)EditStatus.Created);
-        }
-        // if part was modified within the timeframe, mark as Updated
-        else if (timeModified >= minTime)
-        {
-            part["_status"] = new BsonInt32((int)EditStatus.Updated);
-        }
-        // this shouldn't happen as our filters would exclude it, but just in case
-        else
-        {
-            part["_status"] = new BsonInt32((int)EditStatus.Updated);
-        }
-    }
-
-    private void AddItemParts(BsonDocument item)
-    {
-        // get the parts collection
-        IMongoDatabase db = Client!.GetDatabase(_options.DatabaseName);
-        IMongoCollection<BsonDocument> partsCollection =
-            db.GetCollection<BsonDocument>(MongoPart.COLLECTION);
-
-        // get the item ID
-        string itemId = item["_id"].AsString;
-
-        // find parts for this item
-        FilterDefinition<BsonDocument> filter =
-            Builders<BsonDocument>.Filter.Eq("itemId", itemId);
-        List<BsonDocument> parts = partsCollection.Find(filter).ToList();
-
-        // add _status to each part before adding them to the item
-        foreach (BsonDocument part in parts)
-        {
-            AddPartStatus(part);
-        }
-
-        // add _parts property with the found parts
-        item["_parts"] = new BsonArray(parts);
-    }
-
-    /// <summary>
-    /// Get the items from the MongoDB database, including parts if requested.
+    /// Gets the items from the MongoDB database, using the history items
+    /// collection to determine their state at the specified timeframe.
     /// </summary>
     /// <returns>Items.</returns>
     public IEnumerable<BsonDocument> GetItems()
@@ -676,32 +348,78 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             _options.DatabaseName));
         IMongoDatabase db = Client!.GetDatabase(_options.DatabaseName);
 
-        // track item IDs to avoid duplicates
-        HashSet<string> itemIds = [];
+        // get history_items collection
+        IMongoCollection<BsonDocument> historyItemsCollection =
+            db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
 
-        // 1. regular items collection (always included)
-        foreach (BsonDocument document in GetNormalItems(db, itemIds))
+        // create filter builder
+        FilterDefinitionBuilder<BsonDocument> filterBuilder =
+            Builders<BsonDocument>.Filter;
+
+        // apply base filter and time constraints
+        FilterDefinition<BsonDocument> filter = BuildItemFilter(filterBuilder);
+
+        // if we don't want deleted items, exclude them
+        if (_options.NoDeleted)
         {
-            // add _status to the item
-            AddItemStatus(document);
-
-            // add parts if requested
-            if (!_options.NoParts) AddItemParts(document);
-
-            yield return document;
+            filter = filterBuilder.And(filter,
+                filterBuilder.Ne("status", (int)EditStatus.Deleted));
         }
 
-        // 2. history items collection (only when NoDeleted is false)
-        if (!_options.NoDeleted)
-        {
-            foreach (BsonDocument document in GetDeletedItems(db, itemIds))
+        // create aggregation pipeline
+        List<BsonDocument> pipelineDefinitions =
+        [
+            // match the filter - use ToBsonDocument() instead of Render()
+            new BsonDocument("$match", filter.ToBsonDocument()),
+            // sort by timeModified descending
+            new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+            // group by referenceId to get latest version of each item
+            new BsonDocument("$group", new BsonDocument
             {
-                // items from GetDeletedItems already have status property
-                // just add _status based on it
-                AddItemStatus(document);
+                { "_id", "$referenceId" },
+                { "doc", new BsonDocument("$first", "$$ROOT") }
+            }),
+            // replace root to work with the actual document
+            new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc")),
+            // sort by sortKey for consistent output
+            new BsonDocument("$sort", new BsonDocument("sortKey", 1))
+        ];
 
-                yield return document;
+        // add pagination if requested
+        if (_options.PageSize > 0)
+        {
+            pipelineDefinitions.Add(new BsonDocument("$skip",
+                (_options.PageNumber - 1) * _options.PageSize));
+            pipelineDefinitions.Add(new BsonDocument("$limit",
+                _options.PageSize));
+        }
+
+        // execute the aggregation
+        using IAsyncCursor<BsonDocument> cursor = historyItemsCollection
+            .Aggregate<BsonDocument>(pipelineDefinitions);
+
+        // process each item
+        foreach (BsonDocument? item in cursor.ToEnumerable())
+        {
+            // set _id to referenceId and remove referenceId
+            item["_id"] = item["referenceId"];
+            item.Remove("referenceId");
+
+            // set _status based on status
+            if (item.Contains("status"))
+            {
+                item["_status"] = item["status"];
+                item.Remove("status");
             }
+
+            // add parts if requested
+            if (!_options.NoParts)
+            {
+                List<BsonDocument> parts = GetItemParts(db, item["_id"].AsString);
+                item["_parts"] = new BsonArray(parts);
+            }
+
+            yield return item;
         }
     }
 
@@ -755,7 +473,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     {
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
-        ProgressReport? report = progress is null? null : new ProgressReport();
+        ProgressReport? report = progress is null ? null : new ProgressReport();
 
         int count = 0, fileNr = 0;
         StreamWriter? writer = null;
@@ -764,14 +482,12 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             Indent = _options.Indented,
         };
 
-        // for each matching item
-        foreach (BsonDocument item in GetItems())
+        // get items
+        foreach (var item in GetItems())
         {
-            count++;
-
-            // create a new file if needed
-            if (writer == null || (count > _options.MaxItemsPerFile &&
-                _options.MaxItemsPerFile > 0))
+            // create new file for this chunk if needed
+            if (writer == null || (_options.MaxItemsPerFile > 0
+                && count >= _options.MaxItemsPerFile))
             {
                 if (writer != null) WriteTail(writer);
                 writer?.Flush();
@@ -780,17 +496,22 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
                 string path = BuildFileName(++fileNr);
                 writer = new StreamWriter(path, false, Encoding.UTF8);
                 WriteHead(writer, fileNr, jsonSettings);
-                count = 1;
+                count = 0;
             }
 
-            // write the item to the file as JSON
+            // write the item as JSON
             string json = item.ToJson(jsonSettings);
             writer.WriteLine(json);
 
-            // check for cancellation
-            if (cancel.IsCancellationRequested) break;
+            if (cancel.IsCancellationRequested)
+            {
+                // if cancelled, close the file and return
+                writer.Flush();
+                writer.Close();
+                return count;
+            }
 
-            // report progress if needed
+            // report progress periodically
             if (progress != null && count % 100 == 0)
             {
                 report!.Count = count;

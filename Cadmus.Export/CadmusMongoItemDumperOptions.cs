@@ -1,13 +1,11 @@
-﻿using Cadmus.Core.Storage;
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace Cadmus.Export;
 
 /// <summary>
 /// Options for <see cref="CadmusMongoItemDumper"/>.
 /// </summary>
-public class CadmusMongoItemDumperOptions
+public class CadmusMongoItemDumperOptions : CadmusDumpFilter
 {
     /// <summary>
     /// The MongoDB connection string template, having a <c>{0}</c> placeholder
@@ -57,25 +55,4 @@ public class CadmusMongoItemDumperOptions
     /// True to indent the output JSON files.
     /// </summary>
     public bool Indented { get; set; }
-
-    /// <summary>
-    /// The keys of the part types to include in the export. If not specified,
-    /// all part types are included. If specified, only parts with these
-    /// keys will be included in the export.
-    /// Each key is in the format <c>typeId[:roleId]</c>.
-    /// </summary>
-    public List<string>? WhitePartTypeKeys { get; set; }
-
-    /// <summary>
-    /// The keys of the part types to exclude from the export. If not specified,
-    /// no part types are excluded. If specified, parts with these keys will
-    /// be excluded from the export.
-    /// Each key is in the format <c>typeId[:roleId]</c>.
-    /// </summary>
-    public List<string>? BlackPartTypeKeys { get; set; }
-
-    /// <summary>
-    /// The filter to apply to the items to export.
-    /// </summary>
-    public ItemFilter? Filter { get; set; }
-}
+ }

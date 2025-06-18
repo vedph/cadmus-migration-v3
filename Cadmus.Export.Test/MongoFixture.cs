@@ -1,9 +1,14 @@
 ﻿using Cadmus.Mongo;
+using CsvHelper;
+using CsvHelper.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Cadmus.Export.Test;
@@ -29,12 +34,68 @@ public sealed class MongoFixture : IDisposable
         Database.DropCollection(MongoHistoryPart.COLLECTION);
     }
 
+    private void ProcessRecords(string collectionName, List<string[]> rawLines)
+    {
+        // first line should be the header
+        if (rawLines.Count < 2) return;
+
+        // join all lines to create a valid CSV
+        string headerLine = rawLines[0][0];
+        List<string> contentLines = [.. rawLines.Skip(1).Select(l => l[0])];
+        string csvContent = $"{headerLine}\n{string.Join("\n", contentLines)}";
+
+        // create in-memory stream
+        using MemoryStream memoryStream = new(Encoding.UTF8.GetBytes(csvContent));
+        using StreamReader reader = new(memoryStream);
+        using CsvReader csv = new(reader,
+            new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                PrepareHeaderForMatch = args => args.Header.ToLower()
+            });
+
+        // read records
+        List<dynamic> records = [.. csv.GetRecords<dynamic>()];
+
+        // convert to BsonDocuments
+        List<BsonDocument> documents = [];
+        foreach (dynamic? record in records)
+        {
+            BsonDocument doc = [];
+
+            // convert dynamic record to dictionary
+            IDictionary<string, object> recordDict =
+                (IDictionary<string, object>)record;
+
+            switch (collectionName)
+            {
+                case "items":
+                    PopulateItemDocument(doc, recordDict);
+                    break;
+                case "history_items":
+                    PopulateHistoryItemDocument(doc, recordDict);
+                    break;
+                case "parts":
+                    PopulatePartDocument(doc, recordDict);
+                    break;
+                case "history_parts":
+                    PopulateHistoryPartDocument(doc, recordDict);
+                    break;
+            }
+
+            documents.Add(doc);
+        }
+
+        // insert the documents
+        if (documents.Count > 0) InsertDocuments(collectionName, documents);
+    }
+
     public void LoadDataFromCsv(Stream csvStream)
     {
         using StreamReader reader = new(csvStream);
         string? line;
         string currentCollection = "";
-        List<BsonDocument> documents = [];
+        List<string[]> records = [];
 
         while ((line = reader.ReadLine()) != null)
         {
@@ -44,121 +105,119 @@ public sealed class MongoFixture : IDisposable
             if (line.StartsWith('#'))
             {
                 // process previous collection if any
-                if (documents.Count > 0 &&
-                    !string.IsNullOrEmpty(currentCollection))
+                if (records.Count > 0 && !string.IsNullOrEmpty(currentCollection))
                 {
-                    InsertDocuments(currentCollection, documents);
-                    documents.Clear();
+                    ProcessRecords(currentCollection, records);
+                    records.Clear();
                 }
 
                 // new collection marker
-                currentCollection = line.Substring(1);
+                currentCollection = line[1..];
                 continue;
             }
 
-            // parse CSV line into BsonDocument
-            BsonDocument? doc = ParseCsvLine(line, currentCollection);
-            if (doc != null) documents.Add(doc);
+            // add line to be processed using CsvHelper
+            records.Add([line]);
         }
 
-        // insert any remaining documents
-        if (documents.Count > 0 && !string.IsNullOrEmpty(currentCollection))
-            InsertDocuments(currentCollection, documents);
+        // process any remaining records
+        if (records.Count > 0 && !string.IsNullOrEmpty(currentCollection))
+            ProcessRecords(currentCollection, records);
     }
 
-    private static void PopulatePartDocument(BsonDocument doc, string[] values)
+    private static void ReadJsonContent(IDictionary<string, object> record,
+        BsonDocument doc)
+    {
+        if (record.TryGetValue("content", out object? value) &&
+            !string.IsNullOrEmpty(value?.ToString()))
+        {
+            try
+            {
+                // ensure the JSON is valid by parsing it first
+                doc["content"] = BsonDocument.Parse(value.ToString()!);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error parsing JSON content: {ex.Message}");
+                Debug.WriteLine($"Content value: '{value}'");
+
+                // if parsing fails, use an empty document
+                doc["content"] = new BsonDocument();
+            }
+        }
+        else
+        {
+            doc["content"] = new BsonDocument();
+        }
+    }
+
+    private static void PopulatePartDocument(BsonDocument doc,
+        IDictionary<string, object> record)
     {
         // based on the CSV structure for parts
-        // #parts
         // _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,content
-        doc["_id"] = values[0];
-        doc["itemId"] = values[1];
-        doc["typeId"] = values[2];
+        doc["_id"] = record["_id"].ToString();
+        doc["itemId"] = record["itemid"].ToString();
+        doc["typeId"] = record["typeid"].ToString();
 
         // roleId might be empty
-        if (!string.IsNullOrEmpty(values[3])) doc["roleId"] = values[3];
+        if (record.TryGetValue("roleid", out object? value) &&
+            !string.IsNullOrEmpty(value?.ToString()))
+        {
+            doc["roleId"] = value.ToString();
+        }
 
-        doc["timeCreated"] = DateTime.Parse(values[4]).ToUniversalTime();
-        doc["creatorId"] = values[5];
-        doc["timeModified"] = DateTime.Parse(values[6]).ToUniversalTime();
-        doc["userId"] = values[7];
+        doc["timeCreated"] = DateTime.Parse(record["timecreated"].ToString()!)
+            .ToUniversalTime();
+        doc["creatorId"] = record["creatorid"].ToString();
+        doc["timeModified"] = DateTime.Parse(record["timemodified"].ToString()!)
+            .ToUniversalTime();
+        doc["userId"] = record["userid"].ToString();
 
         // content is stored as JSON
-        if (values.Length > 8 && !string.IsNullOrEmpty(values[8]))
-            doc["content"] = BsonDocument.Parse(values[8]);
-        else
-            doc["content"] = new BsonDocument();
+        ReadJsonContent(record, doc);
     }
 
     private static void PopulateHistoryPartDocument(BsonDocument doc,
-        string[] values)
+        IDictionary<string, object> record)
     {
         // first populate the base part fields
-        // #history_parts
-        // _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,
-        // referenceId,status,content
-        PopulatePartDocument(doc, values);
+        PopulatePartDocument(doc, record);
 
         // then add history-specific fields
-        doc["referenceId"] = values[8];
-        doc["status"] = int.Parse(values[9]);
+        doc["referenceId"] = record["referenceid"].ToString();
+        doc["status"] = int.Parse(record["status"].ToString()!);
 
-        // replace content if provided (since the index is different for
-        // history parts)
-        if (values.Length > 10 && !string.IsNullOrEmpty(values[10]))
-            doc["content"] = BsonDocument.Parse(values[10]);
+        // replace content if provided (since we might have already set it
+        // from PopulatePartDocument)
+        if (record.TryGetValue("content", out _))
+            ReadJsonContent(record, doc);
     }
 
-    private static BsonDocument? ParseCsvLine(string line, string collection)
+    private static void PopulateItemDocument(BsonDocument doc,
+        IDictionary<string, object> record)
     {
-        // skip header line (contains column names)
-        if (line.StartsWith("_id,")) return null;
-
-        string[] values = SplitCsvLine(line);
-        if (values.Length < 1) return null;
-
-        BsonDocument doc = [];
-
-        switch (collection)
-        {
-            case "items":
-                PopulateItemDocument(doc, values);
-                break;
-            case "history_items":
-                PopulateHistoryItemDocument(doc, values);
-                break;
-            case "parts":
-                PopulatePartDocument(doc, values);
-                break;
-            case "history_parts":
-                PopulateHistoryPartDocument(doc, values);
-                break;
-        }
-
-        return doc;
-    }
-
-    private static void PopulateItemDocument(BsonDocument doc, string[] values)
-    {
-        doc["_id"] = values[0];
-        doc["title"] = values[1];
-        doc["description"] = values[2];
-        doc["facetId"] = values[3];
-        doc["groupId"] = values[4];
-        doc["sortKey"] = values[5];
-        doc["flags"] = int.Parse(values[6]);
-        doc["timeCreated"] = DateTime.Parse(values[7]).ToUniversalTime();
-        doc["creatorId"] = values[8];
-        doc["timeModified"] = DateTime.Parse(values[9]).ToUniversalTime();
-        doc["userId"] = values[10];
+        doc["_id"] = record["_id"].ToString();
+        doc["title"] = record["title"].ToString();
+        doc["description"] = record["description"].ToString();
+        doc["facetId"] = record["facetid"].ToString();
+        doc["groupId"] = record["groupid"].ToString();
+        doc["sortKey"] = record["sortkey"].ToString();
+        doc["flags"] = int.Parse(record["flags"].ToString()!);
+        doc["timeCreated"] = DateTime.Parse(record["timecreated"].ToString()!)
+            .ToUniversalTime();
+        doc["creatorId"] = record["creatorid"].ToString();
+        doc["timeModified"] = DateTime.Parse(record["timemodified"].ToString()!)
+            .ToUniversalTime();
+        doc["userId"] = record["userid"].ToString();
     }
 
     private static void PopulateHistoryItemDocument(BsonDocument doc,
-        string[] values)
+        IDictionary<string, object> record)
     {
-        PopulateItemDocument(doc, values);
-        doc["referenceId"] = values[11];
-        doc["status"] = int.Parse(values[12]);
+        PopulateItemDocument(doc, record);
+        doc["referenceId"] = record["referenceid"].ToString();
+        doc["status"] = int.Parse(record["status"].ToString()!);
     }
 
     private void InsertDocuments(string collectionName,
@@ -177,28 +236,6 @@ public sealed class MongoFixture : IDisposable
         IMongoCollection<BsonDocument> collection = Database
             .GetCollection<BsonDocument>(actualCollectionName);
         collection.InsertMany(documents);
-    }
-
-    private static string[] SplitCsvLine(string line)
-    {
-        // simple CSV parser that handles quoted values
-        List<string> values = [];
-        bool inQuotes = false;
-        StringBuilder currentValue = new();
-
-        foreach (char c in line)
-        {
-            if (c == '"') inQuotes = !inQuotes;
-            else if (c == ',' && !inQuotes)
-            {
-                values.Add(currentValue.ToString());
-                currentValue.Clear();
-            }
-            else currentValue.Append(c);
-        }
-
-        values.Add(currentValue.ToString());
-        return [.. values];
     }
 
     public void Dispose()
