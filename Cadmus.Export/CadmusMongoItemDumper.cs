@@ -515,13 +515,9 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         }
     }
 
-    private static void AddItemStatus(BsonDocument item)
+    private void AddItemStatus(BsonDocument item)
     {
-        // get the item ID
-        string itemId = item["_id"].AsString;
-
-        // if this item already has a status property (from history collections),
-        // use it
+        // for deleted items from history (they already have a status)
         if (item.Contains("status"))
         {
             item["_status"] = item["status"];
@@ -530,22 +526,49 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             return;
         }
 
-        // for items from active collections, we need to determine status
+        // for active items, we need to determine status based on the timeframe
         DateTime timeCreated = item["timeCreated"].ToUniversalTime();
         DateTime timeModified = item["timeModified"].ToUniversalTime();
 
-        // if timeCreated equals timeModified, it's a newly created item
-        if (timeCreated == timeModified)
+        // if we don't have a time filter (full dump), use simple logic
+        if (_options.Filter == null ||
+            (!_options.Filter.MinModified.HasValue &&
+             !_options.Filter.MaxModified.HasValue))
         {
-            item["_status"] = new BsonInt32((int)EditStatus.Created);
+            // if timeCreated equals timeModified, it's a newly created item
+            if (timeCreated == timeModified)
+            {
+                item["_status"] = new BsonInt32((int)EditStatus.Created);
+            }
+            else
+            {
+                // otherwise, it's an updated item
+                item["_status"] = new BsonInt32((int)EditStatus.Updated);
+            }
             return;
         }
 
-        // otherwise, it's an updated item
-        item["_status"] = new BsonInt32((int)EditStatus.Updated);
+        // for incremental dumps, determine status relative to the timeframe
+        DateTime minTime = _options.Filter.MinModified ?? DateTime.MinValue;
+
+        // if item was created within the timeframe, mark as created
+        if (timeCreated >= minTime)
+        {
+            item["_status"] = new BsonInt32((int)EditStatus.Created);
+        }
+        // if item was modified within the timeframe, mark as updated
+        else if (timeModified >= minTime)
+        {
+            item["_status"] = new BsonInt32((int)EditStatus.Updated);
+        }
+        // this shouldn't happen as our filters would exclude it, but just in case
+        else
+        {
+            item["_status"] = new BsonInt32((int)EditStatus.Updated);
+        }
     }
 
-    private static void AddPartStatus(BsonDocument part)
+    private void AddPartStatus(BsonDocument part)
     {
         // if this part already has a status property (from history collections),
         // use it
@@ -557,19 +580,45 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             return;
         }
 
-        // for parts from active collections, we need to determine status
+        // for active parts, we need to determine status based on the timeframe
         DateTime timeCreated = part["timeCreated"].ToUniversalTime();
         DateTime timeModified = part["timeModified"].ToUniversalTime();
 
-        // if timeCreated equals timeModified, it's a newly created part
-        if (timeCreated == timeModified)
+        // if we don't have a time filter (full dump), use simple logic
+        if (_options.Filter == null ||
+            (!_options.Filter.MinModified.HasValue && !_options.Filter.MaxModified.HasValue))
         {
-            part["_status"] = new BsonInt32((int)EditStatus.Created);
+            // if timeCreated equals timeModified, it's a newly created part
+            if (timeCreated == timeModified)
+            {
+                part["_status"] = new BsonInt32((int)EditStatus.Created);
+            }
+            else
+            {
+                // otherwise, it's an updated part
+                part["_status"] = new BsonInt32((int)EditStatus.Updated);
+            }
             return;
         }
 
-        // otherwise, it's an updated part
-        part["_status"] = new BsonInt32((int)EditStatus.Updated);
+        // for incremental dumps, determine status relative to the timeframe
+        DateTime minTime = _options.Filter.MinModified ?? DateTime.MinValue;
+
+        // if part was created within the timeframe, mark as Created
+        if (timeCreated >= minTime)
+        {
+            part["_status"] = new BsonInt32((int)EditStatus.Created);
+        }
+        // if part was modified within the timeframe, mark as Updated
+        else if (timeModified >= minTime)
+        {
+            part["_status"] = new BsonInt32((int)EditStatus.Updated);
+        }
+        // this shouldn't happen as our filters would exclude it, but just in case
+        else
+        {
+            part["_status"] = new BsonInt32((int)EditStatus.Updated);
+        }
     }
 
     private void AddItemParts(BsonDocument item)
