@@ -5,7 +5,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -399,7 +398,8 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             // match the filter - use an empty document instead of an
             // EmptyFilterDefinition
             new BsonDocument("$match", builtFilter == filterBuilder.Empty
-                ? [] : builtFilter.ToBsonDocument()),
+                ? []
+                : RenderFilter(builtFilter)),
             // sort by timeModified descending
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
             // group by referenceId to get latest version of each item
