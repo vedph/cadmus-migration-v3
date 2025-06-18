@@ -164,7 +164,7 @@ public sealed class MongoFixture : IDisposable
 
     private static void PopulatePartDocument(BsonDocument doc, MockPart part)
     {
-        doc["_id"] = part._id;
+        doc["_id"] = part.Id;
         doc["itemId"] = part.ItemId;
         doc["typeId"] = part.TypeId;
 
@@ -178,7 +178,7 @@ public sealed class MongoFixture : IDisposable
         doc["timeModified"] = part.TimeModified.ToUniversalTime();
         doc["userId"] = part.UserId;
 
-        // Parse content JSON
+        // parse content JSON
         doc["content"] = ParseJsonContent(part.Content);
     }
 
@@ -195,7 +195,7 @@ public sealed class MongoFixture : IDisposable
 
     private static void PopulateItemDocument(BsonDocument doc, MockItem item)
     {
-        doc["_id"] = item._id;
+        doc["_id"] = item.Id;
         doc["title"] = item.Title;
         doc["description"] = item.Description;
         doc["facetId"] = item.FacetId;

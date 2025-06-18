@@ -43,7 +43,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         CadmusMongoItemDumperOptions options = GetBasicOptions();
         CadmusMongoItemDumper dumper = new(options);
 
-        // Create an empty filter for full dump
+        // create an empty filter for full dump
         CadmusDumpFilter filter = new()
         {
             PageNumber = 1,
