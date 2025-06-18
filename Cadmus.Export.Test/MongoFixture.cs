@@ -63,9 +63,7 @@ public sealed class MongoFixture : IDisposable
 
         // insert any remaining documents
         if (documents.Count > 0 && !string.IsNullOrEmpty(currentCollection))
-        {
             InsertDocuments(currentCollection, documents);
-        }
     }
 
     private static void PopulatePartDocument(BsonDocument doc, string[] values)
@@ -78,10 +76,7 @@ public sealed class MongoFixture : IDisposable
         doc["typeId"] = values[2];
 
         // roleId might be empty
-        if (!string.IsNullOrEmpty(values[3]))
-        {
-            doc["roleId"] = values[3];
-        }
+        if (!string.IsNullOrEmpty(values[3])) doc["roleId"] = values[3];
 
         doc["timeCreated"] = DateTime.Parse(values[4]).ToUniversalTime();
         doc["creatorId"] = values[5];
@@ -90,13 +85,9 @@ public sealed class MongoFixture : IDisposable
 
         // content is stored as JSON
         if (values.Length > 8 && !string.IsNullOrEmpty(values[8]))
-        {
             doc["content"] = BsonDocument.Parse(values[8]);
-        }
         else
-        {
             doc["content"] = new BsonDocument();
-        }
     }
 
     private static void PopulateHistoryPartDocument(BsonDocument doc,
@@ -115,9 +106,7 @@ public sealed class MongoFixture : IDisposable
         // replace content if provided (since the index is different for
         // history parts)
         if (values.Length > 10 && !string.IsNullOrEmpty(values[10]))
-        {
             doc["content"] = BsonDocument.Parse(values[10]);
-        }
     }
 
     private static BsonDocument? ParseCsvLine(string line, string collection)

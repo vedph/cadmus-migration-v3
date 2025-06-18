@@ -1,4 +1,5 @@
 ﻿using Cadmus.Core.Storage;
+using MongoDB.Bson;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,18 +43,14 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         CadmusMongoItemDumperOptions options = GetBasicOptions();
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(4, items.Count); // 3 active items + 1 deleted item
 
-        MongoDB.Bson.BsonDocument item1 = items.First(
-            i => i["_id"].AsString == "item1");
-        MongoDB.Bson.BsonDocument item2 = items.First(
-            i => i["_id"].AsString == "item2");
-        MongoDB.Bson.BsonDocument item3 = items.First(
-            i => i["_id"].AsString == "item3");
-        MongoDB.Bson.BsonDocument item4 = items.First(
-            i => i["_id"].AsString == "item4");
+        BsonDocument item1 = items.First(i => i["_id"].AsString == "item1");
+        BsonDocument item2 = items.First(i => i["_id"].AsString == "item2");
+        BsonDocument item3 = items.First(i => i["_id"].AsString == "item3");
+        BsonDocument item4 = items.First(i => i["_id"].AsString == "item4");
 
         // timeCreated == timeModified
         Assert.Equal(EditStatus.Created, (EditStatus)item1["_status"].AsInt32);
@@ -82,12 +79,12 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.NoParts = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(4, items.Count);
 
         // verify no parts were added
-        foreach (MongoDB.Bson.BsonDocument? item in items)
+        foreach (BsonDocument? item in items)
             Assert.False(item.Contains("_parts"));
     }
 
@@ -99,7 +96,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.NoDeleted = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(3, items.Count);
         Assert.DoesNotContain(items, i => i["_id"].AsString == "item4");
@@ -113,7 +110,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.Filter = new ItemFilter { FacetId = "default" };
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         // 2 active items + 1 deleted item with facetId=default
         Assert.Equal(3, items.Count);
@@ -133,7 +130,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         };
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(3, items.Count);
 
@@ -146,12 +143,9 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         Assert.Contains(items, i => i["_id"].AsString == "item4");
 
         // check statuses are correct for incremental dump
-        MongoDB.Bson.BsonDocument item2 = items.First(
-            i => i["_id"].AsString == "item2");
-        MongoDB.Bson.BsonDocument item3 = items.First(
-            i => i["_id"].AsString == "item3");
-        MongoDB.Bson.BsonDocument item4 = items.First(
-            i => i["_id"].AsString == "item4");
+        BsonDocument item2 = items.First(i => i["_id"].AsString == "item2");
+        BsonDocument item3 = items.First(i => i["_id"].AsString == "item3");
+        BsonDocument item4 = items.First(i => i["_id"].AsString == "item4");
 
         Assert.Equal(EditStatus.Updated, (EditStatus)item2["_status"].AsInt32);
         // created within timeframe
@@ -170,11 +164,12 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         };
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(4, items.Count);
 
-        // item2 should be included because one of its parts was modified on May 10
+        // item2 should be included because one of its parts was modified
+        // on May 10
         Assert.Contains(items, i => i["_id"].AsString == "item2");
         // item4 should be included because it was deleted on May 1
         Assert.Contains(items, i => i["_id"].AsString == "item4");
@@ -182,17 +177,15 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         Assert.Contains(items, i => i["_id"].AsString == "item5");
 
         // check part statuses
-        MongoDB.Bson.BsonDocument item2 = items.First(
-            i => i["_id"].AsString == "item2");
-        MongoDB.Bson.BsonDocument item5 = items.First(
-            i => i["_id"].AsString == "item5");
+        BsonDocument item2 = items.First(i => i["_id"].AsString == "item2");
+        BsonDocument item5 = items.First(i => i["_id"].AsString == "item5");
 
-        MongoDB.Bson.BsonValue? part3 = item2["_parts"].AsBsonArray
+        BsonValue? part3 = item2["_parts"].AsBsonArray
             .FirstOrDefault(p => p["_id"].AsString == "part3");
         Assert.NotNull(part3);
         Assert.Equal(EditStatus.Updated, (EditStatus)part3["_status"].AsInt32);
 
-        MongoDB.Bson.BsonValue? part6 = item5["_parts"].AsBsonArray
+        BsonValue? part6 = item5["_parts"].AsBsonArray
             .FirstOrDefault(p => p["_id"].AsString == "part6");
         Assert.NotNull(part6);
         Assert.Equal(EditStatus.Created, (EditStatus)part6["_status"].AsInt32);
@@ -210,7 +203,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.NoPartDate = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         Assert.Equal(3, items.Count);
 
@@ -231,12 +224,12 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.WhitePartTypeKeys = ["token"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
-        foreach (MongoDB.Bson.BsonDocument? item in items.Where(
+        foreach (BsonDocument? item in items.Where(
             i => i.Contains("_parts")))
         {
-            MongoDB.Bson.BsonArray parts = item["_parts"].AsBsonArray;
+            BsonArray parts = item["_parts"].AsBsonArray;
             Assert.All(parts, p => Assert.Equal("token", p["typeId"].AsString));
         }
     }
@@ -249,12 +242,12 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.BlackPartTypeKeys = ["token"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
-        foreach (MongoDB.Bson.BsonDocument? item in items
+        foreach (BsonDocument? item in items
             .Where(i => i.Contains("_parts")))
         {
-            MongoDB.Bson.BsonArray parts = item["_parts"].AsBsonArray;
+            BsonArray parts = item["_parts"].AsBsonArray;
             Assert.All(parts, p => Assert.NotEqual("token", p["typeId"].AsString));
         }
     }
@@ -267,17 +260,17 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.WhitePartTypeKeys = ["token:sample"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<MongoDB.Bson.BsonDocument> items = [.. dumper.GetItems()];
+        List<BsonDocument> items = [.. dumper.GetItems()];
 
         // only item2 should have parts (part3 with typeId=token and
         // roleId=sample)
-        List<MongoDB.Bson.BsonDocument> itemsWithParts =
+        List<BsonDocument> itemsWithParts =
             [.. items.Where(i => i.Contains("_parts") &&
                                  i["_parts"].AsBsonArray.Count > 0)];
         Assert.Single(itemsWithParts);
         Assert.Equal("item2", itemsWithParts[0]["_id"].AsString);
 
-        MongoDB.Bson.BsonArray parts = itemsWithParts[0]["_parts"].AsBsonArray;
+        BsonArray parts = itemsWithParts[0]["_parts"].AsBsonArray;
         Assert.Single(parts);
         Assert.Equal("token", parts[0]["typeId"].AsString);
         Assert.Equal("sample", parts[0]["roleId"].AsString);
