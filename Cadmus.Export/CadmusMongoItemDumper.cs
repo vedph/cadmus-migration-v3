@@ -1,5 +1,4 @@
-﻿using Cadmus.Core;
-using Cadmus.Core.Storage;
+﻿using Cadmus.Core.Storage;
 using Cadmus.Mongo;
 using Fusi.Tools;
 using MongoDB.Bson;
@@ -380,7 +379,9 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
 
                     // get additional items from the items collection
                     using IAsyncCursor<BsonDocument> additionalCursor =
-                        itemsCollection.Find(additionalFilter).Sort(sort).ToCursor();
+                        itemsCollection.Find(additionalFilter)
+                                       .Sort(sort)
+                                       .ToCursor();
 
                     // return additional items while tracking their IDs
                     while (additionalCursor.MoveNext())
