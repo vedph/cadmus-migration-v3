@@ -126,16 +126,16 @@ public sealed class MongoFixture : IDisposable
     {
         switch (collectionName)
         {
-            case "items":
+            case MongoItem.COLLECTION:
                 ProcessRecords<MockItem>(collectionName, records);
                 break;
-            case "history_items":
+            case MongoHistoryItem.COLLECTION:
                 ProcessRecords<MockHistoryItem>(collectionName, records);
                 break;
-            case "parts":
+            case MongoPart.COLLECTION:
                 ProcessRecords<MockPart>(collectionName, records);
                 break;
-            case "history_parts":
+            case MongoHistoryPart.COLLECTION:
                 ProcessRecords<MockHistoryPart>(collectionName, records);
                 break;
             default:
