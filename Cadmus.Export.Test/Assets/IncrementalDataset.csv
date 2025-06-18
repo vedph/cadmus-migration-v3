@@ -5,7 +5,7 @@ item2,Item 2,Description 2,default,group1,2,0,2023-02-01T10:00:00Z,creator1,2023
 item3,Item 3,Description 3,special,group2,3,0,2023-04-01T10:00:00Z,creator2,2023-04-01T10:00:00Z,user2
 item5,Item 5,Description 5,default,group1,5,0,2023-05-15T12:00:00Z,creator1,2023-05-15T12:00:00Z,user1
 
-#history_items
+#history-items
 _id,title,description,facetId,groupId,sortKey,flags,timeCreated,creatorId,timeModified,userId,referenceId,status
 hist1,Item 1,Initial Description 1,default,group1,1,0,2023-01-01T10:00:00Z,creator1,2023-01-01T10:00:00Z,user1,item1,0
 hist2,Item 2,Initial Description 2,default,group1,2,0,2023-02-01T10:00:00Z,creator1,2023-02-01T10:00:00Z,user1,item2,0
@@ -22,7 +22,7 @@ part3,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-05-10T09:30:00Z,user
 part4,item3,note,,2023-04-01T10:30:00Z,creator2,2023-04-01T10:30:00Z,user2,"""value"":""content4"""
 part6,item5,token,,2023-05-15T12:30:00Z,creator1,2023-05-15T12:30:00Z,user1,"""value"":""content6"""
 
-#history_parts
+#history-parts
 _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,referenceId,status,content
 histpart1,item1,token,,2023-01-01T10:30:00Z,creator1,2023-01-01T10:30:00Z,user1,part1,0,"""value"":""content1"""
 histpart2,item2,comment,,2023-02-01T11:00:00Z,creator1,2023-02-01T11:00:00Z,user1,part2,0,"""value"":""content2"""
