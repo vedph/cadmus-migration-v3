@@ -381,8 +381,10 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         // create aggregation pipeline
         List<BsonDocument> pipelineDefinitions =
         [
-            // match the filter - use ToBsonDocument() instead of Render()
-            new BsonDocument("$match", builtFilter.ToBsonDocument()),
+            // match the filter - use an empty document instead of an
+            // EmptyFilterDefinition
+            new BsonDocument("$match", builtFilter == filterBuilder.Empty
+                ? [] : builtFilter.ToBsonDocument()),
             // sort by timeModified descending
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
             // group by referenceId to get latest version of each item
