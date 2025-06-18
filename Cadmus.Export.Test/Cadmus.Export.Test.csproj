@@ -11,12 +11,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Assets\BasicDataset.csv" />
+		<None Remove="Assets\IncrementalDataset.csv" />
 		<None Remove="Assets\Preview.json" />
 		<None Remove="Assets\TokenTextPart.xslt" />
 		<None Remove="Assets\TokenTextPartWrap.xslt" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="Assets\BasicDataset.csv" />
+		<EmbeddedResource Include="Assets\IncrementalDataset.csv" />
 		<EmbeddedResource Include="Assets\Preview.json" />
 		<EmbeddedResource Include="Assets\TokenTextPartWrap.xslt" />
 		<EmbeddedResource Include="Assets\TokenTextPart.xslt" />
