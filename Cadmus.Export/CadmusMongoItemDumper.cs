@@ -3,7 +3,9 @@ using Cadmus.Mongo;
 using Fusi.Tools;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -259,6 +261,17 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
     }
 
+    private static BsonDocument RenderFilter(FilterDefinition<BsonDocument> filter)
+    {
+        IBsonSerializer<BsonDocument> serializer =
+            BsonSerializer.SerializerRegistry.GetSerializer<BsonDocument>();
+        RenderArgs<BsonDocument> renderArgs = new RenderArgs<BsonDocument>(
+            serializer,
+            BsonSerializer.SerializerRegistry
+        );
+        return filter.Render(renderArgs);
+    }
+
     /// <summary>
     /// Gets the parts for a specific item using the history_parts collection.
     /// </summary>
@@ -266,7 +279,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <param name="filter">The source filter.</param>
     /// <param name="itemId">The item ID.</param>
     /// <returns>The list of parts for the item.</returns>
-    private List<BsonDocument> GetItemParts(IMongoDatabase db,
+    private static List<BsonDocument> GetItemParts(IMongoDatabase db,
         CadmusDumpFilter filter, string itemId)
     {
         // get history_parts collection
@@ -310,9 +323,11 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         // 1. Match the filter
         // 2. Sort by timeModified descending to get latest versions first
         // 3. Group by referenceId, keeping the first (latest) document
+        BsonDocument renderedFilter = RenderFilter(builtFilter);
+
         BsonDocument[] pipeline =
         [
-            new BsonDocument("$match", builtFilter.ToBsonDocument()),
+            new BsonDocument("$match", renderedFilter),
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
             new BsonDocument("$group", new BsonDocument
             {
@@ -502,7 +517,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         };
 
         // get items
-        foreach (var item in GetItems(filter))
+        foreach (BsonDocument item in GetItems(filter))
         {
             // create new file for this chunk if needed
             if (writer == null || (_options.MaxItemsPerFile > 0
