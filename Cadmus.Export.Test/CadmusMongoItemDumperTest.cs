@@ -8,14 +8,10 @@ using Xunit;
 
 namespace Cadmus.Export.Test;
 
-public class CadmusMongoItemDumperTest : IClassFixture<MongoFixture>
+public class CadmusMongoItemDumperTest(MongoFixture fixture) :
+    IClassFixture<MongoFixture>
 {
-    private readonly MongoFixture _fixture;
-
-    public CadmusMongoItemDumperTest(MongoFixture fixture)
-    {
-        _fixture = fixture;
-    }
+    private readonly MongoFixture _fixture = fixture;
 
     private static CadmusMongoItemDumperOptions GetBasicOptions(
         string dbName = "test-db")
