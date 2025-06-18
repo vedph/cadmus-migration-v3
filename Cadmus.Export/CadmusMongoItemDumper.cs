@@ -85,7 +85,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter builder.</param>
     /// <returns>Filter definition.</returns>
-    private FilterDefinition<BsonDocument> BuildBaseItemFilter(
+    private static FilterDefinition<BsonDocument> BuildBaseItemFilter(
         CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
@@ -150,7 +150,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter definition builder.</param>
     /// <returns>Filter.</returns>
-    private FilterDefinition<BsonDocument> BuildItemFilter(
+    private static FilterDefinition<BsonDocument> BuildItemFilter(
         CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
@@ -193,15 +193,24 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// </summary>
     /// <param name="builder">Filter definition builder.</param>
     /// <param name="partTypeKey">Part type key with form <c>typeId[:roleId]</c>.
-    /// </param>
+    /// <param name="isBlacklist">True if this is a blacklist key, false if
+    /// it's a whitelist key.</param>
     /// <returns>Filter.</returns>
     private static FilterDefinition<BsonDocument> BuildPartTypeKeyFilter(
-        FilterDefinitionBuilder<BsonDocument> builder, string partTypeKey)
+        FilterDefinitionBuilder<BsonDocument> builder, string partTypeKey,
+        bool isBlacklist = false)
     {
         // parse the key: typeId[:roleId]
         string[] parts = partTypeKey.Split(':', 2);
         string typeId = parts[0];
         string? roleId = parts.Length > 1 ? parts[1] : null;
+
+        if (isBlacklist)
+        {
+            // for blacklist, exclude all parts with the specified typeId,
+            // regardless of roleId
+            return builder.Eq("typeId", typeId);
+        }
 
         if (roleId == null)
         {
@@ -252,7 +261,10 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         {
             List<FilterDefinition<BsonDocument>> blackList = [];
             foreach (string key in filter.BlackPartTypeKeys)
-                blackList.Add(BuildPartTypeKeyFilter(builder, key));
+            {
+                blackList.Add(BuildPartTypeKeyFilter(builder, key,
+                    isBlacklist: true));
+            }
 
             filters.Add(builder.Not(builder.Or(blackList)));
         }
@@ -264,7 +276,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     {
         IBsonSerializer<BsonDocument> serializer =
             BsonSerializer.SerializerRegistry.GetSerializer<BsonDocument>();
-        RenderArgs<BsonDocument> renderArgs = new RenderArgs<BsonDocument>(
+        RenderArgs<BsonDocument> renderArgs = new(
             serializer,
             BsonSerializer.SerializerRegistry
         );
