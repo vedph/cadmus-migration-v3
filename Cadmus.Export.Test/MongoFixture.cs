@@ -8,21 +8,21 @@ using System.Text;
 
 namespace Cadmus.Export.Test;
 
-public class MongoFixture : IDisposable
+public sealed class MongoFixture : IDisposable
 {
     public IMongoClient Client { get; }
     public IMongoDatabase Database { get; }
 
     public MongoFixture()
     {
-        // Setup MongoDB client with connection to test database
+        // setup MongoDB client with connection to test database
         Client = new MongoClient("mongodb://localhost:27017");
         Database = Client.GetDatabase("test-db");
     }
 
     public void ClearDatabase()
     {
-        // Drop all collections
+        // drop all collections
         Database.DropCollection(MongoItem.COLLECTION);
         Database.DropCollection(MongoPart.COLLECTION);
         Database.DropCollection(MongoHistoryItem.COLLECTION);
@@ -31,45 +31,44 @@ public class MongoFixture : IDisposable
 
     public void LoadDataFromCsv(Stream csvStream)
     {
-        using var reader = new StreamReader(csvStream);
+        using StreamReader reader = new(csvStream);
         string? line;
         string currentCollection = "";
-        List<BsonDocument> documents = new List<BsonDocument>();
+        List<BsonDocument> documents = [];
 
         while ((line = reader.ReadLine()) != null)
         {
             line = line.Trim();
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
+            if (string.IsNullOrWhiteSpace(line)) continue;
 
-            if (line.StartsWith("#"))
+            if (line.StartsWith('#'))
             {
-                // Process previous collection if any
-                if (documents.Count > 0 && !string.IsNullOrEmpty(currentCollection))
+                // process previous collection if any
+                if (documents.Count > 0 &&
+                    !string.IsNullOrEmpty(currentCollection))
                 {
                     InsertDocuments(currentCollection, documents);
                     documents.Clear();
                 }
 
-                // New collection marker
+                // new collection marker
                 currentCollection = line.Substring(1);
                 continue;
             }
 
-            // Parse CSV line into BsonDocument
-            var doc = ParseCsvLine(line, currentCollection);
-            if (doc != null)
-                documents.Add(doc);
+            // parse CSV line into BsonDocument
+            BsonDocument? doc = ParseCsvLine(line, currentCollection);
+            if (doc != null) documents.Add(doc);
         }
 
-        // Insert any remaining documents
+        // insert any remaining documents
         if (documents.Count > 0 && !string.IsNullOrEmpty(currentCollection))
         {
             InsertDocuments(currentCollection, documents);
         }
     }
 
-    private void PopulatePartDocument(BsonDocument doc, string[] values)
+    private static void PopulatePartDocument(BsonDocument doc, string[] values)
     {
         // based on the CSV structure for parts
         // #parts
@@ -89,7 +88,7 @@ public class MongoFixture : IDisposable
         doc["timeModified"] = DateTime.Parse(values[6]).ToUniversalTime();
         doc["userId"] = values[7];
 
-        // Content is stored as JSON
+        // content is stored as JSON
         if (values.Length > 8 && !string.IsNullOrEmpty(values[8]))
         {
             doc["content"] = BsonDocument.Parse(values[8]);
@@ -100,7 +99,8 @@ public class MongoFixture : IDisposable
         }
     }
 
-    private void PopulateHistoryPartDocument(BsonDocument doc, string[] values)
+    private static void PopulateHistoryPartDocument(BsonDocument doc,
+        string[] values)
     {
         // first populate the base part fields
         // #history_parts
@@ -120,17 +120,15 @@ public class MongoFixture : IDisposable
         }
     }
 
-    private BsonDocument? ParseCsvLine(string line, string collection)
+    private static BsonDocument? ParseCsvLine(string line, string collection)
     {
         // skip header line (contains column names)
-        if (line.StartsWith("_id,"))
-            return null;
+        if (line.StartsWith("_id,")) return null;
 
         string[] values = SplitCsvLine(line);
-        if (values.Length < 1)
-            return null;
+        if (values.Length < 1) return null;
 
-        BsonDocument doc = new BsonDocument();
+        BsonDocument doc = [];
 
         switch (collection)
         {
@@ -153,7 +151,6 @@ public class MongoFixture : IDisposable
 
     private static void PopulateItemDocument(BsonDocument doc, string[] values)
     {
-        // Example implementation - adjust based on your CSV structure
         doc["_id"] = values[0];
         doc["title"] = values[1];
         doc["description"] = values[2];
@@ -175,11 +172,10 @@ public class MongoFixture : IDisposable
         doc["status"] = int.Parse(values[12]);
     }
 
-    // Similar methods for parts and history parts...
-
-    private void InsertDocuments(string collectionName, List<BsonDocument> documents)
+    private void InsertDocuments(string collectionName,
+        List<BsonDocument> documents)
     {
-        // Map collection names to actual MongoDB collection names
+        // map collection names to actual MongoDB collection names
         string actualCollectionName = collectionName switch
         {
             "items" => MongoItem.COLLECTION,
@@ -189,32 +185,31 @@ public class MongoFixture : IDisposable
             _ => collectionName
         };
 
-        var collection = Database.GetCollection<BsonDocument>(actualCollectionName);
+        IMongoCollection<BsonDocument> collection = Database
+            .GetCollection<BsonDocument>(actualCollectionName);
         collection.InsertMany(documents);
     }
 
     private static string[] SplitCsvLine(string line)
     {
-        // A simple CSV parser that handles quoted values
-        List<string> values = new List<string>();
+        // simple CSV parser that handles quoted values
+        List<string> values = [];
         bool inQuotes = false;
-        StringBuilder currentValue = new StringBuilder();
+        StringBuilder currentValue = new();
 
         foreach (char c in line)
         {
-            if (c == '"')
-                inQuotes = !inQuotes;
+            if (c == '"') inQuotes = !inQuotes;
             else if (c == ',' && !inQuotes)
             {
                 values.Add(currentValue.ToString());
                 currentValue.Clear();
             }
-            else
-                currentValue.Append(c);
+            else currentValue.Append(c);
         }
 
         values.Add(currentValue.ToString());
-        return values.ToArray();
+        return [.. values];
     }
 
     public void Dispose()
