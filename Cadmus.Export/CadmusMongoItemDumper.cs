@@ -81,58 +81,60 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <summary>
     /// Builds item filter without time-based constraints.
     /// </summary>
+    /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter builder.</param>
     /// <returns>Filter definition.</returns>
     private FilterDefinition<BsonDocument> BuildBaseItemFilter(
+        CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
-        if (_options.IsEmpty) return builder.Empty;
+        if (filter.IsEmpty) return builder.Empty;
 
         List<FilterDefinition<BsonDocument>> filters = [];
 
-        if (!string.IsNullOrEmpty(_options.Title))
+        if (!string.IsNullOrEmpty(filter.Title))
         {
             filters.Add(builder.Regex("title",
-                new BsonRegularExpression(_options.Title, "i")));
+                new BsonRegularExpression(filter.Title, "i")));
         }
 
-        if (!string.IsNullOrEmpty(_options.Description))
+        if (!string.IsNullOrEmpty(filter.Description))
         {
             filters.Add(builder.Regex("description",
-                new BsonRegularExpression(_options.Description, "i")));
+                new BsonRegularExpression(filter.Description, "i")));
         }
 
-        if (!string.IsNullOrEmpty(_options.FacetId))
+        if (!string.IsNullOrEmpty(filter.FacetId))
         {
-            filters.Add(builder.Eq("facetId", _options.FacetId));
+            filters.Add(builder.Eq("facetId", filter.FacetId));
         }
 
-        if (!string.IsNullOrEmpty(_options.GroupId))
+        if (!string.IsNullOrEmpty(filter.GroupId))
         {
-            filters.Add(builder.Eq("groupId", _options.GroupId));
+            filters.Add(builder.Eq("groupId", filter.GroupId));
         }
 
-        if (!string.IsNullOrEmpty(_options.UserId))
+        if (!string.IsNullOrEmpty(filter.UserId))
         {
-            filters.Add(builder.Eq("userId", _options.UserId));
+            filters.Add(builder.Eq("userId", filter.UserId));
         }
 
         // flags filter with matching mode
-        if (_options.Flags.HasValue)
+        if (filter.Flags.HasValue)
         {
-            switch (_options.FlagMatching)
+            switch (filter.FlagMatching)
             {
                 case FlagMatching.BitsAllSet:
                     filters.Add(builder.BitsAllSet("flags",
-                        _options.Flags.Value));
+                        filter.Flags.Value));
                     break;
                 case FlagMatching.BitsAnySet:
                     filters.Add(builder.BitsAnySet("flags",
-                        _options.Flags.Value));
+                        filter.Flags.Value));
                     break;
                 case FlagMatching.BitsAllClear:
                     filters.Add(builder.BitsAllClear("flags",
-                        _options.Flags.Value));
+                        filter.Flags.Value));
                     break;
             }
         }
@@ -144,39 +146,42 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// Builds the filter for items to export getting all parameters from
     /// the option's filter, including time-based constraints.
     /// </summary>
+    /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter definition builder.</param>
     /// <returns>Filter.</returns>
     private FilterDefinition<BsonDocument> BuildItemFilter(
+        CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
         // start with the base filter (non-time based constraints)
-        FilterDefinition<BsonDocument> filter = BuildBaseItemFilter(builder);
+        FilterDefinition<BsonDocument> builtFilter =
+            BuildBaseItemFilter(filter, builder);
 
         // if no filter or no time constraints, return the base filter
-        if (_options.IsEmpty ||
-            (!_options.MinModified.HasValue &&
-             !_options.MaxModified.HasValue))
+        if (filter.IsEmpty ||
+            (!filter.MinModified.HasValue &&
+             !filter.MaxModified.HasValue))
         {
-            return filter;
+            return builtFilter;
         }
 
         // add time-based constraints
         List<FilterDefinition<BsonDocument>> filters = [];
 
         // start with the base filter if it's not empty
-        if (filter != builder.Empty) filters.Add(filter);
+        if (builtFilter != builder.Empty) filters.Add(builtFilter);
 
         // add date range filter for items
-        if (_options.MinModified.HasValue)
+        if (filter.MinModified.HasValue)
         {
             filters.Add(builder.Gte("timeModified",
-                _options.MinModified.Value));
+                filter.MinModified.Value));
         }
 
-        if (_options.MaxModified.HasValue)
+        if (filter.MaxModified.HasValue)
         {
             filters.Add(builder.Lte("timeModified",
-                _options.MaxModified.Value));
+                filter.MaxModified.Value));
         }
 
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
@@ -221,29 +226,31 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <summary>
     /// Build the part type filters based on the options whitelist and blacklist.
     /// </summary>
+    /// <param name="filter">The source filter.</param>
     /// <param name="builder">The filter definition builder.</param>
     /// <returns>Filter.</returns>
-    private FilterDefinition<BsonDocument> BuildPartTypeFilters(
+    private static FilterDefinition<BsonDocument> BuildPartTypeFilters(
+        CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
         // create filters for part type keys
         List<FilterDefinition<BsonDocument>> filters = [];
 
         // apply whitelist if specified
-        if (_options.WhitePartTypeKeys?.Count > 0)
+        if (filter.WhitePartTypeKeys?.Count > 0)
         {
             List<FilterDefinition<BsonDocument>> whiteList = [];
-            foreach (string key in _options.WhitePartTypeKeys)
+            foreach (string key in filter.WhitePartTypeKeys)
                 whiteList.Add(BuildPartTypeKeyFilter(builder, key));
 
             filters.Add(builder.Or(whiteList));
         }
 
         // apply blacklist if specified
-        if (_options.BlackPartTypeKeys?.Count > 0)
+        if (filter.BlackPartTypeKeys?.Count > 0)
         {
             List<FilterDefinition<BsonDocument>> blackList = [];
-            foreach (string key in _options.BlackPartTypeKeys)
+            foreach (string key in filter.BlackPartTypeKeys)
                 blackList.Add(BuildPartTypeKeyFilter(builder, key));
 
             filters.Add(builder.Not(builder.Or(blackList)));
@@ -256,11 +263,13 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// Gets the parts for a specific item using the history_parts collection.
     /// </summary>
     /// <param name="db">The database.</param>
+    /// <param name="filter">The source filter.</param>
     /// <param name="itemId">The item ID.</param>
     /// <returns>The list of parts for the item.</returns>
-    private List<BsonDocument> GetItemParts(IMongoDatabase db, string itemId)
+    private List<BsonDocument> GetItemParts(IMongoDatabase db,
+        CadmusDumpFilter filter, string itemId)
     {
-        // Get history_parts collection
+        // get history_parts collection
         IMongoCollection<BsonDocument> historyPartsCollection =
             db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
 
@@ -269,33 +278,32 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             Builders<BsonDocument>.Filter;
 
         // parts must be for this item
-        FilterDefinition<BsonDocument> filter = filterBuilder.Eq("itemId", itemId);
+        FilterDefinition<BsonDocument> builtFilter = filterBuilder.Eq("itemId",
+            itemId);
 
         // add time constraints if they exist
-        if (_options.MinModified.HasValue)
+        if (filter.MinModified.HasValue)
         {
-            filter = filterBuilder.And(
-                filter,
-                filterBuilder.Lte("timeModified",
-                    _options.MinModified.Value)
+            builtFilter = filterBuilder.And(
+                builtFilter,
+                filterBuilder.Lte("timeModified", filter.MinModified.Value)
             );
         }
 
-        if (_options.MaxModified.HasValue)
+        if (filter.MaxModified.HasValue)
         {
-            filter = filterBuilder.And(
-                filter,
-                filterBuilder.Lte("timeModified",
-                    _options.MaxModified.Value)
+            builtFilter = filterBuilder.And(
+                builtFilter,
+                filterBuilder.Lte("timeModified", filter.MaxModified.Value)
             );
         }
 
         // add part type filters if specified
-        if (_options.WhitePartTypeKeys?.Count > 0 ||
-            _options.BlackPartTypeKeys?.Count > 0)
+        if (filter.WhitePartTypeKeys?.Count > 0 ||
+            filter.BlackPartTypeKeys?.Count > 0)
         {
-            filter = filterBuilder.And(filter,
-                BuildPartTypeFilters(filterBuilder));
+            builtFilter = filterBuilder.And(builtFilter,
+                BuildPartTypeFilters(filter, filterBuilder));
         }
 
         // aggregate to get the latest version of each part:
@@ -304,7 +312,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         // 3. Group by referenceId, keeping the first (latest) document
         BsonDocument[] pipeline =
         [
-            new BsonDocument("$match", filter.ToBsonDocument()),
+            new BsonDocument("$match", builtFilter.ToBsonDocument()),
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
             new BsonDocument("$group", new BsonDocument
             {
@@ -340,9 +348,12 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// Gets the items from the MongoDB database, using the history items
     /// collection to determine their state at the specified timeframe.
     /// </summary>
+    /// <param name="filter">The filter to use.</param>
     /// <returns>Items.</returns>
-    public IEnumerable<BsonDocument> GetItems()
+    public IEnumerable<BsonDocument> GetItems(CadmusDumpFilter filter)
     {
+        ArgumentNullException.ThrowIfNull(filter);
+
         // get the MongoDB client and database
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
@@ -357,12 +368,13 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             Builders<BsonDocument>.Filter;
 
         // apply base filter and time constraints
-        FilterDefinition<BsonDocument> filter = BuildItemFilter(filterBuilder);
+        FilterDefinition<BsonDocument> builtFilter =
+            BuildItemFilter(filter, filterBuilder);
 
         // if we don't want deleted items, exclude them
         if (_options.NoDeleted)
         {
-            filter = filterBuilder.And(filter,
+            builtFilter = filterBuilder.And(builtFilter,
                 filterBuilder.Ne("status", (int)EditStatus.Deleted));
         }
 
@@ -370,7 +382,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         List<BsonDocument> pipelineDefinitions =
         [
             // match the filter - use ToBsonDocument() instead of Render()
-            new BsonDocument("$match", filter.ToBsonDocument()),
+            new BsonDocument("$match", builtFilter.ToBsonDocument()),
             // sort by timeModified descending
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
             // group by referenceId to get latest version of each item
@@ -386,12 +398,12 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         ];
 
         // add pagination if requested
-        if (_options.PageSize > 0)
+        if (filter.PageSize > 0)
         {
             pipelineDefinitions.Add(new BsonDocument("$skip",
-                (_options.PageNumber - 1) * _options.PageSize));
+                (filter.PageNumber - 1) * filter.PageSize));
             pipelineDefinitions.Add(new BsonDocument("$limit",
-                _options.PageSize));
+                filter.PageSize));
         }
 
         // execute the aggregation
@@ -415,7 +427,8 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             // add parts if requested
             if (!_options.NoParts)
             {
-                List<BsonDocument> parts = GetItemParts(db, item["_id"].AsString);
+                List<BsonDocument> parts = GetItemParts(
+                    db, filter, item["_id"].AsString);
                 item["_parts"] = new BsonArray(parts);
             }
 
@@ -465,12 +478,16 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// <summary>
     /// Dump the items to JSON files.
     /// </summary>
+    /// <param name="filter">The filter.</param>
     /// <param name="cancel">The cancellation token.</param>
     /// <param name="progress">The optional progress reporter.</param>
     /// <returns>Count of items dumped.</returns>
-    public int Dump(CancellationToken cancel,
+    /// <exception cref="ArgumentNullException">filter</exception>
+    public int Dump(CadmusDumpFilter filter, CancellationToken cancel,
         IProgress<ProgressReport>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(filter);
+
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
         ProgressReport? report = progress is null ? null : new ProgressReport();
@@ -483,7 +500,7 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         };
 
         // get items
-        foreach (var item in GetItems())
+        foreach (var item in GetItems(filter))
         {
             // create new file for this chunk if needed
             if (writer == null || (_options.MaxItemsPerFile > 0

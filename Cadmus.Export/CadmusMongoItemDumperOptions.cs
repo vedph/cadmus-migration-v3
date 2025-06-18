@@ -5,7 +5,7 @@ namespace Cadmus.Export;
 /// <summary>
 /// Options for <see cref="CadmusMongoItemDumper"/>.
 /// </summary>
-public class CadmusMongoItemDumperOptions : CadmusDumpFilter
+public class CadmusMongoItemDumperOptions
 {
     /// <summary>
     /// The MongoDB connection string template, having a <c>{0}</c> placeholder

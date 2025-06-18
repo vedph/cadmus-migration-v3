@@ -22,9 +22,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
             ConnectionString = "mongodb://localhost:27017/{0}",
             DatabaseName = dbName,
             OutputDirectory = Path.GetTempPath(),
-            Indented = true,
-            PageNumber = 1,
-            PageSize = 0  // no paging by default
+            Indented = true
         };
     }
 
@@ -45,7 +43,14 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         CadmusMongoItemDumperOptions options = GetBasicOptions();
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        // Create an empty filter for full dump
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0  // no paging by default
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(4, items.Count); // should return all 4 items from history
 
@@ -84,7 +89,13 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.NoParts = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(4, items.Count);
 
@@ -101,7 +112,13 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         options.NoDeleted = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(3, items.Count);
         Assert.DoesNotContain(items, i => i["_id"].AsString == "item4");
@@ -112,10 +129,16 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     {
         LoadMockData("BasicDataset.csv");
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.FacetId = "default";
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            FacetId = "default",
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         // 2 active items + 1 deleted item with facetId=default
         Assert.Equal(3, items.Count);
@@ -136,11 +159,16 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // - item3 (created April 1)
         // - item4 (deleted May 1)
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.MaxModified = new DateTime(2023, 3, 1, 23, 59, 59,
-            DateTimeKind.Utc);
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            MaxModified = new DateTime(2023, 3, 1, 23, 59, 59, DateTimeKind.Utc),
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(2, items.Count);
         Assert.Contains(items, i => i["_id"].AsString == "item1");
@@ -177,13 +205,17 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // - item5 (created on May 15)
         // - item2 (has part3 updated on May 10)
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.MinModified = new DateTime(2023, 4, 15, 0, 0, 0,
-            DateTimeKind.Utc);
-        options.MaxModified = new DateTime(2023, 5, 20, 23, 59, 59,
-            DateTimeKind.Utc);
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            MinModified = new DateTime(2023, 4, 15, 0, 0, 0, DateTimeKind.Utc),
+            MaxModified = new DateTime(2023, 5, 20, 23, 59, 59, DateTimeKind.Utc),
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(3, items.Count);
         // deleted May 1
@@ -211,13 +243,18 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // With NoPartDate=true, item2 should be excluded because the item itself
         // wasn't modified in the timeframe, only its part was
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.MinModified = new DateTime(2023, 4, 15, 0, 0, 0, DateTimeKind.Utc);
-        options.MaxModified = new DateTime(2023, 5, 20, 23, 59, 59,
-            DateTimeKind.Utc);
         options.NoPartDate = true;
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            MinModified = new DateTime(2023, 4, 15, 0, 0, 0, DateTimeKind.Utc),
+            MaxModified = new DateTime(2023, 5, 20, 23, 59, 59, DateTimeKind.Utc),
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         Assert.Equal(2, items.Count);
         // deleted May 1
@@ -233,10 +270,16 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     {
         LoadMockData("BasicDataset.csv");
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.WhitePartTypeKeys = ["token"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            WhitePartTypeKeys = ["token"]
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         foreach (BsonDocument? item in items.Where(i => i.Contains("_parts")
             && i["_parts"].AsBsonArray.Count > 0))
@@ -251,10 +294,16 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     {
         LoadMockData("BasicDataset.csv");
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.BlackPartTypeKeys = ["token"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            BlackPartTypeKeys = ["token"]
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         foreach (BsonDocument? item in items.Where(i => i.Contains("_parts")
             && i["_parts"].AsBsonArray.Count > 0))
@@ -269,10 +318,16 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     {
         LoadMockData("BasicDataset.csv");
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.WhitePartTypeKeys = ["token:sample"];
         CadmusMongoItemDumper dumper = new(options);
 
-        List<BsonDocument> items = [.. dumper.GetItems()];
+        CadmusDumpFilter filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0,
+            WhitePartTypeKeys = ["token:sample"]
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
         // find all items that have parts
         List<BsonDocument> itemsWithParts = [..
@@ -301,31 +356,88 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     [Fact]
     public void GetItems_Pagination_ReturnsCorrectPage()
     {
-        // Arrange
         LoadMockData("BasicDataset.csv");
 
-        // Configure to return 2 items per page
+        // create dumper
         CadmusMongoItemDumperOptions options = GetBasicOptions();
-        options.PageSize = 2;
-
-        // Create dumper and get page 1
         CadmusMongoItemDumper dumper = new(options);
-        List<BsonDocument> page1Items = [.. dumper.GetItems()];
 
-        // Get page 2
-        options.PageNumber = 2;
-        dumper = new(options);
-        List<BsonDocument> page2Items = [.. dumper.GetItems()];
+        // configure to return 2 items per page
+        CadmusDumpFilter page1Filter = new()
+        {
+            PageNumber = 1,
+            PageSize = 2
+        };
 
-        // Assert
+        // get page 1
+        List<BsonDocument> page1Items = [.. dumper.GetItems(page1Filter)];
+
+        // get page 2
+        CadmusDumpFilter page2Filter = new()
+        {
+            PageNumber = 2,
+            PageSize = 2
+        };
+        List<BsonDocument> page2Items = [.. dumper.GetItems(page2Filter)];
+
         Assert.Equal(2, page1Items.Count);
         Assert.Equal(2, page2Items.Count);
 
-        // Make sure we got different items on different pages
+        // make sure we got different items on different pages
         List<string> allItemIds = page1Items.Select(i => i["_id"].AsString)
             .Concat(page2Items.Select(i => i["_id"].AsString))
             .ToList();
 
         Assert.Equal(4, allItemIds.Distinct().Count());
+    }
+
+    [Fact]
+    public void GetItems_ReuseDumper_WorksWithMultipleCalls()
+    {
+        LoadMockData("BasicDataset.csv");
+
+        // create dumper with basic options
+        CadmusMongoItemDumperOptions options = GetBasicOptions();
+        CadmusMongoItemDumper dumper = new(options);
+
+        // first call - get all items
+        CadmusDumpFilter allItemsFilter = new()
+        {
+            PageNumber = 1,
+            PageSize = 0
+        };
+        List<BsonDocument> allItems = [.. dumper.GetItems(allItemsFilter)];
+
+        // second call - get only default facet items
+        CadmusDumpFilter defaultFacetFilter = new()
+        {
+            FacetId = "default",
+            PageNumber = 1,
+            PageSize = 0
+        };
+        List<BsonDocument> defaultFacetItems =
+            [.. dumper.GetItems(defaultFacetFilter)];
+
+        // Third call - get only special facet items
+        CadmusDumpFilter specialFacetFilter = new()
+        {
+            FacetId = "special",
+            PageNumber = 1,
+            PageSize = 0
+        };
+        List<BsonDocument> specialFacetItems =
+            [.. dumper.GetItems(specialFacetFilter)];
+
+        Assert.Equal(4, allItems.Count);
+        Assert.Equal(3, defaultFacetItems.Count);
+        Assert.Single(specialFacetItems);
+
+        // verify we get correct items for each filter
+        Assert.Contains(defaultFacetItems, i => i["_id"].AsString == "item1");
+        Assert.Contains(defaultFacetItems, i => i["_id"].AsString == "item2");
+        Assert.Contains(defaultFacetItems, i => i["_id"].AsString == "item4");
+        Assert.DoesNotContain(defaultFacetItems, i => i["_id"].AsString == "item3");
+
+        Assert.Contains(specialFacetItems, i => i["_id"].AsString == "item3");
     }
 }
