@@ -38,7 +38,25 @@ namespace Cadmus.Export;
 ///   provided that they match the same filters as the normal items.
 /// </item>
 /// </list>
-/// </remarks>
+/// <para>Also, this dumper can be used for both full or incremental dumps.
+/// When you specify a timeframe in filters (via min/max modified), items and
+/// parts states will be calculated relative to that timeframe.</para>
+/// <para>The source Cadmus database contains collections for items, parts,
+/// history_items, history_parts. Items have among other properties <c>_id</c>
+/// (a GUID), <c>timeCreated</c>, <c>timeModified</c>; parts have <c>_id</c>
+/// (a GUID), <c>timeCreated</c>, <c>timeModified</c>, and an <c>itemId</c>
+/// working like a foreign key to link that part to a specific item.</para>
+/// <para>History collections are used to store copies of items and parts,
+/// whenever they get saved in the database during editing. When this happens,
+/// a copy of the item/part it is stored in the corresponding history
+/// collection: the entry has its own <c>_id</c> (a GUID), and the GUID of its
+/// source item/part in <c>referenceId</c>. Also, there is a <c>status</c></para>
+/// numeric field with values 0=created, 1=updated, 2=deleted. When an item/part
+/// is first created, a copy of it is stored in history with status=created;
+/// then, on each successive update, a copy of it is stored in history with
+/// status=updated. If it gets deleted, the item/part is removed from its
+/// collection, but a copy of it before deletion is stored in the corresponding
+/// history part, with status=deleted.</remarks>
 public sealed class CadmusMongoItemDumper : MongoConsumerBase
 {
     private readonly CadmusMongoItemDumperOptions _options;
