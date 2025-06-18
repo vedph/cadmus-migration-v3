@@ -192,7 +192,8 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
     /// Builds a filter for a part type key.
     /// </summary>
     /// <param name="builder">Filter definition builder.</param>
-    /// <param name="partTypeKey">Part type key with form <c>typeId[:roleId]</c>.
+    /// <param name="partTypeKey">Part type key with form
+    /// <c>typeId[:roleId]</c>.</param>
     /// <param name="isBlacklist">True if this is a blacklist key, false if
     /// it's a whitelist key.</param>
     /// <returns>Filter.</returns>
