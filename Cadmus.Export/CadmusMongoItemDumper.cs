@@ -1,4 +1,5 @@
-﻿using Cadmus.Core.Storage;
+﻿using Cadmus.Core;
+using Cadmus.Core.Storage;
 using Cadmus.Mongo;
 using Fusi.Tools;
 using MongoDB.Bson;
@@ -10,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Cadmus.Export;
 
@@ -515,6 +515,63 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         }
     }
 
+    private static void AddItemStatus(BsonDocument item)
+    {
+        // get the item ID
+        string itemId = item["_id"].AsString;
+
+        // if this item already has a status property (from history collections),
+        // use it
+        if (item.Contains("status"))
+        {
+            item["_status"] = item["status"];
+            // remove status property to avoid confusion with _status
+            item.Remove("status");
+            return;
+        }
+
+        // for items from active collections, we need to determine status
+        DateTime timeCreated = item["timeCreated"].ToUniversalTime();
+        DateTime timeModified = item["timeModified"].ToUniversalTime();
+
+        // if timeCreated equals timeModified, it's a newly created item
+        if (timeCreated == timeModified)
+        {
+            item["_status"] = new BsonInt32((int)EditStatus.Created);
+            return;
+        }
+
+        // otherwise, it's an updated item
+        item["_status"] = new BsonInt32((int)EditStatus.Updated);
+    }
+
+    private static void AddPartStatus(BsonDocument part)
+    {
+        // if this part already has a status property (from history collections),
+        // use it
+        if (part.Contains("status"))
+        {
+            part["_status"] = part["status"];
+            // remove status property to avoid confusion with _status
+            part.Remove("status");
+            return;
+        }
+
+        // for parts from active collections, we need to determine status
+        DateTime timeCreated = part["timeCreated"].ToUniversalTime();
+        DateTime timeModified = part["timeModified"].ToUniversalTime();
+
+        // if timeCreated equals timeModified, it's a newly created part
+        if (timeCreated == timeModified)
+        {
+            part["_status"] = new BsonInt32((int)EditStatus.Created);
+            return;
+        }
+
+        // otherwise, it's an updated part
+        part["_status"] = new BsonInt32((int)EditStatus.Updated);
+    }
+
     private void AddItemParts(BsonDocument item)
     {
         // get the parts collection
@@ -530,17 +587,21 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
             Builders<BsonDocument>.Filter.Eq("itemId", itemId);
         List<BsonDocument> parts = partsCollection.Find(filter).ToList();
 
+        // add _status to each part before adding them to the item
+        foreach (BsonDocument part in parts)
+        {
+            AddPartStatus(part);
+        }
+
         // add _parts property with the found parts
         item["_parts"] = new BsonArray(parts);
     }
 
     /// <summary>
-    /// Gets the items to export from the MongoDB database.
+    /// Get the items from the MongoDB database, including parts if requested.
     /// </summary>
-    /// <param name="includeParts">True to include parts in each item, in an
-    /// added array property named <c>_parts</c>.</param>
     /// <returns>Items.</returns>
-    public IEnumerable<BsonDocument> GetItems(bool includeParts = true)
+    public IEnumerable<BsonDocument> GetItems()
     {
         // get the MongoDB client and database
         EnsureClientCreated(string.Format(_options.ConnectionString,
@@ -553,15 +614,26 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
         // 1. regular items collection (always included)
         foreach (BsonDocument document in GetNormalItems(db, itemIds))
         {
+            // add _status to the item
+            AddItemStatus(document);
+
+            // add parts if requested
             if (!_options.NoParts) AddItemParts(document);
+
             yield return document;
         }
-            
+
         // 2. history items collection (only when NoDeleted is false)
         if (!_options.NoDeleted)
         {
             foreach (BsonDocument document in GetDeletedItems(db, itemIds))
+            {
+                // items from GetDeletedItems already have status property
+                // just add _status based on it
+                AddItemStatus(document);
+
                 yield return document;
+            }
         }
     }
 
