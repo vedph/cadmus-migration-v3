@@ -150,6 +150,19 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     public void GetItems_NoDeleted_ExcludesDeletedItems()
     {
         LoadMockData("BasicDataset.csv");
+
+        // | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
+        // | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+        // | i1*     | CU    |       |       |       |       |       |       |       |
+        // | i2*     |       |       | CU    |       | U     |       |       |       |
+        // | i3*     |       |       |       |       |       |       | CU    |       |
+        // | i4      |       | CU    |       |       |       |       |       | D     |
+        // | p1*(i1) | CU    |       |       |       |       |       |       |       |
+        // | p2*(i2) |       |       | CU    |       |       |       |       |       |
+        // | p3*(i2) |       |       |       | CU    |       | U     |       |       |
+        // | p4*(i3) |       |       |       |       |       |       | CU    |       |
+        // | p5 (i4) |       | CU    |       |       |       |       |       | D     |
+
         CadmusJsonDumperOptions options = GetBasicOptions();
         options.NoDeleted = true;
         CadmusMongoDataFramer dumper = new(options);

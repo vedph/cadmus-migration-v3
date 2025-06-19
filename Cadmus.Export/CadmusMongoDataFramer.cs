@@ -492,6 +492,14 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
             foreach (BsonDocument? item in cursor.ToEnumerable())
             {
+                // exclude deleted items if NoDeleted is set
+                if (_options.NoDeleted && (EditStatus)item["status"].AsInt32
+                    == EditStatus.Deleted)
+                {
+                    continue;
+                }
+
+                // adjust the item schema
                 item["_id"] = item["referenceId"];
                 item.Remove("referenceId");
                 if (item.Contains("status"))
@@ -499,13 +507,8 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                     item["_status"] = item["status"];
                     item.Remove("status");
                 }
-                // exclude deleted items if NoDeleted is set
-                if (_options.NoDeleted && (EditStatus)item["_status"].AsInt32
-                    == EditStatus.Deleted)
-                {
-                    continue;
-                }
 
+                // add parts if requested
                 if (!_options.NoParts)
                 {
                     List<BsonDocument> parts = GetItemParts(db,
@@ -521,6 +524,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             FilterDefinition<BsonDocument> builtFilter =
                 BuildItemFilter(filter, filterBuilder);
 
+            // exclude deleted items if NoDeleted is set
             if (_options.NoDeleted)
             {
                 builtFilter = filterBuilder.And(builtFilter,
