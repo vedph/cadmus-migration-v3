@@ -468,7 +468,17 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                 .ToList()
                 .Select(i => i["referenceId"].AsString)];
 
-            List<string> allItemIds = [.. itemsInWindow.Union(itemIdsFromParts)];
+            HashSet<string> allItemIds;
+            if (_options.NoPartDate)
+            {
+                // only items changed in window
+                allItemIds = itemsInWindow;
+            }
+            else
+            {
+                // items changed in window OR items with parts changed in window
+                allItemIds = [.. itemsInWindow.Union(itemIdsFromParts)];
+            }
 
             // if no items in the union, return empty
             if (allItemIds.Count == 0) yield break;

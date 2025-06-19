@@ -21,13 +21,6 @@ public class CadmusJsonDumperOptions : CadmusMongoDataFramerOptions
     public int MaxItemsPerFile { get; set; }
 
     /// <summary>
-    /// True to not include parts' date in the export filters when time-based
-    /// parameters are specified. When this is true, the export will consider
-    /// only the modified time of the items, ignoring that of each item's parts.
-    /// </summary>
-    public bool NoPartDate { get; set; }
-
-    /// <summary>
     /// True to indent the output JSON files.
     /// </summary>
     public bool Indented { get; set; }

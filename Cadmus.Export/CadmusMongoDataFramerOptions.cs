@@ -26,6 +26,13 @@ public class CadmusMongoDataFramerOptions
     public bool IsIncremental { get; set; }
 
     /// <summary>
+    /// True to not include parts' date in the export filters when time-based
+    /// parameters are specified. When this is true, the export will consider
+    /// only the modified time of the items, ignoring that of each item's parts.
+    /// </summary>
+    public bool NoPartDate { get; set; }
+
+    /// <summary>
     /// True to not include deleted items in the export.
     /// </summary>
     public bool NoDeleted { get; set; }
