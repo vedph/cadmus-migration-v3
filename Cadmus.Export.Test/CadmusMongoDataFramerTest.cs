@@ -9,6 +9,35 @@ using Xunit;
 
 namespace Cadmus.Export.Test;
 
+// basic dataset ([C]reated, [U]pdated, [D]eleted):
+// | obj | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
+// | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+// | i1  | CU    |       |       |       |       |       |       |       |
+// | i2  |       |       | CU    |       | U     |       |       |       |
+// | i3  |       |       |       |       |       |       | CU    |       |
+// | i4  |       | CU    |       |       |       |       |       | D     |
+// | p1  | CU    |       |       |       |       |       |       |       |
+// | p2  |       |       | CU    |       |       |       |       |       |
+// | p3  |       |       |       | CU    |       | U     |       |       |
+// | p4  |       |       |       |       |       |       | CU    |       |
+// | p5  |       | CU    |       |       |       |       |       | D     |
+
+
+// incremental dataset ([C]reated, [U]pdated, [D]eleted):
+// | obj | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 | 05-10 | 05-15 |
+// | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+// | i1  | CU    |       |       |       |       |       |       |       |       |       |
+// | i2  |       |       | CU    |       | U     |       |       |       |       |       |
+// | i3  |       |       |       |       |       |       | CU    |       |       |       |
+// | i4  |       | CU    |       |       |       |       |       | D     |       |       |
+// | i5  |       |       |       |       |       |       |       |       |       | CU    |
+// | p1  | CU    |       |       |       |       |       |       |       |       |       |
+// | p2  |       |       | CU    |       |       |       |       |       |       |       |
+// | p3  |       |       |       | CU    |       | U     |       |       | U     |       |
+// | p4  |       |       |       |       |       |       | CU    |       |       |       |
+// | p5  |       | CU    |       |       |       |       |       | D     |       |       |
+// | p6  |       |       |       |       |       |       |       |       |       | CU    |
+
 public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     IClassFixture<MongoFixture>
 {
@@ -152,12 +181,24 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     {
         LoadMockData("BasicDataset.csv");
 
-        // Set timeframe to March 1, 2023 - this should include:
-        // - item1 (created January 1)
-        // - item2 (modified March 1)
+        // | obj      | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
+        // | ---------| ----- | ----- | ----- | ----- | ===== | ----- | ----- | ----- |
+        // | i1*      | CU    |       |       |       |       |       |       |       |
+        // | i2*      |       |       | CU    |       | U     |       |       |       |
+        // | i3       |       |       |       |       |       |       | CU    |       |
+        // | i4*      |       | CU    |       |       |       |       |       | D     |
+        // | p1* (i1) | CU    |       |       |       |       |       |       |       |
+        // | p2* (i2) |       |       | CU    |       |       |       |       |       |
+        // | p3* (i2) |       |       |       | CU    |       | U     |       |       |
+        // | p4  (i3) |       |       |       |       |       |       | CU    |       |
+        // | p5  (i4) |       | CU    |       |       |       |       |       | D     |
+
+        // Set timeframe to 2023-03-01 - this should include:
+        // - item1 (created 01-01), with part1
+        // - item2 (updated 03-01), with part2 and part3 (before U on 03-15)
+        // - item4 (deleted 05-01), with part5
         // But exclude:
-        // - item3 (created April 1)
-        // - item4 (deleted May 1)
+        // - item3 (created 04-01)
         CadmusJsonDumperOptions options = GetBasicOptions();
         CadmusMongoDataFramer dumper = new(options);
 
@@ -170,18 +211,20 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
 
         List<BsonDocument> items = [.. dumper.GetItems(filter)];
 
-        Assert.Equal(2, items.Count);
+        Assert.Equal(3, items.Count);
         Assert.Contains(items, i => i["_id"].AsString == "item1");
         Assert.Contains(items, i => i["_id"].AsString == "item2");
+        Assert.Contains(items, i => i["_id"].AsString == "item4");
         Assert.DoesNotContain(items, i => i["_id"].AsString == "item3");
-        Assert.DoesNotContain(items, i => i["_id"].AsString == "item4");
 
         // check that statuses are correct
         BsonDocument item1 = items.First(i => i["_id"].AsString == "item1");
         BsonDocument item2 = items.First(i => i["_id"].AsString == "item2");
+        BsonDocument item4 = items.First(i => i["_id"].AsString == "item4");
 
         Assert.Equal(EditStatus.Created, (EditStatus)item1["_status"].AsInt32);
         Assert.Equal(EditStatus.Updated, (EditStatus)item2["_status"].AsInt32);
+        Assert.Equal(EditStatus.Created, (EditStatus)item4["_status"].AsInt32);
 
         // check part content - for item2, we should get the version as of March 1
         BsonArray item2Parts = item2["_parts"].AsBsonArray;
