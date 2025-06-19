@@ -141,8 +141,8 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     }
 
     /// <summary>
-    /// Builds the filter for items to export getting all parameters from
-    /// the option's filter, including time-based constraints.
+    /// Builds the MongoDB filter for items getting all parameters
+    /// <paramref name="filter"/>, including time-based constraints.
     /// </summary>
     /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter definition builder.</param>
@@ -162,25 +162,30 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             return builtFilter;
         }
 
+        // start with empty filters and add the simple one if any
         List<FilterDefinition<BsonDocument>> filters = [];
         if (builtFilter != builder.Empty) filters.Add(builtFilter);
 
+        // if incremental mode, we want only those items which *changed*
+        // (=were updated, created, or deleted - all these affect timeModified)
+        // in the specified time frame
         if (_options.IsIncremental)
         {
-            // only items changed in the window [MinModified, MaxModified]
             if (filter.MinModified.HasValue)
                 filters.Add(builder.Gte("timeModified", filter.MinModified.Value));
 
             if (filter.MaxModified.HasValue)
                 filters.Add(builder.Lte("timeModified", filter.MaxModified.Value));
         }
+        // else we want all items active or deleted up to MaxModified if any,
+        // or just all items if no MaxModified
         else
         {
-            // all items active or deleted as of MaxModified
             if (filter.MaxModified.HasValue)
                 filters.Add(builder.Lte("timeModified", filter.MaxModified.Value));
         }
 
+        // combine and return the filters
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
     }
 
@@ -374,88 +379,161 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     {
         ArgumentNullException.ThrowIfNull(filter);
 
-        // get the MongoDB client and database
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
         IMongoDatabase db = Client!.GetDatabase(_options.DatabaseName);
 
-        // get history_items collection
-        IMongoCollection<BsonDocument> historyItemsCollection =
-            db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
-
-        // create filter builder
         FilterDefinitionBuilder<BsonDocument> filterBuilder =
             Builders<BsonDocument>.Filter;
 
-        // apply base filter and time constraints
-        FilterDefinition<BsonDocument> builtFilter =
-            BuildItemFilter(filter, filterBuilder);
+        IMongoCollection<BsonDocument> historyItems =
+            db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
 
-        // if we don't want deleted items, exclude them
-        if (_options.NoDeleted)
+        if (_options.IsIncremental)
         {
-            builtFilter = filterBuilder.And(builtFilter,
-                filterBuilder.Ne("status", (int)EditStatus.Deleted));
-        }
+            // 1. items changed in window
+            FilterDefinition<BsonDocument> itemFilter =
+                BuildItemFilter(filter, filterBuilder);
 
-        // create aggregation pipeline
-        List<BsonDocument> pipeline =
-        [
-            // match the filter - use an empty document instead of an
-            // EmptyFilterDefinition
-            new BsonDocument("$match", builtFilter == filterBuilder.Empty
-                ? []
-                : RenderFilter(builtFilter)),
-            // sort by timeModified descending
-            new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
-            // group by referenceId to get latest version of each item
-            new BsonDocument("$group", new BsonDocument
+            // 2. items with parts changed in window (apply part type filters)
+            List<FilterDefinition<BsonDocument>> partFilters = [];
+
+            if (filter.MinModified.HasValue)
             {
-                { "_id", "$referenceId" },
-                { "doc", new BsonDocument("$first", "$$ROOT") }
-            }),
-            // replace root to work with the actual document
-            new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc")),
-            // sort by sortKey for consistent output
-            new BsonDocument("$sort", new BsonDocument("sortKey", 1))
-        ];
-
-        // add pagination if requested
-        if (filter.PageSize > 0)
-        {
-            pipeline.Add(new BsonDocument("$skip",
-                (filter.PageNumber - 1) * filter.PageSize));
-            pipeline.Add(new BsonDocument("$limit",
-                filter.PageSize));
-        }
-
-        // execute the aggregation
-        using IAsyncCursor<BsonDocument> cursor = historyItemsCollection
-            .Aggregate<BsonDocument>(pipeline);
-
-        // process each item
-        foreach (BsonDocument? item in cursor.ToEnumerable())
-        {
-            // set _id to referenceId and remove referenceId
-            item["_id"] = item["referenceId"];
-            item.Remove("referenceId");
-
-            // set _status based on status
-            if (item.Contains("status"))
-            {
-                item["_status"] = item["status"];
-                item.Remove("status");
+                partFilters.Add(filterBuilder.Gte("timeModified",
+                    filter.MinModified.Value));
             }
 
-            // add parts if requested
-            if (!_options.NoParts)
+            if (filter.MaxModified.HasValue)
             {
-                List<BsonDocument> parts = GetItemParts(
-                    db, filter, item["_id"].AsString);
-                item["_parts"] = new BsonArray(parts);
+                partFilters.Add(filterBuilder.Lte("timeModified",
+                    filter.MaxModified.Value));
             }
 
-            yield return item;
+            if ((filter.WhitePartTypeKeys?.Count ?? 0) > 0 ||
+                (filter.BlackPartTypeKeys?.Count ?? 0) > 0)
+            {
+                partFilters.Add(BuildPartTypeFilters(filter, filterBuilder));
+            }
+
+            FilterDefinition<BsonDocument> partFilter = partFilters.Count > 0
+                ? filterBuilder.And(partFilters) : filterBuilder.Empty;
+
+            IMongoCollection<BsonDocument> historyParts =
+                db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
+            HashSet<string> itemIdsFromParts = [.. historyParts
+                .Find(partFilter)
+                .Project("{itemId: 1}")
+                .ToList()
+                .Select(p => p["itemId"].AsString)];
+
+            // 3. union with items changed in window
+            HashSet<string> itemsInWindow = [.. historyItems
+                .Find(itemFilter)
+                .ToList()
+                .Select(i => i["referenceId"].AsString)];
+
+            List<string> allItemIds = [.. itemsInWindow.Union(itemIdsFromParts)];
+
+            if (allItemIds.Count == 0) yield break;
+
+            // 4. fetch latest version of each item in the union set
+            FilterDefinition<BsonDocument> finalFilter =
+                filterBuilder.In("referenceId", allItemIds);
+            List<BsonDocument> pipeline =
+            [
+                new BsonDocument("$match", RenderFilter(finalFilter)),
+                new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", "$referenceId" },
+                    { "doc", new BsonDocument("$first", "$$ROOT") }
+                }),
+                new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc")),
+                new BsonDocument("$sort", new BsonDocument("sortKey", 1))
+            ];
+
+            IAsyncCursor<BsonDocument> cursor =
+                historyItems.Aggregate<BsonDocument>(pipeline);
+            foreach (BsonDocument? item in cursor.ToEnumerable())
+            {
+                item["_id"] = item["referenceId"];
+                item.Remove("referenceId");
+                if (item.Contains("status"))
+                {
+                    item["_status"] = item["status"];
+                    item.Remove("status");
+                }
+                // exclude deleted items if NoDeleted is set
+                if (_options.NoDeleted && (EditStatus)item["_status"].AsInt32
+                    == EditStatus.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_options.NoParts)
+                {
+                    List<BsonDocument> parts = GetItemParts(db,
+                        filter, item["_id"].AsString);
+                    item["_parts"] = new BsonArray(parts);
+                }
+                yield return item;
+            }
+        }
+        else
+        {
+            FilterDefinition<BsonDocument> builtFilter =
+                BuildItemFilter(filter, filterBuilder);
+
+            if (_options.NoDeleted)
+            {
+                builtFilter = filterBuilder.And(builtFilter,
+                    filterBuilder.Ne("status", (int)EditStatus.Deleted));
+            }
+
+            List<BsonDocument> pipeline =
+            [
+                new BsonDocument("$match", builtFilter == filterBuilder.Empty
+                    ? new BsonDocument()
+                    : RenderFilter(builtFilter)),
+                new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", "$referenceId" },
+                    { "doc", new BsonDocument("$first", "$$ROOT") }
+                }),
+                new BsonDocument("$replaceRoot",
+                    new BsonDocument("newRoot", "$doc")),
+                new BsonDocument("$sort", new BsonDocument("sortKey", 1))
+            ];
+
+            if (filter.PageSize > 0)
+            {
+                pipeline.Add(new BsonDocument("$skip",
+                    (filter.PageNumber - 1) * filter.PageSize));
+                pipeline.Add(new BsonDocument("$limit", filter.PageSize));
+            }
+
+            using IAsyncCursor<BsonDocument> cursor =
+                historyItems.Aggregate<BsonDocument>(pipeline);
+
+            foreach (BsonDocument? item in cursor.ToEnumerable())
+            {
+                item["_id"] = item["referenceId"];
+                item.Remove("referenceId");
+                if (item.Contains("status"))
+                {
+                    item["_status"] = item["status"];
+                    item.Remove("status");
+                }
+                if (!_options.NoParts)
+                {
+                    List<BsonDocument> parts = GetItemParts(
+                        db, filter, item["_id"].AsString);
+                    item["_parts"] = new BsonArray(parts);
+                }
+                yield return item;
+            }
         }
     }
 }

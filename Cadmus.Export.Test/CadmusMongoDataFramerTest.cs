@@ -242,7 +242,21 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     {
         LoadMockData("IncrementalDataset.csv");
 
-        // get items changed between April 15 and May 20, 2023.
+        // | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 | 05-10 | 05-15 |
+        // | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+        // | i1      | CU    |       |       |       |       |       |       |       |       |       |
+        // | i2*     |       |       | CU    |       | U     |       |       |       |       |       |
+        // | i3      |       |       |       |       |       |       | CU    |       |       |       |
+        // | i4*     |       | CU    |       |       |       |       |       | D     |       |       |
+        // | i5*     |       |       |       |       |       |       |       |       |       | CU    |
+        // | p1 (i1) | CU    |       |       |       |       |       |       |       |       |       |
+        // | p2 (i2) |       |       | CU    |       |       |       |       |       |       |       |
+        // | p3*(i2) |       |       |       | CU    |       | U     |       |       | U     |       |
+        // | p4 (i3) |       |       |       |       |       |       | CU    |       |       |       |
+        // | p5 (i4) |       | CU    |       |       |       |       |       | D     |       |       |
+        // | p6 (i5) |       |       |       |       |       |       |       |       |       | CU    |
+
+        // get items changed between 04-15 and 05-20, 2023.
         // This should include:
         // - item4 (deleted on May 1)
         // - item5 (created on May 15)
