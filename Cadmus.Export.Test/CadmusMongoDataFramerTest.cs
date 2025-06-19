@@ -10,33 +10,33 @@ using Xunit;
 namespace Cadmus.Export.Test;
 
 // basic dataset ([C]reated, [U]pdated, [D]eleted):
-// | obj | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
-// | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-// | i1  | CU    |       |       |       |       |       |       |       |
-// | i2  |       |       | CU    |       | U     |       |       |       |
-// | i3  |       |       |       |       |       |       | CU    |       |
-// | i4  |       | CU    |       |       |       |       |       | D     |
-// | p1  | CU    |       |       |       |       |       |       |       |
-// | p2  |       |       | CU    |       |       |       |       |       |
-// | p3  |       |       |       | CU    |       | U     |       |       |
-// | p4  |       |       |       |       |       |       | CU    |       |
-// | p5  |       | CU    |       |       |       |       |       | D     |
+// | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
+// | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+// | i1      | CU    |       |       |       |       |       |       |       |
+// | i2      |       |       | CU    |       | U     |       |       |       |
+// | i3      |       |       |       |       |       |       | CU    |       |
+// | i4      |       | CU    |       |       |       |       |       | D     |
+// | p1 (i1) | CU    |       |       |       |       |       |       |       |
+// | p2 (i2) |       |       | CU    |       |       |       |       |       |
+// | p3 (i2) |       |       |       | CU    |       | U     |       |       |
+// | p4 (i3) |       |       |       |       |       |       | CU    |       |
+// | p5 (i4) |       | CU    |       |       |       |       |       | D     |
 
 
 // incremental dataset ([C]reated, [U]pdated, [D]eleted):
-// | obj | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 | 05-10 | 05-15 |
-// | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
-// | i1  | CU    |       |       |       |       |       |       |       |       |       |
-// | i2  |       |       | CU    |       | U     |       |       |       |       |       |
-// | i3  |       |       |       |       |       |       | CU    |       |       |       |
-// | i4  |       | CU    |       |       |       |       |       | D     |       |       |
-// | i5  |       |       |       |       |       |       |       |       |       | CU    |
-// | p1  | CU    |       |       |       |       |       |       |       |       |       |
-// | p2  |       |       | CU    |       |       |       |       |       |       |       |
-// | p3  |       |       |       | CU    |       | U     |       |       | U     |       |
-// | p4  |       |       |       |       |       |       | CU    |       |       |       |
-// | p5  |       | CU    |       |       |       |       |       | D     |       |       |
-// | p6  |       |       |       |       |       |       |       |       |       | CU    |
+// | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 | 05-10 | 05-15 |
+// | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+// | i1      | CU    |       |       |       |       |       |       |       |       |       |
+// | i2      |       |       | CU    |       | U     |       |       |       |       |       |
+// | i3      |       |       |       |       |       |       | CU    |       |       |       |
+// | i4      |       | CU    |       |       |       |       |       | D     |       |       |
+// | i5      |       |       |       |       |       |       |       |       |       | CU    |
+// | p1 (i1) | CU    |       |       |       |       |       |       |       |       |       |
+// | p2 (i2) |       |       | CU    |       |       |       |       |       |       |       |
+// | p3 (i2) |       |       |       | CU    |       | U     |       |       | U     |       |
+// | p4 (i3) |       |       |       |       |       |       | CU    |       |       |       |
+// | p5 (i4) |       | CU    |       |       |       |       |       | D     |       |       |
+// | p6 (i5) |       |       |       |       |       |       |       |       |       | CU    |
 
 public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     IClassFixture<MongoFixture>
@@ -69,6 +69,19 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     public void GetItems_FullDump_ReturnsAllItems()
     {
         LoadMockData("BasicDataset.csv");
+
+        // | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 |
+        // | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+        // | i1*     | CU    |       |       |       |       |       |       |       |
+        // | i2*     |       |       | CU    |       | U     |       |       |       |
+        // | i3*     |       |       |       |       |       |       | CU    |       |
+        // | i4*     |       | CU    |       |       |       |       |       | D     |
+        // | p1*(i1) | CU    |       |       |       |       |       |       |       |
+        // | p2*(i2) |       |       | CU    |       |       |       |       |       |
+        // | p3*(i2) |       |       |       | CU    |       | U     |       |       |
+        // | p4*(i3) |       |       |       |       |       |       | CU    |       |
+        // | p5*(i4) |       | CU    |       |       |       |       |       | D     |
+
         CadmusJsonDumperOptions options = GetBasicOptions();
         CadmusMongoDataFramer dumper = new(options);
 
@@ -76,7 +89,7 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
         CadmusDumpFilter filter = new()
         {
             PageNumber = 1,
-            PageSize = 0  // no paging by default
+            PageSize = 0  // no paging
         };
 
         List<BsonDocument> items = [.. dumper.GetItems(filter)];
@@ -105,7 +118,7 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
         Assert.True(item3.Contains("_parts"));
         Assert.Single(item3["_parts"].AsBsonArray);
 
-        // deleted items should also have parts if they exist in history_parts
+        // deleted items should also have parts if they exist in history-parts
         Assert.True(item4.Contains("_parts"));
         Assert.Single(item4["_parts"].AsBsonArray);
     }
