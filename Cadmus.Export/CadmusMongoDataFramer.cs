@@ -398,23 +398,29 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     {
         ArgumentNullException.ThrowIfNull(filter);
 
+        // ensure the client is created and get the database
         EnsureClientCreated(string.Format(_options.ConnectionString,
             _options.DatabaseName));
         IMongoDatabase db = Client!.GetDatabase(_options.DatabaseName);
 
-        FilterDefinitionBuilder<BsonDocument> filterBuilder =
-            Builders<BsonDocument>.Filter;
-
+        // get the history items collection
         IMongoCollection<BsonDocument> historyItems =
             db.GetCollection<BsonDocument>(MongoHistoryItem.COLLECTION);
 
+        // get a filter builder
+        FilterDefinitionBuilder<BsonDocument> filterBuilder =
+            Builders<BsonDocument>.Filter;
+
+        // if incremental mode, we need to filter items changed in the
+        // specified time window, and also those parts changed in the same
+        // window, to get the items which had parts changed in that window too
         if (_options.IsIncremental)
         {
             // 1. items changed in window
             FilterDefinition<BsonDocument> itemFilter =
                 BuildItemFilter(filter, filterBuilder);
 
-            // 2. items with parts changed in window (apply part type filters)
+            // 2. items with parts changed in window: build part type filters
             List<FilterDefinition<BsonDocument>> partFilters = [];
 
             if (filter.MinModified.HasValue)
@@ -438,6 +444,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             FilterDefinition<BsonDocument> partFilter = partFilters.Count > 0
                 ? filterBuilder.And(partFilters) : filterBuilder.Empty;
 
+            // 3. get item IDs from parts changed in window
             IMongoCollection<BsonDocument> historyParts =
                 db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
             HashSet<string> itemIdsFromParts = [.. historyParts
@@ -446,7 +453,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                 .ToList()
                 .Select(p => p["itemId"].AsString)];
 
-            // 3. union with items changed in window
+            // 4. union with items changed in window
             HashSet<string> itemsInWindow = [.. historyItems
                 .Find(itemFilter)
                 .ToList()
@@ -454,26 +461,35 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
             List<string> allItemIds = [.. itemsInWindow.Union(itemIdsFromParts)];
 
+            // if no items in the union, return empty
             if (allItemIds.Count == 0) yield break;
 
-            // 4. fetch latest version of each item in the union set
+            // 5. fetch latest version of each item in the union set
             FilterDefinition<BsonDocument> finalFilter =
                 filterBuilder.In("referenceId", allItemIds);
             List<BsonDocument> pipeline =
             [
+                // match the items in the union set
                 new BsonDocument("$match", RenderFilter(finalFilter)),
+                // sort by timeModified descending to get the latest first
                 new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+                // group by referenceId, keeping the first document
+                // which is the latest version of the item for that referenceId
                 new BsonDocument("$group", new BsonDocument
                 {
                     { "_id", "$referenceId" },
                     { "doc", new BsonDocument("$first", "$$ROOT") }
                 }),
+                // replace the root with the doc field, unwrapping it
                 new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc")),
+                // sort by sortKey to ensure consistent order
                 new BsonDocument("$sort", new BsonDocument("sortKey", 1))
             ];
 
+            // return the items adjusting their schema
             IAsyncCursor<BsonDocument> cursor =
                 historyItems.Aggregate<BsonDocument>(pipeline);
+
             foreach (BsonDocument? item in cursor.ToEnumerable())
             {
                 item["_id"] = item["referenceId"];
@@ -499,6 +515,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                 yield return item;
             }
         }
+        // else, we just need to get the items matching the filter
         else
         {
             FilterDefinition<BsonDocument> builtFilter =
@@ -512,27 +529,33 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
             List<BsonDocument> pipeline =
             [
+                // match the filter
                 new BsonDocument("$match", builtFilter == filterBuilder.Empty
-                    ? new BsonDocument()
+                    ? []
                     : RenderFilter(builtFilter)),
+                // sort by timeModified descending to get the latest first
                 new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+                // group by referenceId, keeping the first document
                 new BsonDocument("$group", new BsonDocument
                 {
                     { "_id", "$referenceId" },
                     { "doc", new BsonDocument("$first", "$$ROOT") }
                 }),
+                // replace the root with the doc field, unwrapping it
                 new BsonDocument("$replaceRoot",
                     new BsonDocument("newRoot", "$doc")),
+                // sort by sortKey to ensure consistent order
                 new BsonDocument("$sort", new BsonDocument("sortKey", 1))
             ];
 
+            // if paging is requested, add skip and limit
             if (filter.PageSize > 0)
             {
-                pipeline.Add(new BsonDocument("$skip",
-                    (filter.PageNumber - 1) * filter.PageSize));
+                pipeline.Add(new BsonDocument("$skip", filter.GetSkipCount()));
                 pipeline.Add(new BsonDocument("$limit", filter.PageSize));
             }
 
+            // return the items adjusting their schema
             using IAsyncCursor<BsonDocument> cursor =
                 historyItems.Aggregate<BsonDocument>(pipeline);
 
