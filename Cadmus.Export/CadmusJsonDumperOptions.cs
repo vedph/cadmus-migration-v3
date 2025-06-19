@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Cadmus.Export;
 
@@ -10,9 +11,9 @@ public class CadmusJsonDumperOptions : CadmusMongoDataFramerOptions
     /// <summary>
     /// The output directory where the exported items will be saved.
     /// </summary>
-    public string OutputDirectory { get; set; } =
-        Environment.GetFolderPath(
-            Environment.SpecialFolder.CommonDesktopDirectory);
+    public string OutputDirectory { get; set; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory),
+        DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd"));
 
     /// <summary>
     /// The maximum number of items to export. If not specified (0), all items

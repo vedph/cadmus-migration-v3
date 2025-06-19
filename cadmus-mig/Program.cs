@@ -52,6 +52,8 @@ public static class Program
             {
                 config.AddCommand<RenderItemsCommand>("render")
                     .WithDescription("Render items");
+                config.AddCommand<DumpCommand>("dump")
+                    .WithDescription("Dump objects from a Cadmus database");
             });
 
             int result = await app.RunAsync(args);
