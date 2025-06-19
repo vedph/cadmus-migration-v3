@@ -9,15 +9,15 @@ using Xunit;
 
 namespace Cadmus.Export.Test;
 
-public class CadmusMongoItemDumperTest(MongoFixture fixture) :
+public class CadmusMongoDataFramerTest(MongoFixture fixture) :
     IClassFixture<MongoFixture>
 {
     private readonly MongoFixture _fixture = fixture;
 
-    private static CadmusMongoItemDumperOptions GetBasicOptions(
+    private static CadmusJsonDumperOptions GetBasicOptions(
         string dbName = "test-db")
     {
-        return new CadmusMongoItemDumperOptions
+        return new CadmusJsonDumperOptions
         {
             ConnectionString = "mongodb://localhost:27017/{0}",
             DatabaseName = dbName,
@@ -28,7 +28,7 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
 
     private void LoadMockData(string resourceName)
     {
-        Assembly assembly = typeof(CadmusMongoItemDumperTest).Assembly;
+        Assembly assembly = typeof(CadmusMongoDataFramerTest).Assembly;
         using Stream? stream = assembly.GetManifestResourceStream(
             $"Cadmus.Export.Test.Assets.{resourceName}")
             ?? throw new ArgumentException($"Resource {resourceName} not found");
@@ -40,8 +40,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_FullDump_ReturnsAllItems()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         // create an empty filter for full dump
         CadmusDumpFilter filter = new()
@@ -85,9 +85,9 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_NoParts_ReturnsItemsWithoutParts()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
+        CadmusJsonDumperOptions options = GetBasicOptions();
         options.NoParts = true;
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -108,9 +108,9 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_NoDeleted_ExcludesDeletedItems()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
+        CadmusJsonDumperOptions options = GetBasicOptions();
         options.NoDeleted = true;
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -128,8 +128,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_FacetFilter_ReturnsMatchingItems()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -158,8 +158,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // But exclude:
         // - item3 (created April 1)
         // - item4 (deleted May 1)
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -204,8 +204,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // - item4 (deleted on May 1)
         // - item5 (created on May 15)
         // - item2 (has part3 updated on May 10)
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -242,9 +242,9 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         // Get items changed between April 15 and May 20, 2023.
         // With NoPartDate=true, item2 should be excluded because the item itself
         // wasn't modified in the timeframe, only its part was
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
+        CadmusJsonDumperOptions options = GetBasicOptions();
         options.NoPartDate = true;
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -269,8 +269,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_WhitelistPartTypes_FiltersPartsByType()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -293,8 +293,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_BlacklistPartTypes_ExcludesPartsByType()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -317,8 +317,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
     public void GetItems_RoleFilter_FiltersPartsByRole()
     {
         LoadMockData("BasicDataset.csv");
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
         {
@@ -359,8 +359,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         LoadMockData("BasicDataset.csv");
 
         // create dumper
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         // configure to return 2 items per page
         CadmusDumpFilter page1Filter = new()
@@ -397,8 +397,8 @@ public class CadmusMongoItemDumperTest(MongoFixture fixture) :
         LoadMockData("BasicDataset.csv");
 
         // create dumper with basic options
-        CadmusMongoItemDumperOptions options = GetBasicOptions();
-        CadmusMongoItemDumper dumper = new(options);
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        CadmusMongoDataFramer dumper = new(options);
 
         // first call - get all items
         CadmusDumpFilter allItemsFilter = new()

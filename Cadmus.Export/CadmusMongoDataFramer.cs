@@ -1,23 +1,20 @@
 ﻿using Cadmus.Core.Storage;
 using Cadmus.Mongo;
-using Fusi.Tools;
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 
 namespace Cadmus.Export;
 
 /// <summary>
-/// Cadmus MongoDB item dumper.
+/// Cadmus MongoDB data framer.
 /// </summary>
-/// <remarks>This is used to dump items data into one or more JSON files.
+/// <remarks>This is used to collect Cadmus MongoDB data from a frame specified
+/// by filters, typically a time frame, and return it as a sequence of items
+/// with their parts, ready to be exported or otherwise processed.
 /// Items are filtered according to specified criteria, with the state of data
 /// determined at a specific timeframe when requested.
 /// <para>The source Cadmus database contains collections for items, parts,
@@ -65,16 +62,16 @@ namespace Cadmus.Export;
 /// processed), group by <c>referenceId</c>, select the latest entry from
 /// each group, and return the part with an adjusted schema.</para>
 /// </remarks>
-public sealed class CadmusMongoItemDumper : MongoConsumerBase
+public sealed class CadmusMongoDataFramer : MongoConsumerBase
 {
-    private readonly CadmusMongoItemDumperOptions _options;
+    private readonly CadmusMongoDataFramerOptions _options;
 
     /// <summary>
-    /// Create a new instance of <see cref="CadmusMongoItemDumper"/>.
+    /// Create a new instance of <see cref="CadmusMongoDataFramer"/>.
     /// </summary>
     /// <param name="options">Options.</param>
     /// <exception cref="ArgumentNullException">options</exception>
-    public CadmusMongoItemDumper(CadmusMongoItemDumperOptions options)
+    public CadmusMongoDataFramer(CadmusMongoDataFramerOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
@@ -464,118 +461,5 @@ public sealed class CadmusMongoItemDumper : MongoConsumerBase
 
             yield return item;
         }
-    }
-
-    private string BuildFileName(int nr)
-    {
-        string fileName = $"{_options.DatabaseName}";
-        if (nr > 0) fileName += $"_{nr:000}";
-        fileName += ".json";
-        return Path.Combine(_options.OutputDirectory, fileName);
-    }
-
-    private void WriteHead(StreamWriter writer, int fileNr,
-        JsonWriterSettings jsonSettings)
-    {
-        // open root object
-        writer.WriteLine("{");
-
-        // write time of dump
-        writer.WriteLine($"  \"time\": \"{DateTime.UtcNow:O}\",");
-
-        // write chunk if needed
-        if (_options.MaxItemsPerFile > 0)
-        {
-            writer.WriteLine($"  \"chunk\": {fileNr},");
-        }
-
-        // write options JSON object
-        writer.WriteLine("  \"options\": ");
-        writer.WriteLine(_options.ToJson(jsonSettings));
-        writer.WriteLine("  }");
-
-        // open items array
-        writer.WriteLine("  \"items\": [");
-    }
-
-    private static void WriteTail(StreamWriter writer)
-    {
-        // close items array and root object
-        writer.WriteLine("]");
-        writer.WriteLine("}");
-    }
-
-    /// <summary>
-    /// Dump the items to JSON files.
-    /// </summary>
-    /// <param name="filter">The filter.</param>
-    /// <param name="cancel">The cancellation token.</param>
-    /// <param name="progress">The optional progress reporter.</param>
-    /// <returns>Count of items dumped.</returns>
-    /// <exception cref="ArgumentNullException">filter</exception>
-    public int Dump(CadmusDumpFilter filter, CancellationToken cancel,
-        IProgress<ProgressReport>? progress = null)
-    {
-        ArgumentNullException.ThrowIfNull(filter);
-
-        EnsureClientCreated(string.Format(_options.ConnectionString,
-            _options.DatabaseName));
-        ProgressReport? report = progress is null ? null : new ProgressReport();
-
-        int count = 0, fileNr = 0;
-        StreamWriter? writer = null;
-        JsonWriterSettings jsonSettings = new()
-        {
-            Indent = _options.Indented,
-        };
-
-        // get items
-        foreach (BsonDocument item in GetItems(filter))
-        {
-            // create new file for this chunk if needed
-            if (writer == null || (_options.MaxItemsPerFile > 0
-                && count >= _options.MaxItemsPerFile))
-            {
-                if (writer != null) WriteTail(writer);
-                writer?.Flush();
-                writer?.Close();
-
-                string path = BuildFileName(++fileNr);
-                writer = new StreamWriter(path, false, Encoding.UTF8);
-                WriteHead(writer, fileNr, jsonSettings);
-                count = 0;
-            }
-
-            // write the item as JSON
-            string json = item.ToJson(jsonSettings);
-            writer.WriteLine(json);
-
-            if (cancel.IsCancellationRequested)
-            {
-                // if cancelled, close the file and return
-                writer.Flush();
-                writer.Close();
-                return count;
-            }
-
-            // report progress periodically
-            if (progress != null && count % 100 == 0)
-            {
-                report!.Count = count;
-                progress.Report(report);
-            }
-        }
-
-        if (writer != null) WriteTail(writer);
-        writer?.Flush();
-        writer?.Close();
-
-        if (progress != null)
-        {
-            report!.Count = count;
-            progress.Report(report);
-        }
-
-        return count;
     }
 }

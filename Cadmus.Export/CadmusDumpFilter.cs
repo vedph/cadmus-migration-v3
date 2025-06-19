@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Cadmus.Export;
 
 /// <summary>
-/// Filter for <see cref="CadmusMongoItemDumper"/>.
+/// Filter for <see cref="CadmusMongoDataFramer"/>.
 /// </summary>
 public class CadmusDumpFilter : ItemFilter
 {
