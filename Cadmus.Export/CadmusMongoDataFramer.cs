@@ -245,10 +245,10 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
         CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
-        // create filters for part type keys
+        // filters for part type keys
         List<FilterDefinition<BsonDocument>> filters = [];
 
-        // apply whitelist if specified
+        // apply whitelist if specified: all keys are combined with OR
         if (filter.WhitePartTypeKeys?.Count > 0)
         {
             List<FilterDefinition<BsonDocument>> whiteList = [];
@@ -258,7 +258,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             filters.Add(builder.Or(whiteList));
         }
 
-        // apply blacklist if specified
+        // apply blacklist if specified: all keys are combined with OR NOT
         if (filter.BlackPartTypeKeys?.Count > 0)
         {
             List<FilterDefinition<BsonDocument>> blackList = [];
@@ -274,7 +274,13 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
     }
 
-    private static BsonDocument RenderFilter(FilterDefinition<BsonDocument> filter)
+    /// <summary>
+    /// Renders the specified filter to a BsonDocument.
+    /// </summary>
+    /// <param name="filter">Filter.</param>
+    /// <returns>BsonDocument.</returns>
+    private static BsonDocument RenderFilter(FilterDefinition<BsonDocument>
+        filter)
     {
         IBsonSerializer<BsonDocument> serializer =
             BsonSerializer.SerializerRegistry.GetSerializer<BsonDocument>();
@@ -286,7 +292,8 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     }
 
     /// <summary>
-    /// Gets the parts for a specific item using the history_parts collection.
+    /// Gets the parts for a specific item using the <c>history-parts</c>
+    /// collection.
     /// </summary>
     /// <param name="db">The database.</param>
     /// <param name="filter">The source filter.</param>
@@ -295,17 +302,18 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     private List<BsonDocument> GetItemParts(IMongoDatabase db,
         CadmusDumpFilter filter, string itemId)
     {
+        // get collection
         IMongoCollection<BsonDocument> historyPartsCollection =
             db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
 
+        // filter by itemId
         FilterDefinitionBuilder<BsonDocument> filterBuilder =
             Builders<BsonDocument>.Filter;
-
         FilterDefinition<BsonDocument> builtFilter =
             filterBuilder.Eq("itemId", itemId);
-
         List<FilterDefinition<BsonDocument>> filters = [builtFilter];
 
+        // add time filter if specified
         if (_options.IsIncremental)
         {
             if (filter.MinModified.HasValue)
@@ -337,23 +345,34 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
         builtFilter = filters.Count > 1 ? filterBuilder.And(filters) : filters[0];
 
+        // render the filter to a BsonDocument
         BsonDocument renderedFilter = RenderFilter(builtFilter);
 
+        // build the pipeline to get the latest version of each part
         BsonDocument[] pipeline =
         [
+            // match the filter
             new BsonDocument("$match", renderedFilter),
+            // sort by timeModified descending to get the latest first
             new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
+            // group by referenceId (itemId), keeping the first document
+            // which is the latest version of the part for that item
             new BsonDocument("$group", new BsonDocument
             {
+                // group by referenceId, which is the itemId in this case
                 { "_id", "$referenceId" },
+                // capture the entire document for each group as "doc"
                 { "doc", new BsonDocument("$first", "$$ROOT") }
             }),
+            // replace the root with the doc field, unwrapping it
             new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc"))
         ];
 
+        // aggregate the parts collection
         List<BsonDocument> parts = historyPartsCollection
             .Aggregate<BsonDocument>(pipeline).ToList();
 
+        // adjust the parts schema before returning
         foreach (BsonDocument? part in parts)
         {
             part["_id"] = part["referenceId"];
