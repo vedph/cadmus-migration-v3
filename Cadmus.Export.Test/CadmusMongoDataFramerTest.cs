@@ -234,7 +234,7 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
 
         // in our test data, part3 was updated multiple times:
         // we should get the version that was current as of March 1
-        Assert.Equal("content3", part3["content"]["value"].AsString);
+        Assert.Equal("initial content3", part3["content"]["value"].AsString);
     }
 
     [Fact]
