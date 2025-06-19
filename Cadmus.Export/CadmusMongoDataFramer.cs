@@ -372,9 +372,18 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
         List<BsonDocument> parts = historyPartsCollection
             .Aggregate<BsonDocument>(pipeline).ToList();
 
+        // filter out deleted parts if NoDeleted is set
+        if (_options.NoDeleted)
+        {
+            parts = [.. parts
+                .Where(part => !part.Contains("status") ||
+                    part["status"].AsInt32 != (int)EditStatus.Deleted)];
+        }
+
         // adjust the parts schema before returning
         foreach (BsonDocument? part in parts)
         {
+            // adjust the part schema
             part["_id"] = part["referenceId"];
             part.Remove("referenceId");
 
@@ -524,19 +533,10 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             FilterDefinition<BsonDocument> builtFilter =
                 BuildItemFilter(filter, filterBuilder);
 
-            // exclude deleted items if NoDeleted is set
-            if (_options.NoDeleted)
-            {
-                builtFilter = filterBuilder.And(builtFilter,
-                    filterBuilder.Ne("status", (int)EditStatus.Deleted));
-            }
-
             List<BsonDocument> pipeline =
             [
                 // match the filter
-                new BsonDocument("$match", builtFilter == filterBuilder.Empty
-                    ? []
-                    : RenderFilter(builtFilter)),
+                new BsonDocument("$match", RenderFilter(builtFilter)),
                 // sort by timeModified descending to get the latest first
                 new BsonDocument("$sort", new BsonDocument("timeModified", -1)),
                 // group by referenceId, keeping the first document
@@ -565,6 +565,14 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
             foreach (BsonDocument? item in cursor.ToEnumerable())
             {
+                // exclude deleted items if NoDeleted is set
+                if (_options.NoDeleted && item.Contains("status") &&
+                    item["status"].AsInt32 == (int)EditStatus.Deleted)
+                {
+                    continue;
+                }
+
+                // adjust the item schema
                 item["_id"] = item["referenceId"];
                 item.Remove("referenceId");
                 if (item.Contains("status"))
@@ -572,12 +580,15 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                     item["_status"] = item["status"];
                     item.Remove("status");
                 }
+
+                // add parts if requested
                 if (!_options.NoParts)
                 {
                     List<BsonDocument> parts = GetItemParts(
                         db, filter, item["_id"].AsString);
                     item["_parts"] = new BsonArray(parts);
                 }
+
                 yield return item;
             }
         }
