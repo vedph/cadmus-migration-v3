@@ -205,6 +205,7 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
         // - item5 (created on May 15)
         // - item2 (has part3 updated on May 10)
         CadmusJsonDumperOptions options = GetBasicOptions();
+        options.IsIncremental = true;
         CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()
@@ -240,10 +241,11 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
         LoadMockData("IncrementalDataset.csv");
 
         // Get items changed between April 15 and May 20, 2023.
-        // With NoPartDate=true, item2 should be excluded because the item itself
-        // wasn't modified in the timeframe, only its part was
+        // With NoPartDate, item2 should be excluded because the item itself
+        // wasn't modified in the timeframe: only its part was
         CadmusJsonDumperOptions options = GetBasicOptions();
         options.NoPartDate = true;
+        options.IsIncremental = true;
         CadmusMongoDataFramer dumper = new(options);
 
         CadmusDumpFilter filter = new()

@@ -147,7 +147,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     /// <param name="filter">The source filter.</param>
     /// <param name="builder">Filter definition builder.</param>
     /// <returns>Filter.</returns>
-    private static FilterDefinition<BsonDocument> BuildItemFilter(
+    private FilterDefinition<BsonDocument> BuildItemFilter(
         CadmusDumpFilter filter,
         FilterDefinitionBuilder<BsonDocument> builder)
     {
@@ -157,29 +157,28 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
 
         // if no filter or no time constraints, return the base filter
         if (filter.IsEmpty ||
-            (!filter.MinModified.HasValue &&
-             !filter.MaxModified.HasValue))
+            (!filter.MinModified.HasValue && !filter.MaxModified.HasValue))
         {
             return builtFilter;
         }
 
-        // add time-based constraints
         List<FilterDefinition<BsonDocument>> filters = [];
-
-        // start with the base filter if it's not empty
         if (builtFilter != builder.Empty) filters.Add(builtFilter);
 
-        // add date range filter for items
-        if (filter.MinModified.HasValue)
+        if (_options.IsIncremental)
         {
-            filters.Add(builder.Gte("timeModified",
-                filter.MinModified.Value));
-        }
+            // only items changed in the window [MinModified, MaxModified]
+            if (filter.MinModified.HasValue)
+                filters.Add(builder.Gte("timeModified", filter.MinModified.Value));
 
-        if (filter.MaxModified.HasValue)
+            if (filter.MaxModified.HasValue)
+                filters.Add(builder.Lte("timeModified", filter.MaxModified.Value));
+        }
+        else
         {
-            filters.Add(builder.Lte("timeModified",
-                filter.MaxModified.Value));
+            // all items active or deleted as of MaxModified
+            if (filter.MaxModified.HasValue)
+                filters.Add(builder.Lte("timeModified", filter.MaxModified.Value));
         }
 
         return filters.Count > 0 ? builder.And(filters) : builder.Empty;
@@ -288,50 +287,51 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
     /// <param name="filter">The source filter.</param>
     /// <param name="itemId">The item ID.</param>
     /// <returns>The list of parts for the item.</returns>
-    private static List<BsonDocument> GetItemParts(IMongoDatabase db,
+    private List<BsonDocument> GetItemParts(IMongoDatabase db,
         CadmusDumpFilter filter, string itemId)
     {
-        // get history_parts collection
         IMongoCollection<BsonDocument> historyPartsCollection =
             db.GetCollection<BsonDocument>(MongoHistoryPart.COLLECTION);
 
-        // create filter builder
         FilterDefinitionBuilder<BsonDocument> filterBuilder =
             Builders<BsonDocument>.Filter;
 
-        // parts must be for this item
-        FilterDefinition<BsonDocument> builtFilter = filterBuilder.Eq("itemId",
-            itemId);
+        FilterDefinition<BsonDocument> builtFilter =
+            filterBuilder.Eq("itemId", itemId);
 
-        // add time constraints if they exist
-        if (filter.MinModified.HasValue)
+        List<FilterDefinition<BsonDocument>> filters = [builtFilter];
+
+        if (_options.IsIncremental)
         {
-            builtFilter = filterBuilder.And(
-                builtFilter,
-                filterBuilder.Lte("timeModified", filter.MinModified.Value)
-            );
+            if (filter.MinModified.HasValue)
+            {
+                filters.Add(filterBuilder.Gte("timeModified",
+                    filter.MinModified.Value));
+            }
+            if (filter.MaxModified.HasValue)
+            {
+                filters.Add(filterBuilder.Lte("timeModified",
+                    filter.MaxModified.Value));
+            }
         }
-
-        if (filter.MaxModified.HasValue)
+        else
         {
-            builtFilter = filterBuilder.And(
-                builtFilter,
-                filterBuilder.Lte("timeModified", filter.MaxModified.Value)
-            );
+            if (filter.MaxModified.HasValue)
+            {
+                filters.Add(filterBuilder.Lte("timeModified",
+                    filter.MaxModified.Value));
+            }
         }
 
         // add part type filters if specified
         if (filter.WhitePartTypeKeys?.Count > 0 ||
             filter.BlackPartTypeKeys?.Count > 0)
         {
-            builtFilter = filterBuilder.And(builtFilter,
-                BuildPartTypeFilters(filter, filterBuilder));
+            filters.Add(BuildPartTypeFilters(filter, filterBuilder));
         }
 
-        // aggregate to get the latest version of each part:
-        // 1. Match the filter
-        // 2. Sort by timeModified descending to get latest versions first
-        // 3. Group by referenceId, keeping the first (latest) document
+        builtFilter = filters.Count > 1 ? filterBuilder.And(filters) : filters[0];
+
         BsonDocument renderedFilter = RenderFilter(builtFilter);
 
         BsonDocument[] pipeline =
@@ -346,18 +346,14 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
             new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$doc"))
         ];
 
-        // execute the aggregation
         List<BsonDocument> parts = historyPartsCollection
             .Aggregate<BsonDocument>(pipeline).ToList();
 
-        // process each part to make it suitable for export
         foreach (BsonDocument? part in parts)
         {
-            // set _id to referenceId and remove referenceId
             part["_id"] = part["referenceId"];
             part.Remove("referenceId");
 
-            // set _status based on status
             if (part.Contains("status"))
             {
                 part["_status"] = part["status"];
@@ -403,7 +399,7 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
         }
 
         // create aggregation pipeline
-        List<BsonDocument> pipelineDefinitions =
+        List<BsonDocument> pipeline =
         [
             // match the filter - use an empty document instead of an
             // EmptyFilterDefinition
@@ -427,15 +423,15 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
         // add pagination if requested
         if (filter.PageSize > 0)
         {
-            pipelineDefinitions.Add(new BsonDocument("$skip",
+            pipeline.Add(new BsonDocument("$skip",
                 (filter.PageNumber - 1) * filter.PageSize));
-            pipelineDefinitions.Add(new BsonDocument("$limit",
+            pipeline.Add(new BsonDocument("$limit",
                 filter.PageSize));
         }
 
         // execute the aggregation
         using IAsyncCursor<BsonDocument> cursor = historyItemsCollection
-            .Aggregate<BsonDocument>(pipelineDefinitions);
+            .Aggregate<BsonDocument>(pipeline);
 
         // process each item
         foreach (BsonDocument? item in cursor.ToEnumerable())

@@ -18,6 +18,14 @@ public class CadmusMongoDataFramerOptions
     public required string DatabaseName { get; set; } = "cadmus";
 
     /// <summary>
+    /// True to enable incremental framing mode. If true, only include
+    /// items/parts changed (created, updated, or deleted) in the timeframe.
+    /// If false, include all items/parts active or deleted as of the end of
+    /// the timeframe.
+    /// </summary>
+    public bool IsIncremental { get; set; }
+
+    /// <summary>
     /// True to not include deleted items in the export.
     /// </summary>
     public bool NoDeleted { get; set; }

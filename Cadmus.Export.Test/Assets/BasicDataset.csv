@@ -14,16 +14,16 @@ hist5,Item 4,Description 4,default,group1,4,0,2023-01-15T10:00:00Z,creator1,2023
 
 #parts
 _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,content
-part1,item1,token,,2023-01-01T10:30:00Z,creator1,2023-01-01T10:30:00Z,user1,"""value"":""content1"""
-part2,item2,comment,,2023-02-01T11:00:00Z,creator1,2023-02-01T11:00:00Z,user1,"""value"":""content2"""
-part3,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-03-15T09:30:00Z,user1,"""value"":""content3"""
-part4,item3,note,,2023-04-01T10:30:00Z,creator2,2023-04-01T10:30:00Z,user2,"""value"":""content4"""
+part1,item1,token,,2023-01-01T10:30:00Z,creator1,2023-01-01T10:30:00Z,user1,"{""value"":""content1""}"
+part2,item2,comment,,2023-02-01T11:00:00Z,creator1,2023-02-01T11:00:00Z,user1,"{""value"":""content2""}"
+part3,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-03-15T09:30:00Z,user1,"{""value"":""content3""}"
+part4,item3,note,,2023-04-01T10:30:00Z,creator2,2023-04-01T10:30:00Z,user2,"{""value"":""content4""}"
 
 #history-parts
 _id,itemId,typeId,roleId,timeCreated,creatorId,timeModified,userId,referenceId,status,content
-histpart1,item1,token,,2023-01-01T10:30:00Z,creator1,2023-01-01T10:30:00Z,user1,part1,0,"""value"":""content1"""
-histpart2,item2,comment,,2023-02-01T11:00:00Z,creator1,2023-02-01T11:00:00Z,user1,part2,0,"""value"":""content2"""
-histpart3,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-02-02T14:00:00Z,user1,part3,0,"""value"":""initial content3"""
-histpart4,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-03-15T09:30:00Z,user1,part3,1,"""value"":""content3"""
-histpart5,item3,note,,2023-04-01T10:30:00Z,creator2,2023-04-01T10:30:00Z,user2,part4,0,"""value"":""content4"""
-histpart6,item4,token,,2023-01-15T10:30:00Z,creator1,2023-05-01T16:00:00Z,user1,part5,2,"""value"":""content5"""
+histpart1,item1,token,,2023-01-01T10:30:00Z,creator1,2023-01-01T10:30:00Z,user1,part1,0,"{""value"":""content1""}"
+histpart2,item2,comment,,2023-02-01T11:00:00Z,creator1,2023-02-01T11:00:00Z,user1,part2,0,"{""value"":""content2""}"
+histpart3,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-02-02T14:00:00Z,user1,part3,0,"{""value"":""initial content3""}"
+histpart4,item2,token,sample,2023-02-02T14:00:00Z,creator1,2023-03-15T09:30:00Z,user1,part3,1,"{""value"":""content3""}"
+histpart5,item3,note,,2023-04-01T10:30:00Z,creator2,2023-04-01T10:30:00Z,user2,part4,0,"{""value"":""content4""}"
+histpart6,item4,token,,2023-01-15T10:30:00Z,creator1,2023-05-01T16:00:00Z,user1,part5,2,"{""value"":""content5""}"
