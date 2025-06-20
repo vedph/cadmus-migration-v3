@@ -147,7 +147,7 @@ public class RenderItemsCommandSettings : CommandSettings
     /// implementing <see cref="ICadmusRenderingFactoryProvider"/>.
     /// </summary>
     [CommandOption("--preview|-p")]
-    [Description("The tag of the factory provider plugin.")]
+    [Description("The tag of the factory provider plugin for preview.")]
     public string? PreviewFactoryProviderTag { get; set; }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class RenderItemsCommandSettings : CommandSettings
     /// implementing Cadmus <see cref="IRepositoryProvider"/>.
     /// </summary>
     [CommandOption("--repository|-r")]
-    [Description("The tag of the Cadmus repository plugin.")]
+    [Description("The tag of the Cadmus repository provider plugin.")]
     public string? RepositoryProviderTag { get; set; }
 
     /// <summary>

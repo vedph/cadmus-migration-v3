@@ -190,13 +190,13 @@ public class DumpCommandSettings : CommandSettings
         DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd"));
 
     [CommandOption("--max-file-items")]
-    [Description("The maximum number of items to export. If not specified (0), " +
-        "all items will be exported in a single file.")]
+    [Description("The maximum number of items to export per file. " +
+        "If not specified (0), all items will be exported in a single file.")]
     [DefaultValue(0)]
     public int MaxItemsPerFile { get; set; }
 
     [CommandOption("--indented")]
-    [Description("If set, the output will be indented.")]
+    [Description("Indent JSON output.")]
     public bool Indented { get; set; }
 
     /// </summary>
@@ -216,13 +216,11 @@ public class DumpCommandSettings : CommandSettings
     public string? UserId { get; set; }
 
     [CommandOption("-n|--min-modified")]
-    [Description("The minimum modified date and time filter. " +
-        "If not specified, no minimum date is applied.")]
+    [Description("The minimum modified date and time filter.")]
     public DateTime? MinModified { get; set; }
 
     [CommandOption("-m|--max-modified")]
-    [Description("The maximum modified date and time filter. " +
-        "If not specified, no maximum date is applied.")]
+    [Description("The maximum modified date and time filter.")]
     public DateTime? MaxModified { get; set; }
 
     [CommandOption("-t|--title")]
