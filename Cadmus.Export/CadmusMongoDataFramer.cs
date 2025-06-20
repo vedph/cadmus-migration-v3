@@ -17,22 +17,23 @@ namespace Cadmus.Export;
 /// with their parts, ready to be exported or otherwise processed.
 /// Items are filtered according to specified criteria, with the state of data
 /// determined at a specific timeframe when requested.
-/// <para>The source Cadmus database contains collections for items, parts,
-/// history_items, history_parts. Items have among other properties <c>_id</c>
-/// (a GUID), <c>timeCreated</c>, <c>timeModified</c>; parts have <c>_id</c>
-/// (a GUID), <c>timeCreated</c>, <c>timeModified</c>, and an <c>itemId</c>
-/// working like a foreign key to link that part to a specific item.</para>
+/// <para>The source Cadmus database contains collections <c>items</c>,
+/// <c>parts</c>, <c>history-items</c>, <c>history-parts</c>. Items have among
+/// other properties <c>_id</c> (a GUID), <c>timeCreated</c>, <c>timeModified</c>;
+/// parts have <c>_id</c> (a GUID), <c>timeCreated</c>, <c>timeModified</c>,
+/// and an <c>itemId</c> working like a foreign key to link that part to a 
+/// specific item.</para>
 /// <para>History collections are used to store copies of items and parts,
 /// whenever they get saved in the database during editing. When this happens,
-/// a copy of the item/part it is stored in the corresponding history
+/// a copy of the item/part is stored in the corresponding history
 /// collection: the entry has its own <c>_id</c> (a GUID), and the GUID of its
-/// source item/part in <c>referenceId</c>. Also, there is a <c>status</c></para>
+/// source item/part in <c>referenceId</c>. Also, there is a <c>status</c>
 /// numeric field with values 0=created, 1=updated, 2=deleted. When an item/part
 /// is first created, a copy of it is stored in history with status=created;
 /// then, on each successive update, a copy of it is stored in history with
 /// status=updated. If it gets deleted, the item/part is removed from its
 /// collection, but a copy of it before deletion is stored in the corresponding
-/// history part, with status=deleted.
+/// history part, with status=deleted.</para>
 /// <para>To get a snapshot of all data at a given time frame, the dumper focuses
 /// on history collections which contain all versions of items and parts with
 /// their timestamps and status.</para>

@@ -276,11 +276,11 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
         // | i4*     |       | CU    |       |       |       |       |       | D     |       |       |
         // | i5*     |       |       |       |       |       |       |       |       |       | CU    |
         // | p1 (i1) | CU    |       |       |       |       |       |       |       |       |       |
-        // | p2 (i2) |       |       | CU    |       |       |       |       |       |       |       |
+        // | p2*(i2) |       |       | CU    |       |       |       |       |       |       |       |
         // | p3*(i2) |       |       |       | CU    |       | U     |       |       | U     |       |
         // | p4 (i3) |       |       |       |       |       |       | CU    |       |       |       |
-        // | p5 (i4) |       | CU    |       |       |       |       |       | D     |       |       |
-        // | p6 (i5) |       |       |       |       |       |       |       |       |       | CU    |
+        // | p5*(i4) |       | CU    |       |       |       |       |       | D     |       |       |
+        // | p6*(i5) |       |       |       |       |       |       |       |       |       | CU    |
 
         // get items changed between 04-15 and 05-20, 2023.
         // This should include:
