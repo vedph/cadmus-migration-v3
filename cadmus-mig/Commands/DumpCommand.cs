@@ -225,7 +225,7 @@ public class DumpCommandSettings : CommandSettings
         "If not specified, no maximum date is applied.")]
     public DateTime? MaxModified { get; set; }
 
-    [CommandOption("--title")]
+    [CommandOption("-t|--title")]
     [Description("The item's title filter.")]
     public string? Title { get; set; }
 
