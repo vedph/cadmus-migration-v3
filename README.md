@@ -17,6 +17,10 @@ Main projects:
 
 ## History
 
+- 2025-06-22: fix to item status in data framer when item's part has changed.
+
+### 8.0.2
+
 - 2025-06-20: added dump logic to export.
 - 2025-06-17:
   - updated packages (all the version numbers will have to be increased).

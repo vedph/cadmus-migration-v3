@@ -525,4 +525,69 @@ public class CadmusMongoDataFramerTest(MongoFixture fixture) :
 
         Assert.Contains(specialFacetItems, i => i["_id"].AsString == "item3");
     }
+
+    [Fact]
+    public void GetItems_ItemIncludedByPartChange_StatusChangedToUpdated()
+    {
+        LoadMockData("IncrementalDataset.csv");
+
+        // | obj     | 01-01 | 01-15 | 02-01 | 02-02 | 03-01 | 03-15 | 04-01 | 05-01 | 05-10 | 05-15 |
+        // | ------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+        // | i1      | CU    |       |       |       |       |       |       |       |       |       |
+        // | i2*     |       |       | CU    |       | U     |       |       |       |       |       |
+        // | i3*     |       |       |       |       |       |       | CU    |       |       |       |
+        // | i4      |       | CU    |       |       |       |       |       | D     |       |       |
+        // | i5      |       |       |       |       |       |       |       |       |       | CU    |
+        // | p1 (i1) | CU    |       |       |       |       |       |       |       |       |       |
+        // | p2 (i2) |       |       | CU    |       |       |       |       |       |       |       |
+        // | p3 (i2) |       |       |       | CU    |       | U     |       |       | U     |       |
+        // | p4 (i3) |       |       |       |       |       |       | CU    |       |       |       |
+        // | p5 (i4) |       | CU    |       |       |       |       |       | D     |       |       |
+        // | p6 (i5) |       |       |       |       |       |       |       |       |       | CU    |
+
+        // Focus on item3, which was Created on 04-01 with part4
+        // Then we look at a timeframe of 05-05 to 05-20 where only part3 of
+        // item2 was updated.
+        // Since item2 itself wasn't changed in this window, but its part was, 
+        // it should have its status changed to Updated instead of remaining
+        // Created.
+
+        CadmusJsonDumperOptions options = GetBasicOptions();
+        options.IsIncremental = true;
+        CadmusMongoDataFramer dumper = new(options);
+
+        // define a timeframe that includes the part update on 05-10
+        // but not the last item2 update on 03-01
+        CadmusDumpFilter filter = new()
+        {
+            MinModified = new DateTime(2023, 5, 5, 0, 0, 0, DateTimeKind.Utc),
+            MaxModified = new DateTime(2023, 5, 20, 23, 59, 59, DateTimeKind.Utc),
+            PageNumber = 1,
+            PageSize = 0
+        };
+
+        List<BsonDocument> items = [.. dumper.GetItems(filter)];
+
+        // verify that item2 is included in the results (due to its part3
+        // being updated)
+        BsonDocument? item2 = items.FirstOrDefault(i => i["_id"].AsString == "item2");
+        Assert.NotNull(item2);
+
+        // verify that the status was changed from Created to Updated
+        Assert.Equal(EditStatus.Updated, (EditStatus)item2["_status"].AsInt32);
+
+        // verify item5 was created in this timeframe and has the correct status
+        BsonDocument? item5 = items.FirstOrDefault(i => i["_id"].AsString == "item5");
+        Assert.NotNull(item5);
+        Assert.Equal(EditStatus.Created, (EditStatus)item5["_status"].AsInt32);
+
+        // check that we got the right version of part3 from the update on 05-10
+        if (!options.NoParts)
+        {
+            BsonArray parts = item2["_parts"].AsBsonArray;
+            BsonValue? part3 = parts.FirstOrDefault(p => p["_id"].AsString == "part3");
+            Assert.NotNull(part3);
+            Assert.Equal("updated content3", part3["content"]["value"].AsString);
+        }
+    }
 }

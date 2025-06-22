@@ -481,6 +481,10 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                 allItemIds = [.. itemsInWindow.Union(itemIdsFromParts)];
             }
 
+            // store the set of items only included because their parts changed
+            HashSet<string> itemsIncludedByParts =
+                [.. itemIdsFromParts.Except(itemsInWindow)];
+
             // if no items in the union, return empty
             if (allItemIds.Count == 0) yield break;
 
@@ -522,9 +526,27 @@ public sealed class CadmusMongoDataFramer : MongoConsumerBase
                 // adjust the item schema
                 item["_id"] = item["referenceId"];
                 item.Remove("referenceId");
+
+                // if this item was included only because its parts changed,
+                // change its status to Updated
                 if (item.Contains("status"))
                 {
-                    item["_status"] = item["status"];
+                    // get the original status
+                    int statusValue = item["status"].AsInt32;
+
+                    // if the status is Created but the item was included because
+                    // of its parts, change the status to Updated
+                    if (statusValue == (int)EditStatus.Created &&
+                        !_options.NoPartDate &&
+                        itemsIncludedByParts.Contains(item["_id"].AsString))
+                    {
+                        item["_status"] = (int)EditStatus.Updated;
+                    }
+                    else
+                    {
+                        item["_status"] = statusValue;
+                    }
+
                     item.Remove("status");
                 }
 
