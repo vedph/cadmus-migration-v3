@@ -54,9 +54,9 @@ public sealed class CadmusMongoJsonDumper
         }
 
         // write options JSON object
-        writer.WriteLine("  \"options\": ");
-        writer.WriteLine(_options.ToJson(jsonSettings));
-        writer.WriteLine("  }");
+        writer.Write("  \"options\": ");
+        writer.Write(_options.ToJson(jsonSettings));
+        writer.WriteLine(",");
 
         // open items array
         writer.WriteLine("  \"items\": [");
@@ -94,6 +94,8 @@ public sealed class CadmusMongoJsonDumper
         // get items
         foreach (BsonDocument item in _framer.GetItems(filter))
         {
+            count++;
+
             // create new file for this chunk if needed
             if (writer == null || (_options.MaxItemsPerFile > 0
                 && count >= _options.MaxItemsPerFile))

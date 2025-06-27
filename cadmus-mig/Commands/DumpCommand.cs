@@ -186,7 +186,8 @@ public class DumpCommandSettings : CommandSettings
     [CommandOption("-o|--output-dir")]
     [Description("The output directory where dump files will be saved")]
     public string OutputDirectory { get; set; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory),
+        Environment.GetFolderPath
+            (Environment.SpecialFolder.DesktopDirectory),
         DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd"));
 
     [CommandOption("--max-file-items")]

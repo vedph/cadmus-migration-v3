@@ -2,7 +2,7 @@
   "profiles": {
     "cadmus-mig": {
       "commandName": "Project",
-      "commandLineArgs": "render cadmus-sidon c:\\users\\dfusi\\desktop\\sidon\\sidon.json"
+      "commandLineArgs": "dump cadmus-ndp --indented"
     }
   }
 }
