@@ -2,7 +2,7 @@
   "profiles": {
     "cadmus-mig": {
       "commandName": "Project",
-      "commandLineArgs": "dump cadmus-ndp --indented"
+      "commandLineArgs": "dump cadmus-ndp --indented -s 5"
     }
   }
 }

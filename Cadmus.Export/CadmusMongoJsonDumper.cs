@@ -107,16 +107,20 @@ public sealed class CadmusMongoJsonDumper
                 string path = BuildFileName(++fileNr);
                 writer = new StreamWriter(path, false, Encoding.UTF8);
                 WriteHead(writer, fileNr, jsonSettings);
-                count = 0;
+                count = 1;
             }
+
+            // prepend array's item separator if not first item in doc
+            if (count > 1) writer.WriteLine(",");
 
             // write the item as JSON
             string json = item.ToJson(jsonSettings);
-            writer.WriteLine(json);
+            writer.Write(json);
 
             if (cancel.IsCancellationRequested)
             {
                 // if cancelled, close the file and return
+                writer.WriteLine();
                 writer.Flush();
                 writer.Close();
                 return count;

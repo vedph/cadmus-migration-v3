@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Cadmus.Export.Test;
@@ -32,6 +33,21 @@ public sealed class MongoFixture : IDisposable
         Database.DropCollection(MongoPart.COLLECTION);
         Database.DropCollection(MongoHistoryItem.COLLECTION);
         Database.DropCollection(MongoHistoryPart.COLLECTION);
+    }
+
+    /// <summary>
+    /// Loads mock data from an embedded CSV resource.
+    /// </summary>
+    /// <param name="resourceName">The name of the embedded resource (e.g., "BasicDataset.csv")</param>
+    /// <exception cref="ArgumentException">Thrown when the resource is not found</exception>
+    public void LoadMockData(string resourceName)
+    {
+        Assembly assembly = typeof(MongoFixture).Assembly;
+        using Stream? stream = assembly.GetManifestResourceStream(
+            $"Cadmus.Export.Test.Assets.{resourceName}")
+            ?? throw new ArgumentException($"Resource {resourceName} not found");
+        ClearDatabase();
+        LoadDataFromCsv(stream);
     }
 
     private void ProcessRecords<T>(string collectionName, List<string[]>
