@@ -42,13 +42,20 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
                     OutputPath = settings.OutputPath,
                     Indented = settings.Indented
                 });
+
+            AnsiConsole.MarkupLine("Dumping thesauri...");
+            
             int count = await dumper.DumpAsync(CancellationToken.None,
                 new Progress<ProgressReport>(r =>
                 {
-                    AnsiConsole.MarkupLine($"- [yellow]{r.Count}[/]: {r.Message}");
+                    // only report every 10th item to reduce noise
+                    if (r.Count % 10 == 0 || r.Count == 1)
+                    {
+                        AnsiConsole.MarkupLine($"Processed [yellow]{r.Count}[/] thesauri...");
+                    }
                 }));
 
-            AnsiConsole.MarkupLine($"Completed. Dump count: [yellow]{count}[/]");
+            AnsiConsole.MarkupLine($"[green]Completed![/] Dumped [yellow]{count}[/] thesauri to [cyan]{settings.OutputPath}[/]");
             return 0;
         }
         catch (Exception ex)
