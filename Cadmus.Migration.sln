@@ -9,6 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cadmus.Export.ML.Test", "Ca
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5202FC97-CA57-47FC-9ADD-7EFC2DFFEE43}"
 	ProjectSection(SolutionItems) = preProject
+		build-cli.ps1 = build-cli.ps1
 		Pack.bat = Pack.bat
 		Push.bat = Push.bat
 		PushLocal.bat = PushLocal.bat

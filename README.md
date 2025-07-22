@@ -17,9 +17,12 @@ Main projects:
 
 ## History
 
+### 8.0.6
+
 - 2025-07-22:
   - added dump thesauri command.
   - updated packages.
+  - added GitHub action.
 - 2025-07-05:
   - fixes to JSON dumper.
   - updated packages.
