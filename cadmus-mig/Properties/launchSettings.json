@@ -2,7 +2,7 @@
   "profiles": {
     "cadmus-mig": {
       "commandName": "Project",
-      "commandLineArgs": "dump cadmus-ndp --indented -s 5"
+      "commandLineArgs": "dump-thesauri cadmus-codicology --indented"
     }
   }
 }

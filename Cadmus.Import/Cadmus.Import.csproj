@@ -4,9 +4,9 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>6.0.1</Version>
-		<FileVersion>6.0.1</FileVersion>
-		<AssemblyVersion>6.0.1</AssemblyVersion>
+		<Version>6.0.2</Version>
+		<FileVersion>6.0.2</FileVersion>
+		<AssemblyVersion>6.0.2</AssemblyVersion>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Authors>Daniele Fusi</Authors>
@@ -21,7 +21,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Cadmus.Core" Version="8.0.8" />
+	  <PackageReference Include="Cadmus.Core" Version="8.0.9" />
 	  <PackageReference Include="CsvHelper" Version="33.1.0" />
 	</ItemGroup>
 

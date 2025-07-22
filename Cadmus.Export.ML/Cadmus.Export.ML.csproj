@@ -4,9 +4,9 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>8.0.5</Version>
-		<FileVersion>8.0.5</FileVersion>
-		<AssemblyVersion>8.0.5</AssemblyVersion>
+		<Version>8.0.6</Version>
+		<FileVersion>8.0.6</FileVersion>
+		<AssemblyVersion>8.0.6</AssemblyVersion>
 		<Authors>Daniele Fusi</Authors>
 		<Company>Fusi</Company>
 		<Product>Cadmus</Product>
@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cadmus.Core" Version="8.0.8" />
+		<PackageReference Include="Cadmus.Core" Version="8.0.9" />
 		<PackageReference Include="Cadmus.General.Parts" Version="7.0.4" />
 		<PackageReference Include="Cadmus.Philology.Parts" Version="9.0.3" />
 		<PackageReference Include="Fusi.Xml.Extras" Version="6.0.2" />

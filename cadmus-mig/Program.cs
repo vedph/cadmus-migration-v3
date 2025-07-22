@@ -1,5 +1,6 @@
 ﻿using Cadmus.Migration.Cli.Commands;
 using Serilog;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using System;
 using System.Diagnostics;
@@ -54,19 +55,20 @@ public static class Program
                     .WithDescription("Render items");
                 config.AddCommand<DumpCommand>("dump")
                     .WithDescription("Dump objects from a Cadmus database");
+                config.AddCommand<DumpThesauriCommand>("dump-thesauri")
+                    .WithDescription("Dump thesauri from a Cadmus database");
             });
 
             int result = await app.RunAsync(args);
 
-            Console.ResetColor();
-            Console.CursorVisible = true;
-            Console.WriteLine();
-            Console.WriteLine();
+            AnsiConsole.ResetColors();
+            AnsiConsole.WriteLine();
+            AnsiConsole.WriteLine();
 
             stopwatch.Stop();
             if (stopwatch.ElapsedMilliseconds > 1000)
             {
-                Console.WriteLine("\nTime: {0}h{1}'{2}\"",
+                AnsiConsole.WriteLine("\nTime: {0}h{1}'{2}\"",
                     stopwatch.Elapsed.Hours,
                     stopwatch.Elapsed.Minutes,
                     stopwatch.Elapsed.Seconds);
@@ -77,10 +79,7 @@ public static class Program
         catch (Exception ex)
         {
             Debug.WriteLine(ex.ToString());
-            Console.CursorVisible = true;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(ex.ToString());
-            Console.ResetColor();
+            AnsiConsole.WriteException(ex);
             return 2;
         }
         finally
