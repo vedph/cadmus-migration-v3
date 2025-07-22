@@ -33,16 +33,20 @@ public sealed class MongoThesaurusDumper : MongoConsumerBase
     /// Processes a document to handle targetId alias logic.
     /// If the document has a targetId property with a non-null value,
     /// only _id and targetId are kept.
+    /// Otherwise, the full document is returned but with targetId removed
+    /// if present.
     /// </summary>
     /// <param name="doc">The document to process.</param>
     /// <returns>The processed document.</returns>
     private static BsonDocument ProcessDocument(BsonDocument doc)
     {
+        // check if targetId exists and has a non-null, non-undefined value
         if (doc.Contains("targetId") && 
             doc["targetId"] != BsonNull.Value && 
-            !doc["targetId"].IsBsonUndefined)
+            !doc["targetId"].IsBsonUndefined &&
+            !string.IsNullOrEmpty(doc["targetId"].AsString))
         {
-            // create a new document with only _id and targetId
+            // create a new document with only _id and targetId (alias case)
             return new BsonDocument
             {
                 { "_id", doc["_id"] },
@@ -50,8 +54,14 @@ public sealed class MongoThesaurusDumper : MongoConsumerBase
             };
         }
         
-        // return the original document if no targetId or targetId is falsy
-        return doc;
+        // for normal thesauri (with entries), remove targetId if present
+        BsonDocument result = [.. doc];
+        if (result.Contains("targetId"))
+        {
+            result.Remove("targetId");
+        }
+        
+        return result;
     }
 
     /// <summary>

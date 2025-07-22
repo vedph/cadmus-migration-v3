@@ -45,7 +45,7 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
             int count = await dumper.DumpAsync(CancellationToken.None,
                 new Progress<ProgressReport>(r =>
                 {
-                    AnsiConsole.MarkupLine($"- [yellow]{r.Message}[/]");
+                    AnsiConsole.MarkupLine($"- [yellow]{r.Count}[/]: {r.Message}");
                 }));
 
             AnsiConsole.MarkupLine($"Completed. Dump count: [yellow]{count}[/]");
