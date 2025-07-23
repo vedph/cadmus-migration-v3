@@ -46,19 +46,54 @@ public sealed class MongoThesaurusDumper : MongoConsumerBase
             !doc["targetId"].IsBsonUndefined &&
             !string.IsNullOrEmpty(doc["targetId"].AsString))
         {
-            // create a new document with only _id and targetId (alias case)
+            // create a new document with only id and targetId (alias case)
             return new BsonDocument
             {
-                { "_id", doc["_id"] },
+                { "id", doc["_id"] },
                 { "targetId", doc["targetId"] }
             };
         }
         
-        // for normal thesauri (with entries), remove targetId if present
-        BsonDocument result = [.. doc];
-        if (result.Contains("targetId"))
+        // for normal thesauri (with entries):
+        // - rename _id into id
+        // - remove targetId if present
+        // - ensure id comes before entries
+        BsonDocument result = new();
+        
+        // add id first
+        result["id"] = doc["_id"];
+        
+        // add all other fields except _id and targetId
+        foreach (var element in doc)
         {
-            result.Remove("targetId");
+            if (element.Name != "_id" && element.Name != "targetId")
+                result[element.Name] = element.Value;
+        }
+        
+        // rename _id into id in entries and ensure id comes before value
+        if (result.Contains("entries") && result["entries"].IsBsonArray)
+        {
+            BsonArray entries = result["entries"].AsBsonArray;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].IsBsonDocument)
+                {
+                    BsonDocument entry = entries[i].AsBsonDocument;
+                    if (entry.Contains("_id"))
+                    {
+                        // create new entry with id first, then value
+                        BsonDocument newEntry = new()
+                        {
+                            ["id"] = entry["_id"]
+                        };
+                        if (entry.Contains("value"))
+                        {
+                            newEntry["value"] = entry["value"];
+                        }
+                        entries[i] = newEntry;
+                    }
+                }
+            }
         }
         
         return result;
