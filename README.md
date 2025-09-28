@@ -17,7 +17,9 @@ Main projects:
 
 ## History
 
-- 2025-09-28: updated packages.
+- 2025-09-28:
+  - updated packages and their versions.
+  - added `Cadmus.Export.Rdf` project (RDF export).
 
 ### 8.0.7
 

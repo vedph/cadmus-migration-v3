@@ -1,0 +1,113 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace Cadmus.Export.Rdf;
+
+/// <summary>
+/// Base class for RDF format writers.
+/// </summary>
+public abstract class RdfWriter
+{
+    /// <summary>
+    /// The RDF export settings.
+    /// </summary>
+    protected readonly RdfExportSettings _settings;
+
+    /// <summary>
+    /// The prefix mappings.
+    /// </summary>
+    protected readonly Dictionary<string, string> _prefixMappings;
+
+    /// <summary>
+    /// The URI mappings.
+    /// </summary>
+    protected readonly Dictionary<int, string> _uriMappings;
+
+    /// <summary>
+    /// Creates a new RDF writer.
+    /// </summary>
+    /// <param name="settings">The RDF export settings.</param>
+    /// <param name="prefixMappings">The prefix mappings.</param>
+    /// <param name="uriMappings">The URI mappings.</param>
+    /// <exception cref="ArgumentNullException">settings or mappings</exception>
+    protected RdfWriter(RdfExportSettings settings,
+        Dictionary<string, string> prefixMappings,
+        Dictionary<int, string> uriMappings)
+    {
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _prefixMappings = prefixMappings
+            ?? throw new ArgumentNullException(nameof(prefixMappings));
+        _uriMappings = uriMappings
+            ?? throw new ArgumentNullException(nameof(uriMappings));
+    }
+
+    /// <summary>
+    /// Get the URI mapped to the given numeric ID.
+    /// </summary>
+    /// <param name="id">The ID.</param>
+    /// <returns>The URI.</returns>
+    /// <exception cref="InvalidOperationException">ID not mapped.</exception>
+    protected string GetUriForId(int id)
+    {
+        if (_uriMappings.TryGetValue(id, out string? uri))
+        {
+            if (uri == null || (_settings.ValidateUris &&
+                !UriHelper.IsValidUri(uri)))
+            {
+                throw new InvalidOperationException(
+                    $"Invalid URI found for ID {id}: {uri}");
+            }
+            return uri;
+        }
+        throw new InvalidOperationException($"No URI mapping found for ID: {id}");
+    }
+
+    /// <summary>
+    /// Get the full URI (expanded) for the given numeric ID.
+    /// </summary>
+    /// <param name="id">The ID.</param>
+    /// <returns>The URI.</returns>
+    protected string GetFullUri(int id)
+    {
+        string shortUri = GetUriForId(id);
+        return UriHelper.ExpandUri(shortUri, _prefixMappings);
+    }
+
+    /// <summary>
+    /// Escapes a literal string for RDF output.
+    /// </summary>
+    /// <param name="literal">The literal to escape.</param>
+    /// <returns>Escaped literal.</returns>
+    protected static string EscapeLiteral(string? literal)
+    {
+        if (string.IsNullOrEmpty(literal)) return "\"\"";
+
+        return "\"" + literal
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\n", "\\n")
+            .Replace("\r", "\\r")
+            .Replace("\t", "\\t") + "\"";
+    }
+
+    /// <summary>
+    /// Write the given triples to the given writer.
+    /// </summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="triples">The triples to write.</param>
+    public abstract Task WriteAsync(TextWriter writer, List<RdfTriple> triples);
+
+    /// <summary>
+    /// Write the header to the given writer.
+    /// </summary>
+    /// <param name="writer">The writer to write to.</param>
+    public abstract Task WriteHeaderAsync(TextWriter writer);
+
+    /// <summary>
+    /// Write the footer to the given writer.
+    /// </summary>
+    /// <param name="writer">The writer to write to.</param>
+    public abstract Task WriteFooterAsync(TextWriter writer);
+}
