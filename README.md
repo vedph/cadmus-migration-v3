@@ -17,6 +17,8 @@ Main projects:
 
 ## History
 
+- 2025-09-28: updated packages.
+
 ### 8.0.7
 
 - 2025-07-23: fixed ID names in thesauri export.
