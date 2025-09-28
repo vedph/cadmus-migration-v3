@@ -16,9 +16,9 @@ public sealed class NTriplesWriter : RdfWriter
     /// <param name="settings">The settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public NTriplesWriter(RdfExportSettings settings,
-        Dictionary<string, string> prefixMappings,
-        Dictionary<int, string> uriMappings)
+    public NTriplesWriter(RdfExportSettings? settings = null,
+        Dictionary<string, string>? prefixMappings = null,
+        Dictionary<int, string>? uriMappings = null)
         : base(settings, prefixMappings, uriMappings)
     {
     }

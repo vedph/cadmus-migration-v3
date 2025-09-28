@@ -19,6 +19,8 @@ internal static class TestHelper
     private static readonly NpgsqlConnection _connection = new(
         $"Host=localhost;Username=postgres;Password=postgres;Database={DB_NAME}");
 
+    public static string GetConnectionString() => _connection.ConnectionString;
+
     private static string LoadSchema()
     {
         using Stream stream = typeof(TestHelper).Assembly
@@ -42,8 +44,7 @@ internal static class TestHelper
         if (!manager.Exists(DB_NAME)) manager.CreateDatabase(DB_NAME,
             LoadSchema(), null);
 
-        if (_connection.State != ConnectionState.Open)
-            _connection.Open();
+        if (_connection.State != ConnectionState.Open) _connection.Open();
     }
 
     public static void SeedData(TextReader reader)

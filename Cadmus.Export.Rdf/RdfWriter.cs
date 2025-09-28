@@ -28,19 +28,17 @@ public abstract class RdfWriter
     /// <summary>
     /// Creates a new RDF writer.
     /// </summary>
-    /// <param name="settings">The RDF export settings.</param>
-    /// <param name="prefixMappings">The prefix mappings.</param>
-    /// <param name="uriMappings">The URI mappings.</param>
+    /// <param name="settings">The optional RDF export settings.</param>
+    /// <param name="prefixMappings">The optional preset prefix mappings.</param>
+    /// <param name="uriMappings">The optional preset URI mappings.</param>
     /// <exception cref="ArgumentNullException">settings or mappings</exception>
-    protected RdfWriter(RdfExportSettings settings,
-        Dictionary<string, string> prefixMappings,
-        Dictionary<int, string> uriMappings)
+    protected RdfWriter(RdfExportSettings? settings = null,
+        Dictionary<string, string>? prefixMappings = null,
+        Dictionary<int, string>? uriMappings = null)
     {
-        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        _prefixMappings = prefixMappings
-            ?? throw new ArgumentNullException(nameof(prefixMappings));
-        _uriMappings = uriMappings
-            ?? throw new ArgumentNullException(nameof(uriMappings));
+        _settings = settings ?? new RdfExportSettings();
+        _prefixMappings = prefixMappings ?? [];
+        _uriMappings = uriMappings ?? [];
     }
 
     /// <summary>

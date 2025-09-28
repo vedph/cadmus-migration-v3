@@ -29,7 +29,8 @@ public sealed class RdfExporter
     /// <param name="connectionString">The connection string.</param>
     /// <param name="settings">The export settings.</param>
     /// <exception cref="ArgumentNullException">connectionString</exception>
-    public RdfExporter(string connectionString, RdfExportSettings? settings = null)
+    public RdfExporter(string connectionString,
+        RdfExportSettings? settings = null)
     {
         if (string.IsNullOrEmpty(connectionString))
             throw new ArgumentNullException(nameof(connectionString));
@@ -56,7 +57,8 @@ public sealed class RdfExporter
     /// <param name="outputPath">The output file path.</param>
     public async Task ExportAsync(string outputPath)
     {
-        using FileStream fileStream = new(outputPath, FileMode.Create, FileAccess.Write);
+        using FileStream fileStream = new(outputPath, FileMode.Create,
+            FileAccess.Write);
         using StreamWriter writer = new(fileStream, _settings.Encoding);
         await ExportAsync(writer);
     }
