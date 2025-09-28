@@ -96,7 +96,7 @@ internal static class TestHelper
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_type", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_lang", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_ix", DbType.Int32));
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_n", DbType.Int32));
+        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_n", DbType.Double));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@sid", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@tag", DbType.String));
 
@@ -198,7 +198,7 @@ internal static class TestHelper
         _connection.Close();
     }
 
-    public static void SeedData(string resourceName = "Data.csv")
+    public static void CreateDatabase(string resourceName = "Data.csv")
     {
         using StreamReader reader = new(Assembly.GetExecutingAssembly()
             .GetManifestResourceStream("Cadmus.Export.Rdf.Test.Assets." +
