@@ -18,10 +18,12 @@ namespace Cadmus.Export.Rdf.Test;
 internal static class TestHelper
 {
     private const string DB_NAME = "cadmus-rdf-test";
-    private const string NODB_CONNECTION_STRING =
-        "Host=localhost;Username=postgres;Password=postgres;";
+
+    private const string CONNECTION_STRING_TEMPLATE =
+        "Host=localhost;Username=postgres;Password=postgres;Database={0}";
+
     private static readonly NpgsqlConnection _connection = new(
-        $"Host=localhost;Username=postgres;Password=postgres;Database={DB_NAME}");
+        string.Format(CONNECTION_STRING_TEMPLATE, DB_NAME));
 
     public static string GetConnectionString() => _connection.ConnectionString;
 
@@ -37,14 +39,14 @@ internal static class TestHelper
     public static void DropDatabase()
     {
         // drop the test database if it exists
-        PgSqlDbManager manager = new(NODB_CONNECTION_STRING);
+        PgSqlDbManager manager = new(CONNECTION_STRING_TEMPLATE);
         if (manager.Exists(DB_NAME)) manager.RemoveDatabase(DB_NAME);
     }
 
     private static void EnsureDatabase()
     {
         // ensure the test database exists
-        PgSqlDbManager manager = new(NODB_CONNECTION_STRING);
+        PgSqlDbManager manager = new(CONNECTION_STRING_TEMPLATE);
         string ddl = LoadSchema();
         if (!manager.Exists(DB_NAME)) manager.CreateDatabase(DB_NAME, ddl, null);
 
