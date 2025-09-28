@@ -17,8 +17,8 @@ x:events/pid/birth,crm:p3_has_note,"Petrarch was born on July 20, 1304 at Arezzo
 x:places/arezzo,rdf:type,crm:e53_place,PID/birth/chronotopes
 x:events/pid/birth,crm:p7_took_place_at,x:places/arezzo,PID/birth/chronotopes
 x:events/pid/birth,crm:p4_has_time-span,x:timespans/ts#4,PID/birth/chronotopes
-x:timespans/ts#4,crm:p82_at_some_time_within,1304
-x:timespans/ts#4,crm:p87_is_identified_by,"20 Jul 1304 AD"
+x:timespans/ts#4,crm:p82_at_some_time_within,1304,PID/birth/chronotopes
+x:timespans/ts#4,crm:p87_is_identified_by,"20 Jul 1304 AD",PID/birth/chronotopes
 
 x:events/pid/birth,crm:p96_by_mother,x:guys/eletta_canigiani,PID/birth/tag
 x:events/pid/birth,crm:p97_from_father,x:guys/ser_petracco,PID/birth/tag

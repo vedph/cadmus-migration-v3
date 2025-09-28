@@ -2,6 +2,7 @@
 using Fusi.DbManager.PgSql;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -47,15 +48,19 @@ internal static class TestHelper
 
     public static void SeedData(TextReader reader)
     {
+        ArgumentNullException.ThrowIfNull(reader);
+
         EnsureDatabase();
 
         // prepare commands
+        // namespace_lookup: id,uri
         using NpgsqlCommand nsCmd = new(
             "INSERT INTO namespace_lookup (id, uri) " +
             "VALUES (@id, @uri);", _connection);
         nsCmd.Parameters.Add(new NpgsqlParameter("@id", DbType.String));
         nsCmd.Parameters.Add(new NpgsqlParameter("@uri", DbType.String));
 
+        // node: id,is_class,tag,label,source_type,sid
         using NpgsqlCommand nodeCmd = new(
             "INSERT INTO node (id, is_class, tag, \"label\", source_type, sid) " +
             "VALUES (@id, @is_class, @tag, @label, @source_type, @sid);",
@@ -67,6 +72,8 @@ internal static class TestHelper
         nodeCmd.Parameters.Add(new NpgsqlParameter("@source_type", DbType.Int32));
         nodeCmd.Parameters.Add(new NpgsqlParameter("@sid", DbType.String));
 
+        // triple: id,s_id,p_id,o_id,o_lit,o_lit_type,o_lit_lang,
+        // o_lit_ix,o_lit_n,sid,tag
         using NpgsqlCommand tripleCmd = new(
             @"INSERT INTO triple
             (id, s_id, p_id, o_id, o_lit, o_lit_type, o_lit_lang, o_lit_ix,
@@ -75,9 +82,9 @@ internal static class TestHelper
             (@id, @s_id, @p_id, @o_id, @o_lit, @o_lit_type, @o_lit_lang, @o_lit_ix,
             @o_lit_n, @sid, @tag);", _connection);
         tripleCmd.Parameters.Add(new NpgsqlParameter("@id", DbType.Int32));
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@s_id", DbType.String));
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@p_id", DbType.String));
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_id", DbType.String));
+        tripleCmd.Parameters.Add(new NpgsqlParameter("@s_id", DbType.Int32));
+        tripleCmd.Parameters.Add(new NpgsqlParameter("@p_id", DbType.Int32));
+        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_id", DbType.Int32));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_type", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_lang", DbType.String));
@@ -89,7 +96,12 @@ internal static class TestHelper
         CsvReader csv = new(reader, CultureInfo.InvariantCulture);
         string? currentSection = null;
         Regex nodeUriRegex = new(@"^[^:]+:", RegexOptions.Compiled);
-        int nNode = 1, nTriple = 1;
+
+        // node ID starts from 16 because of pre-seeded nodes by schema.
+        // triple ID is used just as an ordinal for its SID but this is an
+        // autoincrement field in the database
+        int nNode = 16, nTriple = 1;
+        Dictionary<string, int> nodeIds = [];
 
         while (csv.Read())
         {
@@ -105,6 +117,7 @@ internal static class TestHelper
             {
                 case "namespaces":
                     {
+                        // id,uri
                         string id = f0;
                         string uri = csv.GetField(1) ?? "";
                         nsCmd.Parameters["@id"].Value = id;
@@ -115,32 +128,42 @@ internal static class TestHelper
 
                 case "nodes":
                     {
-                        string uri = f0;
-                        nodeCmd.Parameters["@id"].Value = nNode++;
+                        // label,uri,sid (id is set by us)
+                        string label = f0;
+                        string uri = csv.GetField(1) ?? "";
+                        nodeCmd.Parameters["@id"].Value = nNode;
                         nodeCmd.Parameters["@is_class"].Value = false;
                         nodeCmd.Parameters["@tag"].Value = DBNull.Value;
-                        nodeCmd.Parameters["@label"].Value = uri;
+                        nodeCmd.Parameters["@label"].Value = label;
                         nodeCmd.Parameters["@source_type"].Value = 0;
-                        nodeCmd.Parameters["@sid"].Value = $"sid/{uri}";
+                        nodeCmd.Parameters["@sid"].Value = csv.GetField(2)
+                            ?? $"sid/{uri}";
                         nodeCmd.ExecuteNonQuery();
+                        // build ID map
+                        nodeIds[uri] = nNode++;
                     }
                     break;
 
                 case "triples":
                     {
-                        string s_id = f0;
-                        string p_id = csv.GetField(1) ?? "";
-                        string o_field = csv.GetField(2) ?? "";
+                        // s_uri,p_uri,o_uri or literal,sid
+                        string s_uri = f0;
+                        int s_id = nodeIds[s_uri];
+                        string p_uri = csv.GetField(1) ?? "";
+                        int p_id = nodeIds[p_uri];
+                        string o = csv.GetField(2) ?? "";
+                        string sid = csv.GetField(3) ?? $"sid/triple/{nTriple}";
+                        nTriple++;
 
-                        bool isOid = nodeUriRegex.IsMatch(o_field);
+                        bool isOid = nodeUriRegex.IsMatch(o);
                         tripleCmd.Parameters["@s_id"].Value = s_id;
                         tripleCmd.Parameters["@p_id"].Value = p_id;
-                        tripleCmd.Parameters["@sid"].Value = $"sid/triple/{nTriple++}";
+                        tripleCmd.Parameters["@sid"].Value = sid;
                         tripleCmd.Parameters["@tag"].Value = DBNull.Value;
 
                         if (isOid)
                         {
-                            tripleCmd.Parameters["@o_id"].Value = o_field;
+                            tripleCmd.Parameters["@o_id"].Value = o;
                             tripleCmd.Parameters["@o_lit"].Value = DBNull.Value;
                             tripleCmd.Parameters["@o_lit_type"].Value = DBNull.Value;
                             tripleCmd.Parameters["@o_lit_lang"].Value = DBNull.Value;
@@ -150,10 +173,10 @@ internal static class TestHelper
                         else
                         {
                             tripleCmd.Parameters["@o_id"].Value = DBNull.Value;
-                            tripleCmd.Parameters["@o_lit"].Value = o_field;
+                            tripleCmd.Parameters["@o_lit"].Value = o;
                             tripleCmd.Parameters["@o_lit_type"].Value = DBNull.Value;
                             tripleCmd.Parameters["@o_lit_lang"].Value =
-                                string.IsNullOrEmpty(o_field)
+                                string.IsNullOrEmpty(o)
                                 ? DBNull.Value
                                 : "en";
                             tripleCmd.Parameters["@o_lit_ix"].Value = DBNull.Value;
