@@ -9,6 +9,8 @@ public sealed class RdfExporterTest
     [Fact]
     public async Task Export_DefaultSettings_Ok()
     {
+        TestHelper.SeedData();
+
         RdfExporter exporter = new(TestHelper.GetConnectionString());
         RamRdfWriter writer = new();
         using MemoryStream ms = new();

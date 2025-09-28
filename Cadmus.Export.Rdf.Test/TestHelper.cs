@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Cadmus.Export.Rdf.Test;
@@ -16,6 +18,8 @@ namespace Cadmus.Export.Rdf.Test;
 internal static class TestHelper
 {
     private const string DB_NAME = "cadmus-rdf-test";
+    private const string NODB_CONNECTION_STRING =
+        "Host=localhost;Username=postgres;Password=postgres;";
     private static readonly NpgsqlConnection _connection = new(
         $"Host=localhost;Username=postgres;Password=postgres;Database={DB_NAME}");
 
@@ -33,21 +37,21 @@ internal static class TestHelper
     public static void DropDatabase()
     {
         // drop the test database if it exists
-        PgSqlDbManager manager = new(_connection.ConnectionString);
+        PgSqlDbManager manager = new(NODB_CONNECTION_STRING);
         if (manager.Exists(DB_NAME)) manager.RemoveDatabase(DB_NAME);
     }
 
     private static void EnsureDatabase()
     {
         // ensure the test database exists
-        PgSqlDbManager manager = new(_connection.ConnectionString);
-        if (!manager.Exists(DB_NAME)) manager.CreateDatabase(DB_NAME,
-            LoadSchema(), null);
+        PgSqlDbManager manager = new(NODB_CONNECTION_STRING);
+        string ddl = LoadSchema();
+        if (!manager.Exists(DB_NAME)) manager.CreateDatabase(DB_NAME, ddl, null);
 
         if (_connection.State != ConnectionState.Open) _connection.Open();
     }
 
-    public static void SeedData(TextReader reader)
+    private static void SeedData(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
 
@@ -190,5 +194,13 @@ internal static class TestHelper
         }
 
         _connection.Close();
+    }
+
+    public static void SeedData(string resourceName = "Data.csv")
+    {
+        using StreamReader reader = new(Assembly.GetExecutingAssembly()
+            .GetManifestResourceStream("Cadmus.Export.Rdf.Test.Assets." +
+            resourceName)!, Encoding.UTF8);
+        SeedData(reader);
     }
 }
