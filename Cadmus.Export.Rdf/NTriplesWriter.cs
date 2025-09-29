@@ -60,7 +60,8 @@ public sealed class NTriplesWriter : RdfWriter
             string objectValue;
             if (!string.IsNullOrEmpty(triple.ObjectLiteral))
             {
-                objectValue = EscapeLiteral(triple.ObjectLiteral);
+                objectValue = EscapeLiteral(triple.ObjectLiteral,
+                    triple.ObjectLiteralType, triple.ObjectLiteralLanguage);
             }
             else if (triple.ObjectId.HasValue)
             {

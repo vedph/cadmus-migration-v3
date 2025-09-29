@@ -185,7 +185,8 @@ public sealed class RdfDataReader
         int offset = 0, int? limit = null)
     {
         StringBuilder queryBuilder = new(
-            "SELECT id, s_id, p_id, o_id, o_lit, tag FROM triple");
+            "SELECT id, s_id, p_id, o_id, o_lit, o_lit_type, o_lit_lang, tag " +
+            "FROM triple");
 
         if (settings.TripleTagFilter != null &&
             settings.TripleTagFilter.Count > 0)
@@ -215,6 +216,8 @@ public sealed class RdfDataReader
             int pIdOrdinal = reader.GetOrdinal("p_id");
             int oIdOrdinal = reader.GetOrdinal("o_id");
             int oLitOrdinal = reader.GetOrdinal("o_lit");
+            int oLitTypeOrdinal = reader.GetOrdinal("o_lit_type");
+            int oLitLangOrdinal = reader.GetOrdinal("o_lit_lang");
             int tagOrdinal = reader.GetOrdinal("tag");
 
             while (reader.Read())
@@ -226,6 +229,8 @@ public sealed class RdfDataReader
                     PredicateId = reader.GetInt32(pIdOrdinal),
                     ObjectId = GetNullableInt32(reader, oIdOrdinal),
                     ObjectLiteral = GetNullableString(reader, oLitOrdinal),
+                    ObjectLiteralType = GetNullableString(reader, oLitTypeOrdinal),
+                    ObjectLiteralLanguage = GetNullableString(reader, oLitLangOrdinal),
                     Tag = GetNullableString(reader, tagOrdinal)
                 });
             }

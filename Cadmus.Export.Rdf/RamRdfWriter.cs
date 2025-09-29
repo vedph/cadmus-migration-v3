@@ -170,7 +170,8 @@ public sealed class RamRdfWriter : RdfWriter
             string formattedObject;
             if (!string.IsNullOrEmpty(triple.ObjectLiteral))
             {
-                formattedObject = EscapeLiteral(triple.ObjectLiteral);
+                formattedObject = EscapeLiteral(triple.ObjectLiteral,
+                    triple.ObjectLiteralType, triple.ObjectLiteralLanguage);
             }
             else if (triple.ObjectId.HasValue)
             {

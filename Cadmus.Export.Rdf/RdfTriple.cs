@@ -31,6 +31,18 @@ public class RdfTriple
     public string? ObjectLiteral { get; set; }
 
     /// <summary>
+    /// The type of the object literal, if applicable. This corresponds to
+    /// literal suffixes after <c>^^</c> in Turtle: e.g. <c>"12.3"^^xs:double</c>.
+    /// </summary>
+    public string? ObjectLiteralType { get; set; }
+
+    /// <summary>
+    /// The language of the object literal, if applicable. This is meaningful
+    /// only for string literals, and usually is a BCP47 or ISO639 code.
+    /// </summary>
+    public string? ObjectLiteralLanguage { get; set; }
+
+    /// <summary>
     /// Gets or sets an optional tag associated with the object.
     /// </summary>
     public string? Tag { get; set; }
@@ -42,6 +54,8 @@ public class RdfTriple
     public override string ToString()
     {
         return $"{Id}: {SubjectId} {PredicateId} " +
-            $"{(ObjectId.HasValue ? ObjectId.ToString() : $"\"{ObjectLiteral}\"")}";
+            (ObjectId.HasValue
+            ? ObjectId.ToString()
+            : $"\"{ObjectLiteral}\"{ObjectLiteralLanguage}");
     }
 }

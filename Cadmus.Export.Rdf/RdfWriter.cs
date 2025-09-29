@@ -76,17 +76,38 @@ public abstract class RdfWriter
     /// Escapes a literal string for RDF output.
     /// </summary>
     /// <param name="literal">The literal to escape.</param>
+    /// <param name="literalType">The optional literal type (datatype).</param>
+    /// <param name="literalLanguage">The optional literal language.</param>
     /// <returns>Escaped literal.</returns>
-    protected static string EscapeLiteral(string? literal)
+    protected static string EscapeLiteral(string literal,
+        string? literalType = null, string? literalLanguage = null)
     {
         if (string.IsNullOrEmpty(literal)) return "\"\"";
 
-        return "\"" + literal
+        string escapedValue = "\"" + literal
             .Replace("\\", "\\\\")
             .Replace("\"", "\\\"")
             .Replace("\n", "\\n")
             .Replace("\r", "\\r")
             .Replace("\t", "\\t") + "\"";
+
+        // add language tag if present (e.g. "Hello"@en):
+        // language tags take precedence over datatypes as per RDF spec
+        if (!string.IsNullOrEmpty(literalLanguage))
+            return escapedValue + "@" + literalLanguage;
+
+        // add datatype if present (e.g., "12.3"^^xsd:double)
+        if (!string.IsNullOrEmpty(literalType))
+        {
+            // check if type is a full URI or prefixed
+            string typeUri = literalType.Contains(':') &&
+                !literalType.StartsWith("http")
+                ? literalType
+                : $"<{literalType}>";
+            return escapedValue + "^^" + typeUri;
+        }
+
+        return escapedValue;
     }
 
     /// <summary>
