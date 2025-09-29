@@ -52,47 +52,24 @@ public sealed class RdfExporter
     }
 
     /// <summary>
-    /// Exports RDF data to the specified output path.
+    /// Creates and returns a properly configured RDF writer.
+    /// Useful for testing scenarios where you want to access the writer directly.
     /// </summary>
-    /// <param name="outputPath">The output file path.</param>
-    public async Task ExportAsync(string outputPath)
+    public async Task<RdfWriter> CreateWriterAsync()
     {
-        using FileStream fileStream = new(outputPath, FileMode.Create,
-            FileAccess.Write);
-        using StreamWriter writer = new(fileStream, _settings.Encoding);
-        await ExportAsync(writer);
-    }
-
-    /// <summary>
-    /// Exports RDF data to the specified <see cref="TextWriter"/> in the
-    /// configured format.
-    /// </summary>
-    /// <remarks>This method writes RDF data in batches, using the format and
-    /// settings specified in the configuration. It includes a header, the
-    /// serialized RDF triples, and a footer. Progress updates may be reported
-    /// through the <c>OnProgressReported</c> event, if subscribed.
-    /// <para> The method ensures that prefix and URI mappings are loaded and
-    /// applied to the output. The caller is  responsible for ensuring that
-    /// the <paramref name="writer"/> is open and ready for writing.</para>
-    /// </remarks>
-    /// <param name="writer">The <see cref="TextWriter"/> to which the RDF data
-    /// will be written. This cannot be <see langword="null"/>.</param>
-    /// <exception cref="ArgumentNullException">writer</exception>
-    public async Task ExportAsync(TextWriter writer)
-    {
-        ArgumentNullException.ThrowIfNull(writer);
-
-        // load mappings
         Dictionary<string, string> prefixMappings =
             await LoadPrefixMappingsAsync();
-        Dictionary<int, string> uriMappings = await LoadUriMappingsAsync();
+        Dictionary<int, string> uriMappings =
+            await LoadUriMappingsAsync();
+        return RdfWriterFactory.CreateWriter(_settings.Format,
+            _settings, prefixMappings, uriMappings);
+    }
 
-        // create appropriate writer
-        RdfWriter rdfWriter = RdfWriterFactory.CreateWriter(
-            _settings.Format, _settings, prefixMappings, uriMappings);
-
+    private async Task ExportWithWriterAsync(TextWriter textWriter,
+        RdfWriter rdfWriter)
+    {
         // write header
-        await rdfWriter.WriteHeaderAsync(writer);
+        await rdfWriter.WriteHeaderAsync(textWriter);
 
         // export triples in batches
         int totalTriples = await _dataReader.GetTripleCountAsync(_settings);
@@ -104,7 +81,7 @@ public sealed class RdfExporter
                 _settings, processedTriples, _settings.BatchSize);
             if (batch.Count == 0) break;
 
-            await rdfWriter.WriteAsync(writer, batch);
+            await rdfWriter.WriteAsync(textWriter, batch);
             processedTriples += batch.Count;
 
             // report progress
@@ -117,7 +94,56 @@ public sealed class RdfExporter
         }
 
         // write footer
-        await rdfWriter.WriteFooterAsync(writer);
+        await rdfWriter.WriteFooterAsync(textWriter);
+    }
+
+    /// <summary>
+    /// Exports RDF data to the specified output path.
+    /// </summary>
+    /// <param name="outputPath">The output file path.</param>
+    public async Task ExportAsync(string outputPath)
+    {
+        ArgumentNullException.ThrowIfNull(outputPath);
+
+        using FileStream fileStream = new(outputPath, FileMode.Create,
+            FileAccess.Write);
+        using StreamWriter writer = new(fileStream, _settings.Encoding);
+        await ExportAsync(writer);
+    }
+
+    /// <summary>
+    /// Exports RDF data to the specified <see cref="TextWriter"/> in the
+    /// configured format.
+    /// </summary>
+    /// <param name="writer">The <see cref="TextWriter"/> to which the RDF data
+    /// will be written.</param>
+    /// <exception cref="ArgumentNullException">writer</exception>
+    public async Task ExportAsync(TextWriter writer)
+    {
+        ArgumentNullException.ThrowIfNull(writer);
+
+        // load mappings
+        Dictionary<string, string> prefixMappings =
+            await LoadPrefixMappingsAsync();
+        Dictionary<int, string> uriMappings = await LoadUriMappingsAsync();
+
+        // create the appropriate writer based on settings
+        RdfWriter rdfWriter = RdfWriterFactory.CreateWriter(_settings.Format,
+            _settings, prefixMappings, uriMappings);
+
+        await ExportWithWriterAsync(writer, rdfWriter);
+    }
+
+    /// <summary>
+    /// Exports RDF data using a provided RDF writer instance.
+    /// This is useful for testing or when you need direct access to the writer.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">textWriter or rdfWriter</exception>
+    public async Task ExportAsync(TextWriter textWriter, RdfWriter rdfWriter)
+    {
+        ArgumentNullException.ThrowIfNull(textWriter);
+        ArgumentNullException.ThrowIfNull(rdfWriter);
+        await ExportWithWriterAsync(textWriter, rdfWriter);
     }
 }
 

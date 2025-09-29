@@ -18,14 +18,25 @@ public sealed class RdfExporterTest
         TestHelper.CreateDatabase();
 
         string cs = TestHelper.GetConnectionString();
-        RdfExporter exporter = new(cs);
-        RamRdfWriter writer = new();
+
+        //RdfExportSettings settings = new() { Format = "ram" };
+        //RdfExporter exporter = new(cs, settings);
+        //await exporter.ExportAsync("output.ttl");
+
+        RdfExportSettings settings = new() { Format = "ram" };
+        RdfExporter exporter = new(cs, settings);
+
+        // create the writer yourself
+        RamRdfWriter writer = (RamRdfWriter)await exporter.CreateWriterAsync();
+
+        // export using your writer instance
         using MemoryStream ms = new();
         using StreamWriter sw = new(ms, Encoding.UTF8);
-
-        await exporter.ExportAsync(sw);
-
-        Assert.Equal(2, writer.Statistics.LiteralTripleCount);
+        
+        await exporter.ExportAsync(sw, writer);
+        
+        string output = Encoding.UTF8.GetString(ms.ToArray());
+        Assert.Equal(3, writer.Statistics.LiteralTripleCount);
         // TODO
     }
 }
