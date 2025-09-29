@@ -171,14 +171,6 @@ INSERT INTO uri_lookup(uri) VALUES('rdfs:XMLLiteral');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:Class');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:Property');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:DataType');
--- core classes nodes
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(1, true, 'rdfs:Resource', NULL, 0, NULL);
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(2, true, 'rdfs:Literal', NULL, 0, NULL);
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(3, true, 'rdfs:XMLLiteral', NULL, 0, NULL);
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(4, true, 'rdfs:Class', NULL, 0, NULL);
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(5, true, 'rdfs:Property', NULL, 0, NULL);
-INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(6, true, 'rdfs:DataType', NULL, 0, NULL);
-
 -- core properties URIs
 INSERT INTO uri_lookup(uri) VALUES('rdf:type');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:subClassOf');
@@ -189,6 +181,14 @@ INSERT INTO uri_lookup(uri) VALUES('rdfs:label');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:comment');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:seeAlso');
 INSERT INTO uri_lookup(uri) VALUES('rdfs:isDefinedBy');
+
+-- core classes nodes
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(1, true, 'rdfs:Resource', NULL, 0, NULL);
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(2, true, 'rdfs:Literal', NULL, 0, NULL);
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(3, true, 'rdfs:XMLLiteral', NULL, 0, NULL);
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(4, true, 'rdfs:Class', NULL, 0, NULL);
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(5, true, 'rdfs:Property', NULL, 0, NULL);
+INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(6, true, 'rdfs:DataType', NULL, 0, NULL);
 -- core properties nodes
 INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(7, false, 'is-a', 'property', 0, NULL);
 INSERT INTO node(id, is_class, label, tag, source_type, sid) VALUES(8, false, 'rdfs:subClassOf', 'property', 0, NULL);

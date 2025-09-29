@@ -53,6 +53,22 @@ internal static class TestHelper
         if (_connection.State != ConnectionState.Open) _connection.Open();
     }
 
+    private static Dictionary<string, int> GetUriMap()
+    {
+        Dictionary<string, int> map = [];
+        using NpgsqlCommand cmd = new("SELECT id,uri FROM uri_lookup;",
+            _connection);
+        using NpgsqlDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            int id = reader.GetInt32(0);
+            string uri = reader.GetString(1);
+            map[uri] = id;
+        }
+        reader.Close();
+        return map;
+    }
+
     private static void SeedData(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -66,6 +82,13 @@ internal static class TestHelper
             "VALUES (@id, @uri);", _connection);
         nsCmd.Parameters.Add(new NpgsqlParameter("@id", DbType.String));
         nsCmd.Parameters.Add(new NpgsqlParameter("@uri", DbType.String));
+
+        // uri_lookup: uri
+        using NpgsqlCommand uriCmd = new(
+            "INSERT INTO uri_lookup (uri) " +
+            "VALUES (@uri) RETURNING id;",
+            _connection);
+        uriCmd.Parameters.Add(new NpgsqlParameter("@uri", DbType.String));
 
         // node: id,is_class,tag,label,source_type,sid
         using NpgsqlCommand nodeCmd = new(
@@ -104,11 +127,10 @@ internal static class TestHelper
         string? currentSection = null;
         Regex nodeUriRegex = new(@"^[^:]+:", RegexOptions.Compiled);
 
-        // node ID starts from 16 because of pre-seeded nodes by schema.
-        // triple ID is used just as an ordinal for its SID but this is an
-        // autoincrement field in the database
-        int nNode = 16, nTriple = 1;
-        Dictionary<string, int> nodeIds = [];
+        // triple ID is used just as an ordinal for its mock SID value,
+        // but this is an autoincrement field in the database
+        int nTriple = 1;
+        Dictionary<string, int> uriMap = GetUriMap();
 
         while (csv.Read())
         {
@@ -135,19 +157,25 @@ internal static class TestHelper
 
                 case "nodes":
                     {
-                        // label,uri,sid (id is set by us)
                         string label = f0;
                         string uri = csv.GetField(1) ?? "";
-                        nodeCmd.Parameters["@id"].Value = nNode;
+                        string sid = csv.GetField(2) ?? $"sid/{uri}";
+
+                        // add uri_lookup with the node's URI so we can get ids ID
+                        uriCmd.Parameters["@uri"].Value = uri;
+                        int id = (int)uriCmd.ExecuteScalar()!;
+
+                        // label,uri,sid (id is set by us)
+                        nodeCmd.Parameters["@id"].Value = id;
                         nodeCmd.Parameters["@is_class"].Value = false;
                         nodeCmd.Parameters["@tag"].Value = DBNull.Value;
                         nodeCmd.Parameters["@label"].Value = label;
                         nodeCmd.Parameters["@source_type"].Value = 0;
-                        nodeCmd.Parameters["@sid"].Value = csv.GetField(2)
+                        nodeCmd.Parameters["@sid"].Value = sid
                             ?? $"sid/{uri}";
                         nodeCmd.ExecuteNonQuery();
                         // build ID map
-                        nodeIds[uri] = nNode++;
+                        uriMap[uri] = id;
                     }
                     break;
 
@@ -155,14 +183,15 @@ internal static class TestHelper
                     {
                         // s_uri,p_uri,o_uri or literal,sid
                         string s_uri = f0;
-                        int s_id = nodeIds[s_uri];
+                        int s_id = uriMap[s_uri];
                         string p_uri = csv.GetField(1) ?? "";
-                        int p_id = nodeIds[p_uri];
+                        int p_id = uriMap[p_uri];
                         string o = csv.GetField(2) ?? "";
                         string sid = csv.GetField(3) ?? $"sid/triple/{nTriple}";
                         nTriple++;
 
                         bool isOid = nodeUriRegex.IsMatch(o);
+                        tripleCmd.Parameters["@id"].Value = DBNull.Value;
                         tripleCmd.Parameters["@s_id"].Value = s_id;
                         tripleCmd.Parameters["@p_id"].Value = p_id;
                         tripleCmd.Parameters["@sid"].Value = sid;
