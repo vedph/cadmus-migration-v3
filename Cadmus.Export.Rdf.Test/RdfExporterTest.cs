@@ -17,7 +17,8 @@ public sealed class RdfExporterTest
         TestHelper.DropDatabase();
         TestHelper.CreateDatabase();
 
-        RdfExporter exporter = new(TestHelper.GetConnectionString());
+        string cs = TestHelper.GetConnectionString();
+        RdfExporter exporter = new(cs);
         RamRdfWriter writer = new();
         using MemoryStream ms = new();
         using StreamWriter sw = new(ms, Encoding.UTF8);

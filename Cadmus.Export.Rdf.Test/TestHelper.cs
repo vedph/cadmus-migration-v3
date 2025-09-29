@@ -20,12 +20,14 @@ internal static class TestHelper
     private const string DB_NAME = "cadmus-rdf-test";
 
     private const string CONNECTION_STRING_TEMPLATE =
-        "Host=localhost;Username=postgres;Password=postgres;Database={0}";
+        "Host=localhost;Username=postgres;Password=postgres;Database={0};" +
+        "Include Error Detail=true";
 
     private static readonly NpgsqlConnection _connection = new(
         string.Format(CONNECTION_STRING_TEMPLATE, DB_NAME));
 
-    public static string GetConnectionString() => _connection.ConnectionString;
+    public static string GetConnectionString() =>
+        string.Format(CONNECTION_STRING_TEMPLATE, DB_NAME);
 
     private static string LoadSchema()
     {
@@ -106,19 +108,18 @@ internal static class TestHelper
         // o_lit_ix,o_lit_n,sid,tag
         using NpgsqlCommand tripleCmd = new(
             @"INSERT INTO triple
-            (id, s_id, p_id, o_id, o_lit, o_lit_type, o_lit_lang, o_lit_ix,
-             o_lit_n, sid, tag)
+            (s_id, p_id, o_id, o_lit, o_lit_type, o_lit_lang,
+             o_lit_ix, o_lit_n, sid, tag)
             VALUES
-            (@id, @s_id, @p_id, @o_id, @o_lit, @o_lit_type, @o_lit_lang, @o_lit_ix,
-            @o_lit_n, @sid, @tag);", _connection);
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@id", DbType.Int32));
+            (@s_id, @p_id, @o_id, @o_lit, @o_lit_type, @o_lit_lang,
+             @o_lit_ix, @o_lit_n, @sid, @tag);", _connection);
         tripleCmd.Parameters.Add(new NpgsqlParameter("@s_id", DbType.Int32));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@p_id", DbType.Int32));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_id", DbType.Int32));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_type", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_lang", DbType.String));
-        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_ix", DbType.Int32));
+        tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_ix", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@o_lit_n", DbType.Double));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@sid", DbType.String));
         tripleCmd.Parameters.Add(new NpgsqlParameter("@tag", DbType.String));
@@ -191,7 +192,6 @@ internal static class TestHelper
                         nTriple++;
 
                         bool isOid = nodeUriRegex.IsMatch(o);
-                        tripleCmd.Parameters["@id"].Value = DBNull.Value;
                         tripleCmd.Parameters["@s_id"].Value = s_id;
                         tripleCmd.Parameters["@p_id"].Value = p_id;
                         tripleCmd.Parameters["@sid"].Value = sid;
@@ -199,7 +199,7 @@ internal static class TestHelper
 
                         if (isOid)
                         {
-                            tripleCmd.Parameters["@o_id"].Value = o;
+                            tripleCmd.Parameters["@o_id"].Value = uriMap[o];
                             tripleCmd.Parameters["@o_lit"].Value = DBNull.Value;
                             tripleCmd.Parameters["@o_lit_type"].Value = DBNull.Value;
                             tripleCmd.Parameters["@o_lit_lang"].Value = DBNull.Value;
