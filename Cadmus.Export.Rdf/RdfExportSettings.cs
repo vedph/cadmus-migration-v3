@@ -45,12 +45,6 @@ public class RdfExportSettings
     public bool PrettyPrint { get; set; } = true;
 
     /// <summary>
-    /// Whether to validate URIs before export.
-    /// Default is true.
-    /// </summary>
-    public bool ValidateUris { get; set; } = true;
-
-    /// <summary>
     /// Whether to export only nodes that are referenced in triples.
     /// Default is false (exports all nodes).
     /// </summary>

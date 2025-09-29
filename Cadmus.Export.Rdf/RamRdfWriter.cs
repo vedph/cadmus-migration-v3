@@ -142,7 +142,8 @@ public sealed class RamRdfWriter : RdfWriter
     /// <param name="triples">The triples to write.</param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">writer or triples</exception>
-    public override async Task WriteAsync(TextWriter writer, List<RdfTriple> triples)
+    public override async Task WriteAsync(TextWriter writer,
+        List<RdfTriple> triples)
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(triples);

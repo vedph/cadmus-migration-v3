@@ -51,11 +51,10 @@ public abstract class RdfWriter
     {
         if (_uriMappings.TryGetValue(id, out string? uri))
         {
-            if (uri == null || (_settings.ValidateUris &&
-                !UriHelper.IsValidUri(uri)))
+            if (uri == null)
             {
                 throw new InvalidOperationException(
-                    $"Invalid URI found for ID {id}: {uri}");
+                    $"URI not found for ID {id}: {uri}");
             }
             return uri;
         }
