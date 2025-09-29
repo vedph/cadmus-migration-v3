@@ -50,79 +50,87 @@ internal sealed class RenderItemsCommand : AsyncCommand<RenderItemsCommandSettin
     {
         ShowSettings(settings);
 
-        string cs = string.Format(
-            ConfigurationService.Configuration!.GetConnectionString("Default")!,
-            settings.DatabaseName);
-
-        AppContextService contextService =
-            GetContextService(settings.DatabaseName);
-
-        // load rendering config
-        AnsiConsole.WriteLine("Loading rendering config...");
-        string config = CommandHelper.LoadFileContent(settings.ConfigPath!);
-
-        // get preview factory from its provider
-        AnsiConsole.WriteLine("Building preview factory...");
-        ICadmusRenderingFactoryProvider? provider =
-            AppContextService.GetPreviewFactoryProvider(
-                settings.PreviewFactoryProviderTag);
-        if (provider == null)
+        try
         {
-            AnsiConsole.MarkupLine("[red]Preview factory provider not found[/]");
-            return Task.FromResult(2);
-        }
-        CadmusRenderingFactory factory = provider.GetFactory(config,
-            typeof(FSTeiOffItemComposer).Assembly);
-        factory.ConnectionString = cs;
+            string cs = string.Format(
+                ConfigurationService.Configuration!.GetConnectionString("Default")!,
+                settings.DatabaseName);
 
-        // get the Cadmus repository from the specified plugin
-        AnsiConsole.WriteLine("Building repository factory...");
-        ICadmusRepository repository = contextService.GetCadmusRepository(
-            settings.RepositoryProviderTag)
-            ?? throw new InvalidOperationException(
-                "Unable to create Cadmus repository");
+            AppContextService contextService =
+                GetContextService(settings.DatabaseName);
 
-        // create the preview item composer
-        AnsiConsole.WriteLine("Creating item composer...");
-        IItemComposer? composer = factory.GetComposer(settings.ComposerKey);
-        if (composer == null)
-        {
-            AnsiConsole.MarkupLine(
-                $"[red]Could not find composer with key {settings.ComposerKey}.[/] " +
-                "Please check your rendering configuration.");
-            return Task.FromResult(2);
-        }
+            // load rendering config
+            AnsiConsole.WriteLine("Loading rendering config...");
+            string config = CommandHelper.LoadFileContent(settings.ConfigPath!);
 
-        // create ID collector
-        AnsiConsole.WriteLine("Creating item collector...");
-        IItemIdCollector? collector = factory.GetItemIdCollector();
-        if (collector == null)
-        {
-            AnsiConsole.MarkupLine(
-                "[red]No item ID collector defined in configuration.[/]");
-            return Task.FromResult(2);
-        }
-
-        // render items
-        AnsiConsole.MarkupLine("[cyan]Rendering items...[/]");
-
-        int n = 0;
-        composer.Open();
-        foreach (string id in collector.GetIds())
-        {
-            if (++n > settings.MaxItems && settings.MaxItems > 0) break;
-
-            AnsiConsole.WriteLine($" - {n}: " + id);
-            IItem? item = repository.GetItem(id, true);
-            if (item != null)
+            // get preview factory from its provider
+            AnsiConsole.WriteLine("Building preview factory...");
+            ICadmusRenderingFactoryProvider? provider =
+                AppContextService.GetPreviewFactoryProvider(
+                    settings.PreviewFactoryProviderTag);
+            if (provider == null)
             {
-                AnsiConsole.WriteLine("   " + item.Title);
-                composer.Compose(item);
+                AnsiConsole.MarkupLine("[red]Preview factory provider not found[/]");
+                return Task.FromResult(2);
             }
-        }
-        composer.Close();
+            CadmusRenderingFactory factory = provider.GetFactory(config,
+                typeof(FSTeiOffItemComposer).Assembly);
+            factory.ConnectionString = cs;
 
-        return Task.FromResult(0);
+            // get the Cadmus repository from the specified plugin
+            AnsiConsole.WriteLine("Building repository factory...");
+            ICadmusRepository repository = contextService.GetCadmusRepository(
+                settings.RepositoryProviderTag)
+                ?? throw new InvalidOperationException(
+                    "Unable to create Cadmus repository");
+
+            // create the preview item composer
+            AnsiConsole.WriteLine("Creating item composer...");
+            IItemComposer? composer = factory.GetComposer(settings.ComposerKey);
+            if (composer == null)
+            {
+                AnsiConsole.MarkupLine(
+                    $"[red]Could not find composer with key {settings.ComposerKey}.[/] " +
+                    "Please check your rendering configuration.");
+                return Task.FromResult(2);
+            }
+
+            // create ID collector
+            AnsiConsole.WriteLine("Creating item collector...");
+            IItemIdCollector? collector = factory.GetItemIdCollector();
+            if (collector == null)
+            {
+                AnsiConsole.MarkupLine(
+                    "[red]No item ID collector defined in configuration.[/]");
+                return Task.FromResult(2);
+            }
+
+            // render items
+            AnsiConsole.MarkupLine("[cyan]Rendering items...[/]");
+
+            int n = 0;
+            composer.Open();
+            foreach (string id in collector.GetIds())
+            {
+                if (++n > settings.MaxItems && settings.MaxItems > 0) break;
+
+                AnsiConsole.WriteLine($" - {n}: " + id);
+                IItem? item = repository.GetItem(id, true);
+                if (item != null)
+                {
+                    AnsiConsole.WriteLine("   " + item.Title);
+                    composer.Compose(item);
+                }
+            }
+            composer.Close();
+
+            return Task.FromResult(0);
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.WriteException(ex);
+            return Task.FromResult(2);
+        }
     }
 }
 

@@ -35,6 +35,10 @@ public static class RdfWriterFactory
                 new TurtleWriter(settings, prefixMappings, uriMappings),
             "ntriples" or "nt" =>
                 new NTriplesWriter(settings, prefixMappings, uriMappings),
+            "rdfxml" or "rdf" or "xml" =>
+                new RdfXmlWriter(settings, prefixMappings, uriMappings),
+            "jsonld" or "json-ld" or "json" =>
+                new JsonLdWriter(settings, prefixMappings, uriMappings),
             "ram" or "test" => new RamRdfWriter(settings, prefixMappings, uriMappings),
             _ => throw new NotSupportedException($"RDF format '{format}' " +
                 $"is not supported")

@@ -57,6 +57,8 @@ public static class Program
                     .WithDescription("Dump objects from a Cadmus database");
                 config.AddCommand<DumpThesauriCommand>("dump-thesauri")
                     .WithDescription("Dump thesauri from a Cadmus database");
+                config.AddCommand<ExportRdfCommand>("export-rdf")
+                    .WithDescription("Export RDF data from a Cadmus graph database");
             });
 
             int result = await app.RunAsync(args);
