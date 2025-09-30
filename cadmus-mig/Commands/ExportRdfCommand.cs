@@ -100,23 +100,26 @@ public class ExportRdfCommandSettings : CommandSettings
     [CommandOption("-f|--format <FORMAT>")]
     [Description("The RDF format to export (turtle, rdfxml, ntriples, jsonld). " +
         "Default is 'turtle'.")]
+    [DefaultValue("turtle")]
     public string Format { get; set; } = "turtle";
 
     /// <summary>
     /// Whether to include prefix declarations in the output.
     /// Default is true.
     /// </summary>
-    [CommandOption("--include-prefixes")]
+    [CommandOption("-p|--include-prefixes")]
     [Description("Whether to include prefix declarations in the output. " +
         "Default is true.")]
+    [DefaultValue(true)]
     public bool IncludePrefixes { get; set; } = true;
 
     /// <summary>
     /// Whether to include comments in the output.
     /// Default is true.
     /// </summary>
-    [CommandOption("--include-comments")]
+    [CommandOption("-c|--include-comments")]
     [Description("Whether to include comments in the output. Default is true.")]
+    [DefaultValue(true)]
     public bool IncludeComments { get; set; } = true;
 
     /// <summary>
@@ -135,15 +138,17 @@ public class ExportRdfCommandSettings : CommandSettings
     [CommandOption("--batch-size <SIZE>")]
     [Description("Maximum number of triples to process in a single batch. " +
         "Default is 10000.")]
+    [DefaultValue(10000)]
     public int BatchSize { get; set; } = 10000;
 
     /// <summary>
     /// Whether to pretty-print the output (add indentation and line breaks).
     /// Default is true.
     /// </summary>
-    [CommandOption("--pretty-print")]
+    [CommandOption("-r|--pretty-print")]
     [Description("Whether to pretty-print the output (add indentation and " +
         "line breaks). Default is true.")]
+    [DefaultValue(true)]
     public bool PrettyPrint { get; set; } = true;
 
     /// <summary>
@@ -153,7 +158,7 @@ public class ExportRdfCommandSettings : CommandSettings
     [CommandOption("--export-referenced-nodes-only")]
     [Description("Whether to export only nodes that are referenced in triples. " +
         "Default is false (exports all nodes).")]
-    public bool ExportReferencedNodesOnly { get; set; } = false;
+    public bool ExportReferencedNodesOnly { get; set; }
 
     /// <summary>
     /// Optional filter for node tags. If specified, only nodes with matching
@@ -180,5 +185,6 @@ public class ExportRdfCommandSettings : CommandSettings
     [CommandOption("--encoding <ENCODING>")]
     [Description("The character encoding to use for output files. " +
         "Default is UTF-8.")]
+    [DefaultValue("UTF-8")]
     public string Encoding { get; set; } = "UTF-8";
 }

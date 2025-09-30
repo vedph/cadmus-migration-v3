@@ -2,7 +2,7 @@
   "profiles": {
     "cadmus-mig": {
       "commandName": "Project",
-      "commandLineArgs": "dump-thesauri cadmus-codicology --indented"
+      "commandLineArgs": "export-rdf cadmus-rdf-test c:/users/dfusi/desktop/triples.xml -f rdfxml"
     }
   }
 }

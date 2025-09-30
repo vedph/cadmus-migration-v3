@@ -25,6 +25,12 @@ The CLI tool in this solution (`cadmus-mig`) provides the following commands:
 - export-rdf: export a Cadmus RDF graph into various standard formats.
 - render-items: render Cadmus items via item composers.
 
+>If you use the cadmus-rdf-test database as a source when running the CLI, please be sure to add all the required namespaces:
+
+```sql
+insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/cidoc-crm/');
+```
+
 ## History
 
 - 2025-09-28:
