@@ -32,13 +32,13 @@ public static class RdfWriterFactory
         return format?.ToLowerInvariant() switch
         {
             "turtle" or "ttl" =>
-                new TurtleWriter(settings, prefixMappings, uriMappings),
+                new TurtleRdfWriter(settings, prefixMappings, uriMappings),
             "ntriples" or "nt" =>
-                new NTriplesWriter(settings, prefixMappings, uriMappings),
+                new NTriplesRdfWriter(settings, prefixMappings, uriMappings),
             "rdfxml" or "rdf" or "xml" =>
-                new RdfXmlWriter(settings, prefixMappings, uriMappings),
+                new XmlRdfWriter(settings, prefixMappings, uriMappings),
             "jsonld" or "json-ld" or "json" =>
-                new JsonLdWriter(settings, prefixMappings, uriMappings),
+                new JsonLdRdfWriter(settings, prefixMappings, uriMappings),
             "ram" or "test" => new RamRdfWriter(settings, prefixMappings, uriMappings),
             _ => throw new NotSupportedException($"RDF format '{format}' " +
                 $"is not supported")

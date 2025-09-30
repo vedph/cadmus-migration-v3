@@ -8,7 +8,7 @@ namespace Cadmus.Export.Rdf;
 /// <summary>
 /// N-Triples format RDF writer.
 /// </summary>
-public sealed class NTriplesWriter : RdfWriter
+public sealed class NTriplesRdfWriter : RdfWriter
 {
     /// <summary>
     /// Creates a new N-Triples writer.
@@ -16,7 +16,7 @@ public sealed class NTriplesWriter : RdfWriter
     /// <param name="settings">The settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public NTriplesWriter(RdfExportSettings? settings = null,
+    public NTriplesRdfWriter(RdfExportSettings? settings = null,
         Dictionary<string, string>? prefixMappings = null,
         Dictionary<int, string>? uriMappings = null)
         : base(settings, prefixMappings, uriMappings)

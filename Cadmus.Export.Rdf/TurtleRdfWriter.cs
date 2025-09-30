@@ -8,7 +8,7 @@ namespace Cadmus.Export.Rdf;
 /// <summary>
 /// Turtle format RDF writer.
 /// </summary>
-public sealed class TurtleWriter : RdfWriter
+public sealed class TurtleRdfWriter : RdfWriter
 {
     /// <summary>
     /// Creates a new RDF writer.
@@ -16,7 +16,7 @@ public sealed class TurtleWriter : RdfWriter
     /// <param name="settings">The RDF export settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public TurtleWriter(RdfExportSettings? settings = null,
+    public TurtleRdfWriter(RdfExportSettings? settings = null,
         Dictionary<string, string>? prefixMappings = null,
         Dictionary<int, string>? uriMappings = null)
         : base(settings, prefixMappings, uriMappings)

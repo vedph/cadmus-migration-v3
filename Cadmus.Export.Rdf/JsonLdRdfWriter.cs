@@ -10,7 +10,7 @@ namespace Cadmus.Export.Rdf;
 /// <summary>
 /// JSON-LD format RDF writer.
 /// </summary>
-public sealed class JsonLdWriter : RdfWriter
+public sealed class JsonLdRdfWriter : RdfWriter
 {
     /// <summary>
     /// Creates a new JSON-LD writer.
@@ -18,7 +18,7 @@ public sealed class JsonLdWriter : RdfWriter
     /// <param name="settings">The RDF export settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public JsonLdWriter(RdfExportSettings settings,
+    public JsonLdRdfWriter(RdfExportSettings settings,
         Dictionary<string, string> prefixMappings,
         Dictionary<int, string> uriMappings)
         : base(settings, prefixMappings, uriMappings)

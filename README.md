@@ -9,11 +9,21 @@ Tools for migrating (importing/exporting) Cadmus data. Export tools also include
 Main projects:
 
 - [Cadmus.Export](Cadmus.Export/README.md): general purpose components used to export Cadmus data.
-- [Cadmus.Export.ML](Cadmus.Export.ML/README.md): markup related components used to export Cadmus data into some markup language, typically XML.
+- [Cadmus.Export.ML](Cadmus.Export.ML/README.md): markup-related components used to export Cadmus data into some markup language, typically XML.
+- [Cadmus.Export.Rdf](Cadmus.Export.Rdf/README.md): components used to export Cadmus semantic graphs into a standard RDF format.
 - `Cadmus.Import`: core components for thesauri import.
 - `Cadmus.Import.Excel`: Excel (XLSX or XLS) thesauri importers.
 - `Cadmus.Import.Proteus`: Proteus-based components for importing Cadmus items and parts from sources handled with Proteus readers.
 - [Proteus.Rendering](Proteus.Rendering/README.md): Proteus rendering components, to be moved into the Proteus solution once stable.
+
+## CLI
+
+The CLI tool in this solution (`cadmus-mig`) provides the following commands:
+
+- dump: dump Cadmus data into JSON files.
+- dump thesauri: dump Cadmus thesauri into JSON files.
+- export-rdf: export a Cadmus RDF graph into various standard formats.
+- render-items: render Cadmus items via item composers.
 
 ## History
 

@@ -143,6 +143,7 @@ public sealed class RdfExporter
     {
         ArgumentNullException.ThrowIfNull(textWriter);
         ArgumentNullException.ThrowIfNull(rdfWriter);
+
         await ExportWithWriterAsync(textWriter, rdfWriter);
     }
 }

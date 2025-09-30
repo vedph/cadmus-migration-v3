@@ -44,12 +44,10 @@ internal sealed class ExportRdfCommand : AsyncCommand<ExportRdfCommandSettings>
 
         try
         {
-            string cs = string.Format(
-                ConfigurationService.Configuration!.GetConnectionString("Default")!,
-                settings.DatabaseName);
+            string cs = string.Format(ConfigurationService.Configuration!
+                .GetConnectionString("Default")!, settings.DatabaseName);
 
-            RdfExporter exporter = new(cs,
-                new RdfExportSettings
+            RdfExporter exporter = new(cs, new RdfExportSettings
                 {
                     Format = settings.Format,
                     IncludePrefixes = settings.IncludePrefixes,
@@ -99,7 +97,7 @@ public class ExportRdfCommandSettings : CommandSettings
     /// The RDF format to export (turtle, rdfxml, ntriples, jsonld).
     /// Default is "turtle".
     /// </summary>
-    [CommandOption("--format <FORMAT>")]
+    [CommandOption("-f|--format <FORMAT>")]
     [Description("The RDF format to export (turtle, rdfxml, ntriples, jsonld). " +
         "Default is 'turtle'.")]
     public string Format { get; set; } = "turtle";
@@ -135,7 +133,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// Default is 10000.
     /// </summary>
     [CommandOption("--batch-size <SIZE>")]
-    [Description("Maximum number of triples to process in a single batch. Default is 10000.")]
+    [Description("Maximum number of triples to process in a single batch. " +
+        "Default is 10000.")]
     public int BatchSize { get; set; } = 10000;
 
     /// <summary>
@@ -143,7 +142,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// Default is true.
     /// </summary>
     [CommandOption("--pretty-print")]
-    [Description("Whether to pretty-print the output (add indentation and line breaks). Default is true.")]
+    [Description("Whether to pretty-print the output (add indentation and " +
+        "line breaks). Default is true.")]
     public bool PrettyPrint { get; set; } = true;
 
     /// <summary>
@@ -151,7 +151,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// Default is false (exports all nodes).
     /// </summary>
     [CommandOption("--export-referenced-nodes-only")]
-    [Description("Whether to export only nodes that are referenced in triples. Default is false (exports all nodes).")]
+    [Description("Whether to export only nodes that are referenced in triples. " +
+        "Default is false (exports all nodes).")]
     public bool ExportReferencedNodesOnly { get; set; } = false;
 
     /// <summary>
@@ -159,7 +160,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// tags are exported.
     /// </summary>
     [CommandOption("--node-tag-filter <TAGS>")]
-    [Description("Optional filter for node tags. If specified, only nodes with matching tags are exported. Comma-separated.")]
+    [Description("Optional filter for node tags. If specified, only nodes " +
+        "with matching tags are exported. Comma-separated.")]
     public HashSet<string>? NodeTagFilter { get; set; }
 
     /// <summary>
@@ -167,7 +169,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// matching tags are exported.
     /// </summary>
     [CommandOption("--triple-tag-filter <TAGS>")]
-    [Description("Optional filter for triple tags. If specified, only triples with matching tags are exported. Comma-separated.")]
+    [Description("Optional filter for triple tags. If specified, only triples " +
+        "with matching tags are exported. Comma-separated.")]
     public HashSet<string>? TripleTagFilter { get; set; }
 
     /// <summary>
@@ -175,6 +178,7 @@ public class ExportRdfCommandSettings : CommandSettings
     /// Default is UTF-8.
     /// </summary>
     [CommandOption("--encoding <ENCODING>")]
-    [Description("The character encoding to use for output files. Default is UTF-8.")]
+    [Description("The character encoding to use for output files. " +
+        "Default is UTF-8.")]
     public string Encoding { get; set; } = "UTF-8";
 }

@@ -10,7 +10,7 @@ namespace Cadmus.Export.Rdf;
 /// <summary>
 /// RDF/XML format RDF writer.
 /// </summary>
-public sealed class RdfXmlWriter : RdfWriter
+public sealed class XmlRdfWriter : RdfWriter
 {
     /// <summary>
     /// Creates a new RDF/XML writer.
@@ -18,7 +18,7 @@ public sealed class RdfXmlWriter : RdfWriter
     /// <param name="settings">The RDF export settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public RdfXmlWriter(RdfExportSettings settings,
+    public XmlRdfWriter(RdfExportSettings settings,
         Dictionary<string, string> prefixMappings,
         Dictionary<int, string> uriMappings)
         : base(settings, prefixMappings, uriMappings)

@@ -4,9 +4,9 @@
 
 The `Proteus.Rendering` library is a collection of rendering utilities and components designed to leverage the Proteus framework to render some data into text (e.g. plain text, HTML, XML, etc.).
 
-Currently this is being developed to provide all the generic, reusable models and logic for rendering data into text, in order to serve both the GVE (`Gve.Migration` project in this solution) and Cadmus (`Cadmus.Migration` solution) export subsystems.
+Currently this is being developed to provide all the generic, reusable models and logic for rendering data into text, in order to serve both GVE and Cadmus (`Cadmus.Migration` solution) export subsystems.
 
-The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution.
+>The code in this library is mostly derived from `Cadmus.Migration`, with the necessary changes to make it reusable and generic. When the library is stable, it will be moved to the `Proteus` solution.
 
 Text rendering essentially is a 4-steps process:
 
