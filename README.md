@@ -33,6 +33,8 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+### 8.0.8
+
 - 2025-09-28:
   - updated packages and their versions.
   - added `Cadmus.Export.Rdf` project (RDF export).

@@ -7,6 +7,11 @@ using Xunit;
 
 namespace Cadmus.Export.Test;
 
+// https://github.com/xunit/xunit/issues/1999
+
+[CollectionDefinition(nameof(NonParallelResourceCollection),
+    DisableParallelization = true)]
+[Collection(nameof(NonParallelResourceCollection))]
 public sealed class CadmusMongoJsonDumperTest :
     IClassFixture<MongoFixture>, IDisposable
 {

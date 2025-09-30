@@ -6,8 +6,10 @@ using Proteus.Text.Filters;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Xunit;
 
 namespace Cadmus.Export.Test;
+
 
 internal static class TestHelper
 {

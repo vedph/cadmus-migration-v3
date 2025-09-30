@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 
 namespace Cadmus.Export.Rdf.Test;
 
+public class NonParallelResourceCollection { }
+
 // https://github.com/xunit/xunit/issues/1999
 [CollectionDefinition(nameof(NonParallelResourceCollection),
     DisableParallelization = true)]
-public class NonParallelResourceCollection { }
+
 [Collection(nameof(NonParallelResourceCollection))]
 public sealed class RdfExporterTest
 {
