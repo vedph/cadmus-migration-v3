@@ -45,7 +45,7 @@ internal sealed class ExportRdfCommand : AsyncCommand<ExportRdfCommandSettings>
         try
         {
             string cs = string.Format(ConfigurationService.Configuration!
-                .GetConnectionString("Default")!, settings.DatabaseName);
+                .GetConnectionString("Graph")!, settings.DatabaseName);
 
             RdfExporter exporter = new(cs, new RdfExportSettings
                 {
