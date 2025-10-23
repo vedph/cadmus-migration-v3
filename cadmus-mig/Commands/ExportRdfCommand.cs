@@ -98,8 +98,8 @@ public class ExportRdfCommandSettings : CommandSettings
     /// Default is "turtle".
     /// </summary>
     [CommandOption("-f|--format <FORMAT>")]
-    [Description("The RDF format to export (turtle, rdfxml, ntriples, jsonld). " +
-        "Default is 'turtle'.")]
+    [Description("The RDF format to export (turtle, rdfxml, rdfowlxml, " +
+        "ntriples, jsonld). Default is 'turtle'.")]
     [DefaultValue("turtle")]
     public string Format { get; set; } = "turtle";
 

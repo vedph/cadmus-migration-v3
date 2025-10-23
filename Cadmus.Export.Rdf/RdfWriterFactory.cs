@@ -37,6 +37,8 @@ public static class RdfWriterFactory
                 new NTriplesRdfWriter(settings, prefixMappings, uriMappings),
             "rdfxml" or "rdf" or "xml" =>
                 new XmlRdfWriter(settings, prefixMappings, uriMappings),
+            "rdfowlxml" or "owlxml" or "owl" =>
+                new XmlRdfOwlWriter(settings, prefixMappings, uriMappings),
             "jsonld" or "json-ld" or "json" =>
                 new JsonLdRdfWriter(settings, prefixMappings, uriMappings),
             "ram" or "test" => new RamRdfWriter(settings, prefixMappings, uriMappings),

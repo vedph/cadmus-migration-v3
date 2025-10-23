@@ -41,7 +41,8 @@ public sealed class RdfExporter
 
     private async Task<Dictionary<string, string>> LoadPrefixMappingsAsync()
     {
-        List<NamespaceMapping> mappings = await _dataReader.GetNamespaceMappingsAsync();
+        List<NamespaceMapping> mappings =
+            await _dataReader.GetNamespaceMappingsAsync();
         return mappings.ToDictionary(m => m.Prefix, m => m.Uri);
     }
 

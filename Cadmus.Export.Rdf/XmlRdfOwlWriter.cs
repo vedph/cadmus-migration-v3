@@ -9,24 +9,34 @@ using System.Xml.Linq;
 namespace Cadmus.Export.Rdf;
 
 /// <summary>
-/// RDF/XML format RDF writer.
+/// RDF/XML OWL format RDF writer. This writer outputs RDF in OWL format,
+/// using owl:NamedIndividual elements instead of rdf:Description.
 /// </summary>
-public sealed class XmlRdfWriter : RdfWriter
+/// <remarks>In this variant of <see cref="XmlRdfWriter"/> the RDF/XML output
+/// is modified to use OWL-specific elements and attributes:
+/// <para>- Uses &lt;owl:NamedIndividual rdf:about="..."&gt; as the container
+/// element.
+/// </para>
+/// <para>- Type is still expressed as &lt;rdf:type rdf:resource="..."&gt;
+/// but nested inside.</para>
+/// <para>- Properties follow the same pattern (like &lt;rdfs:comment&gt;).
+/// </para>
+/// <para>- Otherwise maintains the same RDF/XML structure.</para>
+/// </remarks>
+public sealed class XmlRdfOwlWriter : RdfWriter
 {
-    internal static readonly XNamespace RDF_NS =
-        "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-    internal static readonly XNamespace XML_NS =
-        "http://www.w3.org/XML/1998/namespace";
+    private static readonly XNamespace OWL_NS =
+        "http://www.w3.org/2002/07/owl#";
 
     private XDocument? _document;
 
     /// <summary>
-    /// Creates a new RDF/XML writer.
+    /// Creates a new RDF/XML OWL writer.
     /// </summary>
     /// <param name="settings">The RDF export settings.</param>
     /// <param name="prefixMappings">The prefix mappings.</param>
     /// <param name="uriMappings">The URI mappings.</param>
-    public XmlRdfWriter(RdfExportSettings settings,
+    public XmlRdfOwlWriter(RdfExportSettings settings,
         Dictionary<string, string> prefixMappings,
         Dictionary<int, string> uriMappings)
         : base(settings, prefixMappings, uriMappings)
@@ -43,15 +53,17 @@ public sealed class XmlRdfWriter : RdfWriter
         ArgumentNullException.ThrowIfNull(writer);
 
         // create the root RDF element with all namespace declarations
-        XElement rootElement = new(RDF_NS + "RDF");
+        XElement rootElement = new(XmlRdfWriter.RDF_NS + "RDF");
 
         // add namespace declarations
         rootElement.SetAttributeValue(XNamespace.Xmlns + "rdf",
-            RDF_NS.NamespaceName);
+            XmlRdfWriter.RDF_NS.NamespaceName);
+        rootElement.SetAttributeValue(XNamespace.Xmlns + "owl",
+            OWL_NS.NamespaceName);
 
         foreach (KeyValuePair<string, string> mapping in _prefixMappings)
         {
-            if (mapping.Key != "rdf") // rdf is already declared
+            if (mapping.Key != "rdf" && mapping.Key != "owl") // already declared
             {
                 rootElement.SetAttributeValue(XNamespace.Xmlns + mapping.Key,
                     mapping.Value);
@@ -60,7 +72,10 @@ public sealed class XmlRdfWriter : RdfWriter
 
         // add base URI if specified
         if (!string.IsNullOrEmpty(_settings.BaseUri))
-            rootElement.SetAttributeValue(XML_NS + "base", _settings.BaseUri);
+        {
+            rootElement.SetAttributeValue(XmlRdfWriter.XML_NS + "base",
+                _settings.BaseUri);
+        }
 
         // create the document with declaration using the configured encoding
         _document = new XDocument(
@@ -80,7 +95,7 @@ public sealed class XmlRdfWriter : RdfWriter
     }
 
     /// <summary>
-    /// Writes the given triples in RDF/XML format.
+    /// Writes the given triples in RDF/XML OWL format.
     /// </summary>
     /// <param name="writer">The writer to write to.</param>
     /// <param name="triples">The triples.</param>
@@ -102,19 +117,19 @@ public sealed class XmlRdfWriter : RdfWriter
         {
             string subjectUri = GetFullUri(subjectGroup.Key);
 
-            // create Description element
-            XElement descriptionElement = new(RDF_NS + "Description",
-                new XAttribute(RDF_NS + "about", subjectUri));
+            // create NamedIndividual element (OWL format)
+            XElement namedIndividualElement = new(OWL_NS + "NamedIndividual",
+                new XAttribute(XmlRdfWriter.RDF_NS + "about", subjectUri));
 
             // add predicate elements for this subject
             foreach (RdfTriple triple in subjectGroup)
             {
                 XElement predicateElement = CreatePredicateElement(triple);
-                descriptionElement.Add(predicateElement);
+                namedIndividualElement.Add(predicateElement);
             }
 
             // add to document root
-            _document.Root.Add(descriptionElement);
+            _document.Root.Add(namedIndividualElement);
         }
 
         // all content will be written at once in WriteFooterAsync
@@ -128,7 +143,7 @@ public sealed class XmlRdfWriter : RdfWriter
     /// <returns>The predicate element.</returns>
     private XElement CreatePredicateElement(RdfTriple triple)
     {
-        string predicateUri = GetUriForId(triple.PredicateId);
+        string predicateUri = GetFullUri(triple.PredicateId);
         XName predicateName = CreateXName(predicateUri);
 
         if (!string.IsNullOrEmpty(triple.ObjectLiteral))
@@ -138,7 +153,7 @@ public sealed class XmlRdfWriter : RdfWriter
 
             if (!string.IsNullOrEmpty(triple.ObjectLiteralLanguage))
             {
-                literalElement.SetAttributeValue(XML_NS + "lang",
+                literalElement.SetAttributeValue(XmlRdfWriter.XML_NS + "lang",
                     triple.ObjectLiteralLanguage);
             }
             else if (!string.IsNullOrEmpty(triple.ObjectLiteralType))
@@ -147,7 +162,8 @@ public sealed class XmlRdfWriter : RdfWriter
                     !triple.ObjectLiteralType.StartsWith("http")
                     ? UriHelper.ExpandUri(triple.ObjectLiteralType, _prefixMappings)
                     : triple.ObjectLiteralType;
-                literalElement.SetAttributeValue(RDF_NS + "datatype", datatype);
+                literalElement.SetAttributeValue(XmlRdfWriter.RDF_NS +
+                    "datatype", datatype);
             }
 
             return literalElement;
@@ -157,7 +173,7 @@ public sealed class XmlRdfWriter : RdfWriter
             // resource reference
             string objectUri = GetFullUri(triple.ObjectId.Value);
             return new XElement(predicateName,
-                new XAttribute(RDF_NS + "resource", objectUri));
+                new XAttribute(XmlRdfWriter.RDF_NS + "resource", objectUri));
         }
         else
         {
@@ -198,25 +214,86 @@ public sealed class XmlRdfWriter : RdfWriter
             }
         }
 
-        // fallback: use full URI as local name with a default namespace
-        // this creates a valid RDF/XML element but with a generated namespace
-        string fallbackNamespace = "http://unknown.namespace/";
-        string fallbackLocalName = $"predicate_{GetPredicateIdFromUri(uri)}";
-
-        // add the fallback namespace to the document if not already present
-        if (_document?.Root != null)
+        // if no prefix match found, we need to split the URI properly
+        // try to extract namespace and local name from the full URI
+        int splitIndex = GetUriSplitIndex(uri);
+        if (splitIndex > 0 && splitIndex < uri.Length)
         {
-            string fallbackPrefix = "ns" + GetPredicateIdFromUri(uri);
-            if (!_prefixMappings.ContainsKey(fallbackPrefix))
+            string namespaceUri = uri[..splitIndex];
+            string localName = uri[splitIndex..];
+
+            if (IsValidXmlName(localName))
             {
-                _document.Root.SetAttributeValue(XNamespace.Xmlns + fallbackPrefix,
-                    fallbackNamespace);
+                // add this namespace to the document if not already present
+                if (_document?.Root != null)
+                {
+                    // generate a prefix for this namespace
+                    string prefix = GeneratePrefixForNamespace(namespaceUri);
+                    if (!_prefixMappings.ContainsValue(namespaceUri))
+                    {
+                        _document.Root.SetAttributeValue(XNamespace.Xmlns + prefix,
+                            namespaceUri);
+                        _prefixMappings[prefix] = namespaceUri;
+                    }
+                }
+
+                return XName.Get(localName, namespaceUri);
             }
         }
 
-        return XName.Get(fallbackLocalName, fallbackNamespace);
+        // ultimate fallback: create a safe element name
+        throw new InvalidOperationException(
+            $"Cannot create valid XML name from URI: {uri}. " +
+            "Ensure all predicates have proper namespace mappings configured.");
     }
 
+    /// <summary>
+    /// Finds the best split point in a URI to separate namespace from local name.
+    /// </summary>
+    /// <param name="uri">The URI to split.</param>
+    /// <returns>The index where to split, or -1 if no good split point found.</returns>
+    private static int GetUriSplitIndex(string uri)
+    {
+        // prefer splitting after # (fragment identifier)
+        int hashIndex = uri.LastIndexOf('#');
+        if (hashIndex >= 0 && hashIndex < uri.Length - 1)
+            return hashIndex + 1;
+
+        // otherwise split after last / (path separator)
+        int slashIndex = uri.LastIndexOf('/');
+        if (slashIndex >= 0 && slashIndex < uri.Length - 1)
+            return slashIndex + 1;
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Generates a unique prefix for a namespace.
+    /// </summary>
+    /// <param name="namespaceUri">The namespace URI.</param>
+    /// <returns>A unique prefix.</returns>
+    private string GeneratePrefixForNamespace(string namespaceUri)
+    {
+        // check if this namespace already has a prefix
+        foreach (KeyValuePair<string, string> mapping in _prefixMappings)
+        {
+            if (mapping.Value == namespaceUri)
+                return mapping.Key;
+        }
+
+        // generate a new prefix
+        int counter = 1;
+        string prefix;
+        do
+        {
+            prefix = $"ns{counter}";
+            counter++;
+        } while (_prefixMappings.ContainsKey(prefix));
+
+        return prefix;
+    }
+
+    /// <summary>
     /// <summary>
     /// Checks if a string is a valid XML name.
     /// </summary>
@@ -240,28 +317,6 @@ public sealed class XmlRdfWriter : RdfWriter
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Extracts predicate ID from URI for fallback naming.
-    /// </summary>
-    /// <param name="uri">The URI.</param>
-    /// <returns>A safe identifier.</returns>
-    private static string GetPredicateIdFromUri(string uri)
-    {
-        // simple heuristic: take last part after / or #
-        int lastSlash = uri.LastIndexOf('/');
-        int lastHash = uri.LastIndexOf('#');
-        int start = Math.Max(lastSlash, lastHash);
-
-        if (start >= 0 && start < uri.Length - 1)
-        {
-            string candidate = uri[(start + 1)..];
-            if (IsValidXmlName(candidate))
-                return candidate;
-        }
-
-        return uri.GetHashCode().ToString("X");
     }
 
     /// <summary>

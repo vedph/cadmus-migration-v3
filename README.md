@@ -33,6 +33,8 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+- 2025-10-23: added RDF OWL XML export and updated version numbers for affected libraries and CLI tool.
+
 ### 8.0.9
 
 - 2025-10-23: updated packages.
