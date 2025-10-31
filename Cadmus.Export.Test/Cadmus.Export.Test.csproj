@@ -40,7 +40,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cadmus.Philology.Parts" Version="10.0.1" />
+		<PackageReference Include="Cadmus.Philology.Parts" Version="11.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

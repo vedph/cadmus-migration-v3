@@ -10,6 +10,7 @@ using Spectre.Console.Cli;
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cadmus.Migration.Cli.Commands;
@@ -46,7 +47,7 @@ internal sealed class RenderItemsCommand : AsyncCommand<RenderItemsCommandSettin
     }
 
     public override Task<int> ExecuteAsync(CommandContext context,
-        RenderItemsCommandSettings settings)
+        RenderItemsCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);
 

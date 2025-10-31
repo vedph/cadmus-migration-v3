@@ -89,7 +89,7 @@ internal sealed class DumpCommand : AsyncCommand<DumpCommandSettings>
     }
 
     public override Task<int> ExecuteAsync(CommandContext context,
-        DumpCommandSettings settings)
+        DumpCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);
 

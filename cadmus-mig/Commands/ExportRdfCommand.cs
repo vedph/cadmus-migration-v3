@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cadmus.Migration.Cli.Commands;
@@ -38,7 +39,7 @@ internal sealed class ExportRdfCommand : AsyncCommand<ExportRdfCommandSettings>
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context,
-        ExportRdfCommandSettings settings)
+        ExportRdfCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);
 

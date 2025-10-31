@@ -24,7 +24,7 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
     }
 
     public override async Task<int> ExecuteAsync(CommandContext context,
-        DumpThesauriCommandSettings settings)
+        DumpThesauriCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);
         try
@@ -55,7 +55,8 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
                     }
                 }));
 
-            AnsiConsole.MarkupLine($"[green]Completed![/] Dumped [yellow]{count}[/] thesauri to [cyan]{settings.OutputPath}[/]");
+            AnsiConsole.MarkupLine($"[green]Completed![/] Dumped " +
+                $"[yellow]{count}[/] thesauri to [cyan]{settings.OutputPath}[/]");
             return 0;
         }
         catch (Exception ex)
