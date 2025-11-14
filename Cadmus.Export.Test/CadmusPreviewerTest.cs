@@ -261,23 +261,23 @@ public sealed class CadmusPreviewerTest
         MongoCadmusRepository repository = GetRepository();
         CadmusPreviewer previewer = GetPreviewer(repository);
 
-        IList<ExportedSegment> spans = previewer.BuildTextSegments(TEXT_ID,
+        IList<ExportedSegment> segments = previewer.BuildTextSegments(TEXT_ID,
         [
             ORTH_ID,
             COMM_ID
         ]);
 
-        Assert.Equal(8, spans.Count);
+        Assert.Equal(8, segments.Count);
 
         // qu: -
-        ExportedSegment segment = spans[0];
+        ExportedSegment segment = segments[0];
         Assert.Equal("qu", segment.Text);
         AnnotatedTextRange? range =
             CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
         Assert.Empty(range.FragmentIds);
         // e: AB
-        segment = spans[1];
+        segment = segments[1];
         Assert.Equal("e", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
@@ -285,13 +285,13 @@ public sealed class CadmusPreviewerTest
         Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.orthography@0",
             range.FragmentIds[0]);
         // _: -
-        segment = spans[2];
+        segment = segments[2];
         Assert.Equal(" ", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
         Assert.Empty(range.FragmentIds);
         // b: OC
-        segment = spans[3];
+        segment = segments[3];
         Assert.Equal("b", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
@@ -301,7 +301,7 @@ public sealed class CadmusPreviewerTest
         Assert.Contains("it.vedph.token-text-layer:fr.it.vedph.comment@0",
             range.FragmentIds);
         // ixit: C
-        segment = spans[4];
+        segment = segments[4];
         Assert.Equal("ixit", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
@@ -311,7 +311,7 @@ public sealed class CadmusPreviewerTest
         Assert.True(segment.HasFeature(ExportedSegment.F_EOL_TAIL));
 
         // annos: C
-        segment = spans[5];
+        segment = segments[5];
         Assert.Equal("annos", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
@@ -319,13 +319,13 @@ public sealed class CadmusPreviewerTest
         Assert.Equal("it.vedph.token-text-layer:fr.it.vedph.comment@0",
             range.FragmentIds[0]);
         // _: -
-        segment = spans[6];
+        segment = segments[6];
         Assert.Equal(" ", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
         Assert.Empty(range.FragmentIds);
         // XX: D
-        segment = spans[7];
+        segment = segments[7];
         Assert.Equal("XX", segment.Text);
         range = CadmusTextTreeBuilder.GetSegmentFirstRange(segment);
         Assert.NotNull(range);
