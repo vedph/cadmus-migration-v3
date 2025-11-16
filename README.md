@@ -33,6 +33,10 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+### 8.0.11
+
+- 2025-11-16: added `Bcp47TextFilter`.
+
 ### 8.0.10
 
 - 2025-10-31: updated packages.
