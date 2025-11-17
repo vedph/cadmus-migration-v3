@@ -35,6 +35,9 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ### 8.0.11
 
+- 2025-11-17:
+  - added `JsonToXmlConverter`.
+  - refactored `XsltJsonRenderer` to use the new `JsonToXmlConverter`, also changing the default behavior for arrays (render as a single-item array rather than unwrap the item).
 - 2025-11-16: added `Bcp47TextFilter`.
 
 ### 8.0.10
