@@ -2,7 +2,7 @@
   "profiles": {
     "cadmus-mig": {
       "commandName": "Project",
-      "commandLineArgs": "export-rdf cadmus-rdf-test c:/users/dfusi/desktop/triples.xml -f rdfowlxml"
+      "commandLineArgs": "json-to-xml c:/users/dfusi/desktop/part.json -nfi"
     }
   }
 }

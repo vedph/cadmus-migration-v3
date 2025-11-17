@@ -59,6 +59,8 @@ public static class Program
                     .WithDescription("Dump thesauri from a Cadmus database");
                 config.AddCommand<ExportRdfCommand>("export-rdf")
                     .WithDescription("Export RDF data from a Cadmus graph database");
+                config.AddCommand<JsonToXmlCommand>("json-to-xml")
+                    .WithDescription("Convert item/part JSON to XML");
             });
 
             int result = await app.RunAsync(args);

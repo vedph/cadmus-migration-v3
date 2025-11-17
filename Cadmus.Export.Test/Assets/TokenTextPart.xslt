@@ -7,6 +7,10 @@
 </xsl:template>
 
 	<xsl:template match="lines">
+		<xsl:apply-templates/>
+	</xsl:template>
+
+	<xsl:template match="line">
 		<xsl:value-of select="y"/>
 		<xsl:text xml:space="preserve">  </xsl:text>
 		<xsl:value-of select="text"/>

@@ -33,11 +33,17 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+### 8.0.12
+
+- 2025-11-17:
+  - added JSON to XML command to the CLI tool. You can use this to convert JSON files exported with the get-object command of the Cadmus CLI tool into XML files.
+  - refactored JSON conversion to simplify array handling (now arrays are always rendered as arrays, even if they contain a single item).
+
 ### 8.0.11
 
 - 2025-11-17:
   - added `JsonToXmlConverter`.
-  - refactored `XsltJsonRenderer` to use the new `JsonToXmlConverter`, also changing the default behavior for arrays (render as a single-item array rather than unwrap the item).
+  - refactored `XsltJsonRenderer` to use the new `JsonToXmlConverter`, also changing the default behavior for arrays (render as a single-item array rather than unwrap the item). 
 - 2025-11-16: added `Bcp47TextFilter`.
 
 ### 8.0.10

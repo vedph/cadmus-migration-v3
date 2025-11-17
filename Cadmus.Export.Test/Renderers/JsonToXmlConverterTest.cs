@@ -74,7 +74,7 @@ public sealed class JsonToXmlConverterTest
     }
 
     [Fact]
-    public void Convert_Array_CreatesMultipleElements()
+    public void Convert_Array_CreatesContainerWithItems()
     {
         JsonToXmlConverter converter = new();
         string json = @"{
@@ -83,7 +83,11 @@ public sealed class JsonToXmlConverterTest
 
         XElement result = converter.Convert(json);
 
-        List<XElement> items = [.. result.Elements("items")];
+        XElement? itemsContainer = result.Element("items");
+        Assert.NotNull(itemsContainer);
+
+        // Items should be singularized to "item"
+        List<XElement> items = [.. itemsContainer.Elements("item")];
         Assert.Equal(3, items.Count);
         Assert.Equal("apple", items[0].Value);
         Assert.Equal("banana", items[1].Value);
@@ -91,7 +95,7 @@ public sealed class JsonToXmlConverterTest
     }
 
     [Fact]
-    public void Convert_ArrayOfObjects_CreatesMultipleElementsWithChildren()
+    public void Convert_ArrayOfObjects_CreatesContainerWithItemChildren()
     {
         JsonToXmlConverter converter = new();
         string json = @"{
@@ -103,7 +107,11 @@ public sealed class JsonToXmlConverterTest
 
         XElement result = converter.Convert(json);
 
-        List<XElement> users = [.. result.Elements("users")];
+        XElement? usersContainer = result.Element("users");
+        Assert.NotNull(usersContainer);
+
+        // Users should be singularized to "user"
+        List<XElement> users = [.. usersContainer.Elements("user")];
         Assert.Equal(2, users.Count);
         Assert.Equal("Alice", users[0].Element("name")?.Value);
         Assert.Equal("20", users[0].Element("age")?.Value);
@@ -297,7 +305,10 @@ public sealed class JsonToXmlConverterTest
 
         XElement result = converter.Convert(json, options);
 
-        List<XElement> items = [.. result.Elements("items")];
+        XElement? itemsContainer = result.Element("items");
+        Assert.NotNull(itemsContainer);
+
+        List<XElement> items = [.. itemsContainer.Elements("item")];
         Assert.All(items, item => Assert.Null(item.Attribute("n")));
     }
 
@@ -315,7 +326,10 @@ public sealed class JsonToXmlConverterTest
 
         XElement result = converter.Convert(json, options);
 
-        List<XElement> items = [.. result.Elements("items")];
+        XElement? itemsContainer = result.Element("items");
+        Assert.NotNull(itemsContainer);
+
+        List<XElement> items = [.. itemsContainer.Elements("item")];
         Assert.Equal(3, items.Count);
         Assert.Equal("1", items[0].Attribute("n")?.Value);
         Assert.Equal("2", items[1].Attribute("n")?.Value);
@@ -323,74 +337,53 @@ public sealed class JsonToXmlConverterTest
     }
     #endregion
 
-    #region Option: SingleArrayItemFlattening
+    #region Array Structure Tests
+
     [Fact]
-    public void Convert_SingleArrayItemFlattening_False_NoFlattening()
+    public void Convert_SingleItemArray_CreatesContainerWithOneItem()
     {
         JsonToXmlConverter converter = new();
-        JsonToXmlConverterOptions options = new()
-        {
-            SingleArrayItemFlattening = false
-        };
         string json = @"{
             ""items"": [""single""]
         }";
 
-        XElement result = converter.Convert(json, options);
+        XElement result = converter.Convert(json);
 
-        List<XElement> items = [.. result.Elements("items")];
+        XElement? itemsContainer = result.Element("items");
+        Assert.NotNull(itemsContainer);
+
+        List<XElement> items = [.. itemsContainer.Elements("item")];
         Assert.Single(items);
         Assert.Equal("single", items[0].Value);
     }
 
     [Fact]
-    public void Convert_SingleArrayItemFlattening_True_FlattensArray()
+    public void Convert_EmptyArray_CreatesEmptyContainer()
     {
         JsonToXmlConverter converter = new();
-        JsonToXmlConverterOptions options = new()
-        {
-            SingleArrayItemFlattening = true
-        };
         string json = @"{
-            ""items"": [""single""]
+            ""items"": []
         }";
 
-        XElement result = converter.Convert(json, options);
+        XElement result = converter.Convert(json);
 
-        List<XElement> items = [.. result.Elements("items")];
-        Assert.Single(items);
-        Assert.Equal("single", items[0].Value);
+        XElement? itemsContainer = result.Element("items");
+        Assert.NotNull(itemsContainer);
+        Assert.Empty(itemsContainer.Elements());
     }
 
-    [Fact]
-    public void Convert_SingleArrayItemFlattening_MultipleItems_NoEffect()
-    {
-        JsonToXmlConverter converter = new();
-        JsonToXmlConverterOptions options = new()
-        {
-            SingleArrayItemFlattening = true
-        };
-        string json = @"{
-            ""items"": [""first"", ""second""]
-        }";
-
-        XElement result = converter.Convert(json, options);
-
-        List<XElement> items = [.. result.Elements("items")];
-        Assert.Equal(2, items.Count);
-    }
     #endregion
 
     #region Option: WrappedEntryNames
     [Fact]
-    public void Convert_WrappedEntryNames_SingleElement_WrapsContent()
+    public void Convert_WrappedEntryNames_UsesExplicitMapping()
     {
         JsonToXmlConverter converter = new();
         JsonToXmlConverterOptions options = new()
         {
             WrappedEntryNames = new Dictionary<string, string>
             {
-                { "items", "item" }
+                { "items", "element" }  // Use "element" instead of "item"
             }
         };
         string json = @"{
@@ -401,7 +394,7 @@ public sealed class JsonToXmlConverterTest
 
         XElement? itemsContainer = result.Element("items");
         Assert.NotNull(itemsContainer);
-        XElement? item = itemsContainer.Element("item");
+        XElement? item = itemsContainer.Element("element");
         Assert.NotNull(item);
         Assert.Equal("test", item.Element("name")?.Value);
     }
@@ -473,9 +466,6 @@ public sealed class JsonToXmlConverterTest
     public void Convert_AutoSingularization_Fragments_UsesFragment()
     {
         JsonToXmlConverter converter = new();
-        // Note: Auto-singularization only works when elements repeat
-        // which doesn't happen with the basic JSON->XML conversion
-        // This test verifies the singularizer logic exists
         string json = @"{
             ""fragments"": [
                 { ""text"": ""one"" },
@@ -485,9 +475,15 @@ public sealed class JsonToXmlConverterTest
 
         XElement result = converter.Convert(json);
 
-        // Without WrappedEntryNames, elements are named "fragments"
-        List<XElement> fragments = [.. result.Elements("fragments")];
+        XElement? fragmentsContainer = result.Element("fragments");
+        Assert.NotNull(fragmentsContainer);
+
+        // Auto-singularization: "fragments" -> "fragment"
+        List<XElement> fragments =
+            [.. fragmentsContainer.Elements("fragment")];
         Assert.Equal(2, fragments.Count);
+        Assert.Equal("one", fragments[0].Element("text")?.Value);
+        Assert.Equal("two", fragments[1].Element("text")?.Value);
     }
 
     [Fact]
@@ -533,18 +529,6 @@ public sealed class JsonToXmlConverterTest
     #endregion
 
     #region Edge Cases
-    [Fact]
-    public void Convert_EmptyArray_CreatesNoElements()
-    {
-        JsonToXmlConverter converter = new();
-        string json = @"{
-            ""items"": []
-        }";
-
-        XElement result = converter.Convert(json);
-
-        Assert.Empty(result.Elements("items"));
-    }
 
     [Fact]
     public void Convert_MixedTypes_HandlesAll()
@@ -569,7 +553,12 @@ public sealed class JsonToXmlConverterTest
         Assert.Equal("true", result.Element("true")?.Value);
         Assert.Equal("false", result.Element("false")?.Value);
         Assert.NotNull(result.Element("null"));
-        Assert.Equal(3, result.Elements("array").Count());
+
+        // Array becomes container with singularized items
+        XElement? arrayContainer = result.Element("array");
+        Assert.NotNull(arrayContainer);
+        Assert.Equal(3, arrayContainer.Elements().Count());
+
         Assert.NotNull(result.Element("object"));
     }
 

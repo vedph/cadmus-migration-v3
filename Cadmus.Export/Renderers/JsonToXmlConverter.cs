@@ -1,7 +1,6 @@
 ﻿using Proteus.Core.Text;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
@@ -56,35 +55,34 @@ public sealed class JsonToXmlConverter
 
         ProcessJsonElement(doc.RootElement, root, options);
 
-        // Wrap arrays if needed
-        if (options.WrappedEntryNames?.Count > 0)
-        {
-            Dictionary<XName, XName> wrappedMap =
-                BuildWrappedEntryNamesMap(options);
-            WrapXmlArrays(root, wrappedMap, options);
-        }
-
         return root;
     }
 
-    private static Dictionary<XName, XName> BuildWrappedEntryNamesMap(
+    private XName GetArrayItemName(string arrayName,
         JsonToXmlConverterOptions options)
     {
-        Dictionary<XName, XName> map = [];
-        IXmlNamespaceResolver resolver = options.GetResolver();
-
-        foreach (KeyValuePair<string, string> pair in
-            options.WrappedEntryNames!)
+        // Check if there's an explicit mapping
+        if (options.WrappedEntryNames?.TryGetValue(arrayName,
+            out string? itemName) == true)
         {
-            XName key = NamespaceOptions.ResolvePrefixedName(
-                pair.Key, resolver, options.DefaultNsPrefix);
-            XName value = NamespaceOptions.ResolvePrefixedName(
-                pair.Value, resolver, options.DefaultNsPrefix);
-
-            map[key] = value;
+            // Resolve prefixed names (e.g. "tei:div")
+            if (itemName.Contains(':'))
+            {
+                IXmlNamespaceResolver resolver = options.GetResolver();
+                return NamespaceOptions.ResolvePrefixedName(
+                    itemName, resolver, options.DefaultNsPrefix);
+            }
+            return XName.Get(itemName);
         }
 
-        return map;
+        // Try singularization as fallback
+        string? singularized = _singularizer.Singularize(arrayName);
+
+        // If singularization fails or returns empty, use original name
+        if (string.IsNullOrEmpty(singularized))
+            return XName.Get(arrayName);
+
+        return XName.Get(singularized);
     }
 
     private void ProcessJsonElement(JsonElement element,
@@ -133,40 +131,30 @@ public sealed class JsonToXmlConverter
         XElement parent, JsonToXmlConverterOptions options,
         string arrayName)
     {
-        int count = 0;
-        foreach (JsonElement item in element.EnumerateArray())
-        {
-            count++;
-        }
+        // Create array container element
+        XName containerName = XName.Get(arrayName);
+        XElement container = new(containerName);
 
-        // handle single-item flattening
-        if (options.SingleArrayItemFlattening && count == 1)
-        {
-            XName childName = XName.Get(arrayName);
-            XElement child = new(childName);
+        // Get the name for individual items
+        XName itemName = GetArrayItemName(arrayName, options);
 
-            JsonElement singleItem = element.EnumerateArray().First();
-            ProcessJsonElement(singleItem, child, options);
-            parent.Add(child);
-            return;
-        }
-
-        // process array items
+        // Process each array item
         int index = 1;
         foreach (JsonElement item in element.EnumerateArray())
         {
-            XName childName = XName.Get(arrayName);
-            XElement child = new(childName);
+            XElement itemElement = new(itemName);
 
             if (options.ArrayItemNumbering)
             {
-                child.SetAttributeValue("n", index);
+                itemElement.SetAttributeValue("n", index);
             }
 
-            ProcessJsonElement(item, child, options);
-            parent.Add(child);
+            ProcessJsonElement(item, itemElement, options);
+            container.Add(itemElement);
             index++;
         }
+
+        parent.Add(container);
     }
 
     private static void ProcessJsonValue(JsonElement element,
@@ -223,161 +211,6 @@ public sealed class JsonToXmlConverter
         }
     }
 
-    private void WrapXmlArrays(XElement root,
-        Dictionary<XName, XName> map, JsonToXmlConverterOptions options)
-    {
-        foreach (KeyValuePair<XName, XName> entry in map)
-        {
-            XName arrayName = entry.Key;
-            XName itemName = entry.Value;
-
-            WrapArraySequences(root, arrayName, itemName, options);
-        }
-
-        // handle arrays with singularized names (fallback)
-        ProcessSingularizedArrays(root, map, options);
-    }
-
-    private static void WrapArraySequences(XElement root, XName arrayName,
-        XName itemName, JsonToXmlConverterOptions options)
-    {
-        // find all sequences of elements with the same name
-        List<XElement> firstElements = [..root.Descendants(arrayName)
-            .Where(e => e.ElementsBeforeSelf().LastOrDefault()?.Name
-                != arrayName)];
-
-        foreach (XElement firstElement in firstElements)
-        {
-            // get all subsequent siblings with the same name
-            List<XElement> siblings = [..firstElement.ElementsAfterSelf()
-                .TakeWhile(e => e.Name == arrayName)];
-
-            // create a list of all elements to be wrapped
-            List<XElement> allElements = [firstElement];
-            allElements.AddRange(siblings);
-
-            // if there's only one element, wrap its contents
-            if (siblings.Count == 0)
-            {
-                WrapSingleElement(firstElement, itemName, options);
-            }
-            else
-            {
-                WrapMultipleElements(allElements, itemName, options);
-            }
-        }
-    }
-
-    private static void WrapSingleElement(XElement element, XName itemName,
-        JsonToXmlConverterOptions options)
-    {
-        // create a wrapper element with the item name
-        XElement wrapper = new(itemName);
-
-        // add numbering if requested
-        if (options.ArrayItemNumbering)
-        {
-            wrapper.SetAttributeValue("n", 1);
-        }
-
-        // move the contents to the wrapper
-        List<XNode> contents = [..element.Nodes()];
-        foreach (XNode node in contents)
-        {
-            node.Remove();
-            wrapper.Add(node);
-        }
-
-        // copy attributes if any
-        foreach (XAttribute attr in element.Attributes().ToList())
-        {
-            wrapper.SetAttributeValue(attr.Name, attr.Value);
-        }
-
-        element.RemoveNodes();
-        element.RemoveAttributes();
-        element.Add(wrapper);
-    }
-
-    private static void WrapMultipleElements(List<XElement> elements,
-        XName itemName, JsonToXmlConverterOptions options)
-    {
-        XElement parent = elements[0].Parent!;
-        XName containerName = elements[0].Name;
-
-        // Remove all elements from their parent
-        foreach (XElement element in elements)
-        {
-            element.Remove();
-        }
-
-        // create a container element with the same name as the originals
-        XElement container = new(containerName);
-
-        // for each original element, create a wrapper and add the contents
-        int index = 1;
-        foreach (XElement original in elements)
-        {
-            XElement wrapper = new(itemName);
-
-            // add numbering if requested
-            if (options.ArrayItemNumbering)
-            {
-                wrapper.SetAttributeValue("n", index);
-            }
-
-            // copy contents
-            foreach (XNode node in original.Nodes())
-            {
-                wrapper.Add(new XElement(node is XElement xe
-                    ? xe : new XElement("value", node.ToString())));
-            }
-
-            // copy attributes
-            foreach (XAttribute attr in original.Attributes())
-            {
-                wrapper.SetAttributeValue(attr.Name, attr.Value);
-            }
-
-            container.Add(wrapper);
-            index++;
-        }
-
-        // add the container back to the parent
-        parent.Add(container);
-    }
-
-    private void ProcessSingularizedArrays(XElement root,
-        Dictionary<XName, XName> explicitMap,
-        JsonToXmlConverterOptions options)
-    {
-        // find all potential array elements (siblings with same name)
-        IEnumerable<IGrouping<XName, XElement>> potentialArrays =
-            root.Descendants()
-                .GroupBy(e => e.Name)
-                .Where(g => g.Count() > 1);
-
-        foreach (IGrouping<XName, XElement> group in potentialArrays)
-        {
-            XName arrayName = group.Key;
-
-            // skip if already in explicit map
-            if (explicitMap.ContainsKey(arrayName))
-                continue;
-
-            // try to get singularized name
-            string? singularName = _singularizer.Singularize(
-                arrayName.LocalName);
-
-            if (singularName != null &&
-                singularName != arrayName.LocalName)
-            {
-                XName itemName = XName.Get(singularName,
-                    arrayName.NamespaceName);
-                WrapArraySequences(root, arrayName, itemName, options);
-            }
-        }
-    }
 }
 
 /// <summary>
@@ -386,17 +219,15 @@ public sealed class JsonToXmlConverter
 public class JsonToXmlConverterOptions : NamespaceOptions
 {
     /// <summary>
-    /// Gets or sets the names of the XML elements representing entries
-    /// derived from the conversion of a JSON array. When converting JSON
-    /// into XML, any JSON array is converted into a list of entry elements.
-    /// So, from a <c>guys</c> array with 3 entries you get 3 elements
-    /// named <c>guys</c>. If you want to wrap these elements into an array
-    /// parent element, set the name of the entries element as the key of this
-    /// dictionary, and the name of the single entry element as the value
-    /// of this dictionary (e.g. key=<c>guys</c>, value=<c>guy</c>,
-    /// essentially plural=singular). If you need to set a namespace, add
-    /// its prefix before colon, like <c>tei:div</c>. These prefixes are
-    /// optionally defined in <see cref="NamespaceOptions.Namespaces"/>.
+    /// Gets or sets the names of the XML elements representing individual
+    /// items in a JSON array. The key is the array property name, and the
+    /// value is the name for each item element (e.g. key=<c>guys</c>,
+    /// value=<c>guy</c>, essentially plural=singular). If no mapping is
+    /// provided, the converter will try to singularize the array name
+    /// automatically (e.g. "fragments" becomes "fragment"). If you need
+    /// to set a namespace, add its prefix before colon, like <c>tei:div</c>.
+    /// These prefixes are optionally defined in
+    /// <see cref="NamespaceOptions.Namespaces"/>.
     /// </summary>
     public IDictionary<string, string>? WrappedEntryNames { get; set; }
 
@@ -405,12 +236,6 @@ public class JsonToXmlConverterOptions : NamespaceOptions
     /// ordinal number.
     /// </summary>
     public bool ArrayItemNumbering { get; set; }
-
-    /// <summary>
-    /// True to flatten arrays with a single item, i.e. to avoid wrapping
-    /// them into an entries element.
-    /// </summary>
-    public bool SingleArrayItemFlattening { get; set; }
 
     /// <summary>
     /// The name of the root element. Prefix is allowed, e.g. <c>tei:TEI</c>.
