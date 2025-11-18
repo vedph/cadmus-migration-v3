@@ -152,8 +152,7 @@ public sealed class CadmusTextTreeBuilder
             // add features
             if (range.End + 1 < text.Length && text[range.End + 1] == '\n')
             {
-                child.Data.AddFeature(ExportedSegment.F_EOL_TAIL,
-                    range.Text![range.End + 1].ToString());
+                child.Data.AddFeature(ExportedSegment.F_EOL_TAIL, "\n");
             }
 
             node.AddChild(child);

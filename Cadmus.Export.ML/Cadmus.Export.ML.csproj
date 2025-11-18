@@ -4,9 +4,9 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>8.0.12</Version>
-		<FileVersion>8.0.12</FileVersion>
-		<AssemblyVersion>8.0.12</AssemblyVersion>
+		<Version>8.0.13</Version>
+		<FileVersion>8.0.13</FileVersion>
+		<AssemblyVersion>8.0.13</AssemblyVersion>
 		<Authors>Daniele Fusi</Authors>
 		<Company>Fusi</Company>
 		<Product>Cadmus</Product>

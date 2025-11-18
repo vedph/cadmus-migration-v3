@@ -33,6 +33,10 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+### 8.0.13
+
+- 2025-11-18: fix to `CadmusTextTreeBuilder` for EOL insertion.
+
 ### 8.0.12
 
 - 2025-11-17:
