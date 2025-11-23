@@ -46,14 +46,14 @@ public sealed class TeiOffLinearTextTreeRendererTest
         orthLayerPart.Fragments.Add(new OrthographyLayerFragment()
         {
             Location = "1.1@3",
-            Standard = "quae"
+            Reference = "quae"
         });
 
         // bixit
         orthLayerPart.Fragments.Add(new OrthographyLayerFragment()
         {
             Location = "1.2@1",
-            Standard = "vixit"
+            Reference = "vixit"
         });
 
         // e-b

@@ -116,13 +116,13 @@ public sealed class CadmusPreviewerTest
         orthLayer.Fragments.Add(new OrthographyLayerFragment
         {
             Location = "1.1@3",
-            Standard = "ae"
+            Reference = "ae"
         });
         // [b]ixit
         orthLayer.Fragments.Add(new OrthographyLayerFragment
         {
             Location = "1.2@1",
-            Standard = "v"
+            Reference = "v"
         });
         parts.InsertOne(CreateMongoPart(orthLayer));
 
