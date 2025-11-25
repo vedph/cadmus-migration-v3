@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cadmus.Epigraphy.Parts" Version="8.0.2" />
+		<PackageReference Include="Cadmus.Epigraphy.Parts" Version="9.0.0" />
 		<PackageReference Include="Cadmus.Philology.Parts" Version="12.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="xunit" Version="2.9.3" />

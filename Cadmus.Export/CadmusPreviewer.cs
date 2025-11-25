@@ -97,11 +97,23 @@ public sealed class CadmusPreviewer
 
     private CadmusRendererContext BuildContext(IItem item)
     {
+        // if item has no parts, get at least the part for base text, if any
+        if (_repository != null && item.Parts.Count == 0)
+        {
+            IPart? textPart = _repository.GetItemParts(
+                [item.Id], null, PartBase.BASE_TEXT_ROLE_ID)
+                .FirstOrDefault();
+            if (textPart != null) item.Parts.Add(textPart);
+        }
+
+        // create context
         CadmusRendererContext context = new()
         {
-            Repository = _repository
+            Repository = _repository,
+            Source = item
         };
 
+        // supply metadata
         context.Data[ItemComposer.M_ITEM_ID] = item.Id;
         context.Data[ItemComposer.M_ITEM_FACET] = item.FacetId;
 
