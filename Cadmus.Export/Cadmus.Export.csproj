@@ -4,9 +4,9 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>9.0.1</Version>
-		<FileVersion>9.0.1</FileVersion>
-		<AssemblyVersion>9.0.1</AssemblyVersion>
+		<Version>9.0.2</Version>
+		<FileVersion>9.0.2</FileVersion>
+		<AssemblyVersion>9.0.2</AssemblyVersion>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<Authors>Daniele Fusi</Authors>
@@ -42,9 +42,9 @@
 		<PackageReference Include="Fusi.Xml.Extras" Version="7.0.0" />
 		<PackageReference Include="JmesPath.Net" Version="1.0.330" />
 		<PackageReference Include="Markdig" Version="0.44.0" />
-		<PackageReference Include="MongoDB.Bson" Version="3.5.1" />
-		<PackageReference Include="MongoDB.Driver" Version="3.5.1" />
-		<PackageReference Include="Proteus.Core" Version="10.0.0" />
+		<PackageReference Include="MongoDB.Bson" Version="3.5.2" />
+		<PackageReference Include="MongoDB.Driver" Version="3.5.2" />
+		<PackageReference Include="Proteus.Core" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
