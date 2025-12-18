@@ -58,10 +58,11 @@ public sealed class MongoThesaurusDumper : MongoConsumerBase
         // - rename _id into id
         // - remove targetId if present
         // - ensure id comes before entries
-        BsonDocument result = new();
-        
-        // add id first
-        result["id"] = doc["_id"];
+        BsonDocument result = new()
+        {
+            // add id first
+            ["id"] = doc["_id"]
+        };
         
         // add all other fields except _id and targetId
         foreach (var element in doc)

@@ -51,7 +51,8 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
                     // only report every 10th item to reduce noise
                     if (r.Count % 10 == 0 || r.Count == 1)
                     {
-                        AnsiConsole.MarkupLine($"Processed [yellow]{r.Count}[/] thesauri...");
+                        AnsiConsole.MarkupLine(
+                            $"Processed [yellow]{r.Count}[/] thesauri...");
                     }
                 }));
 
@@ -87,4 +88,3 @@ public class DumpThesauriCommandSettings : CommandSettings
     [Description("Indent JSON output.")]
     public bool Indented { get; set; }
 }
-

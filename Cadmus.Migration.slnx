@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="build-cli.ps1" />
+    <File Path="Pack.bat" />
+    <File Path="Push.bat" />
+    <File Path="PushLocal.bat" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="cadmus-mig/cadmus-mig.csproj" />
+  <Project Path="Cadmus.Export.ML.Test/Cadmus.Export.ML.Test.csproj" />
+  <Project Path="Cadmus.Export.ML/Cadmus.Export.ML.csproj" />
+  <Project Path="Cadmus.Export.Rdf.Test/Cadmus.Export.Rdf.Test.csproj" />
+  <Project Path="Cadmus.Export.Rdf/Cadmus.Export.Rdf.csproj" />
+  <Project Path="Cadmus.Export.Test/Cadmus.Export.Test.csproj" />
+  <Project Path="Cadmus.Export/Cadmus.Export.csproj" />
+  <Project Path="Cadmus.Import.Excel.Test/Cadmus.Import.Excel.Test.csproj" />
+  <Project Path="Cadmus.Import.Excel/Cadmus.Import.Excel.csproj" />
+  <Project Path="Cadmus.Import.Proteus.Test/Cadmus.Import.Proteus.Test.csproj" />
+  <Project Path="Cadmus.Import.Proteus/Cadmus.Import.Proteus.csproj" />
+  <Project Path="Cadmus.Import.Test/Cadmus.Import.Test.csproj" />
+  <Project Path="Cadmus.Import/Cadmus.Import.csproj" />
+  <Project Path="CadmusPreviewBuilder/CadmusPreviewBuilder.csproj" />
+  <Project Path="Proteus.Rendering.Test/Proteus.Rendering.Test.csproj" />
+  <Project Path="Proteus.Rendering/Proteus.Rendering.csproj" />
+</Solution>
