@@ -33,6 +33,18 @@ public class CadmusEntrySetContext : EntrySetContext
     public IItem? CurrentItem => Items.Count > 0 ? Items[^1] : null;
 
     /// <summary>
+    /// Resets the collection to its initial state, optionally performing
+    /// initialization logic.
+    /// </summary>
+    /// <param name="init">true to perform initialization logic during the reset;
+    /// otherwise, false.</param>
+    public override void Reset(bool init = false)
+    {
+        base.Reset(init);
+        Items.Clear();
+    }
+
+    /// <summary>
     /// Clones this instance.
     /// </summary>
     /// <returns>Cloned context.</returns>
