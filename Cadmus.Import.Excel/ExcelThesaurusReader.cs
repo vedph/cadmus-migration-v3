@@ -17,6 +17,11 @@ public sealed class ExcelThesaurusReader : IThesaurusReader
     private int _rowIndex;
 
     /// <summary>
+    /// Gets the current thesaurus if any.
+    /// </summary>
+    public Thesaurus? Current { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ExcelThesaurusReader"/>
     /// class.
     /// </summary>
@@ -55,7 +60,7 @@ public sealed class ExcelThesaurusReader : IThesaurusReader
     /// <exception cref="InvalidOperationException">
     /// Expected thesaurus ID, Expected thesaurus entry ID.
     /// </exception>
-    public Thesaurus? Next()
+    public bool Next()
     {
         ISheet sheet = _workbook.GetSheetAt(_options.SheetIndex);
 
@@ -120,7 +125,16 @@ public sealed class ExcelThesaurusReader : IThesaurusReader
             _rowIndex++;
         }
 
-        return thesaurus;
+        if (thesaurus == null)
+        {
+            Current = null;
+            return false;
+        }
+        else
+        {
+            Current = thesaurus;
+            return true;
+        }
     }
 
     private void Dispose(bool disposing)

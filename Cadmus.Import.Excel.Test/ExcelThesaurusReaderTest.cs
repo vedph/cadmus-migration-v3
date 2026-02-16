@@ -21,7 +21,8 @@ public sealed class ExcelThesaurusReaderTest
             new ExcelThesaurusReaderOptions { RowOffset = 1 });
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
         Assert.NotNull(thesaurus);
         Assert.Equal("colors@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
@@ -34,7 +35,8 @@ public sealed class ExcelThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // shapes thesaurus
-        thesaurus = reader.Next();
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.NotNull(thesaurus);
         Assert.Equal("shapes@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
@@ -52,8 +54,8 @@ public sealed class ExcelThesaurusReaderTest
             new ExcelThesaurusReaderOptions { RowOffset = 1 });
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
         Assert.Equal("colors@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(3, thesaurus.Entries.Count);
@@ -65,8 +67,8 @@ public sealed class ExcelThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // shapes thesaurus
-        thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.Equal("shapes@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(2, thesaurus.Entries.Count);
@@ -83,8 +85,8 @@ public sealed class ExcelThesaurusReaderTest
             new ExcelThesaurusReaderOptions { RowOffset = 1 });
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
         Assert.Equal("colors@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(3, thesaurus.Entries.Count);
@@ -96,7 +98,8 @@ public sealed class ExcelThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // alias thesaurus
-        thesaurus = reader.Next();
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.NotNull(thesaurus);
         Assert.Equal("colours@en", thesaurus!.Id);
         Assert.Equal("colors", thesaurus.TargetId);

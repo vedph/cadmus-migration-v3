@@ -47,10 +47,9 @@ public class ThesaurusEntryMap
 
         JsonThesaurusReader reader = new(stream);
         List<Thesaurus> thesauri = [];
-        Thesaurus? thesaurus;
-        while ((thesaurus = reader.Next()) != null)
+        while ((reader.Next()))
         {
-            thesauri.Add(thesaurus);
+            thesauri.Add(reader.Current!);
         }
 
         _thesauri = thesauri.Where(t => t.TargetId == null)

@@ -23,6 +23,11 @@ public sealed class CsvThesaurusReader : IThesaurusReader
     private CsvThesaurusEntry? _pendingEntry;
 
     /// <summary>
+    /// Gets the current thesaurus if any.
+    /// </summary>
+    public Thesaurus? Current { get; private set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="CsvThesaurusReader"/> class.
     /// </summary>
     /// <param name="stream">The input stream.</param>
@@ -50,7 +55,7 @@ public sealed class CsvThesaurusReader : IThesaurusReader
     /// Read the next thesaurus entry from source.
     /// </summary>
     /// <returns>Thesaurus, or null if no more thesauri in source.</returns>
-    public Thesaurus? Next()
+    public bool Next()
     {
         // read the next entry if any
         CsvThesaurusEntry? entry;
@@ -61,12 +66,17 @@ public sealed class CsvThesaurusReader : IThesaurusReader
         }
         else if (!_reader.Read())
         {
-            return null;
+            Current = null;
+            return false;
         }
         else
         {
             entry = _reader.GetRecord<CsvThesaurusEntry>();
-            if (entry == null) return null;
+            if (entry == null)
+            {
+                Current = null;
+                return false;
+            }
         }
 
         // read all the entries until id changes, but just return an alias
@@ -78,7 +88,8 @@ public sealed class CsvThesaurusReader : IThesaurusReader
         if (!string.IsNullOrEmpty(entry.TargetId))
         {
             thesaurus.TargetId = entry.TargetId;
-            return thesaurus;
+            Current = thesaurus;
+            return true;
         }
         if (entry.Id != null) thesaurus.AddEntry(GetThesaurusEntry(entry));
         while (_reader.Read())
@@ -93,7 +104,13 @@ public sealed class CsvThesaurusReader : IThesaurusReader
             }
             if (entry?.Id != null) thesaurus.AddEntry(GetThesaurusEntry(entry));
         }
-        return thesaurus.Entries.Count == 0 ? null : thesaurus;
+        if (thesaurus.Entries.Count == 0)
+        {
+            Current = null;
+            return false;
+        }
+        Current = thesaurus;
+        return true;
     }
 
     private void Dispose(bool disposing)
@@ -119,6 +136,10 @@ public sealed class CsvThesaurusReader : IThesaurusReader
     }
 }
 
+/// <summary>
+/// Serializable CSV thesaurus entry. This is used to read the CSV file,
+/// and then convert to a <see cref="ThesaurusEntry"/> when needed.
+/// </summary>
 internal class CsvThesaurusEntry
 {
     public string? ThesaurusId { get; set; }

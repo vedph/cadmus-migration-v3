@@ -23,9 +23,9 @@ public sealed class CsvThesaurusReaderTest
         CsvThesaurusReader reader = new(GetStream(text));
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
-        Assert.Equal("colors@en", thesaurus!.Id);
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
+        Assert.Equal("colors@en", thesaurus.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(3, thesaurus.Entries.Count);
         Assert.NotNull(thesaurus.Entries
@@ -36,8 +36,8 @@ public sealed class CsvThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // shapes thesaurus
-        thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.Equal("shapes@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(2, thesaurus.Entries.Count);
@@ -59,8 +59,8 @@ public sealed class CsvThesaurusReaderTest
         CsvThesaurusReader reader = new(GetStream(text));
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
         Assert.Equal("colors@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(3, thesaurus.Entries.Count);
@@ -72,8 +72,8 @@ public sealed class CsvThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // shapes thesaurus
-        thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.Equal("shapes@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(2, thesaurus.Entries.Count);
@@ -94,8 +94,8 @@ public sealed class CsvThesaurusReaderTest
         CsvThesaurusReader reader = new(GetStream(text));
 
         // colors thesaurus
-        Thesaurus? thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        Thesaurus thesaurus = reader.Current!;
         Assert.Equal("colors@en", thesaurus!.Id);
         Assert.Null(thesaurus.TargetId);
         Assert.Equal(3, thesaurus.Entries.Count);
@@ -107,8 +107,8 @@ public sealed class CsvThesaurusReaderTest
             .FirstOrDefault(e => e.Id == "b" && e.Value == "blue"));
 
         // alias thesaurus
-        thesaurus = reader.Next();
-        Assert.NotNull(thesaurus);
+        Assert.True(reader.Next());
+        thesaurus = reader.Current!;
         Assert.Equal("colours@en", thesaurus!.Id);
         Assert.Equal("colors", thesaurus.TargetId);
         Assert.Empty(thesaurus.Entries);

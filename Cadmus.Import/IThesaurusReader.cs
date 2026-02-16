@@ -10,8 +10,13 @@ namespace Cadmus.Import;
 public interface IThesaurusReader : IDisposable
 {
     /// <summary>
+    /// The current thesaurus read from source, or null.
+    /// </summary>
+    public Thesaurus? Current { get; }
+
+    /// <summary>
     /// Read the next thesaurus entry from source.
     /// </summary>
-    /// <returns>Thesaurus, or null if no more thesauri in source.</returns>
-    Thesaurus? Next();
+    /// <returns>True if read, false if no more thesauri in source.</returns>
+    bool Next();
 }
