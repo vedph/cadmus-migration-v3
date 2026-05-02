@@ -5,6 +5,7 @@ using Newtonsoft.Json.Serialization;
 using Proteus.Core;
 using Proteus.Core.Entries;
 using Proteus.Core.Regions;
+using Proteus.Entries.Export;
 using System;
 using System.IO;
 using System.Linq;
@@ -19,8 +20,9 @@ namespace Cadmus.Import.Proteus;
 /// <para>Tag: <c>it.vedph.entry-set-exporter.cadmus.md-dump</c>.</para>
 /// </summary>
 [Tag("it.vedph.entry-set-exporter.cadmus.md-dump")]
-public sealed class MdDumpEntrySetExporter : IEntrySetExporter,
-    IConfigurable<MdDumpEntrySetExporterOptions>
+public sealed class MdDumpEntrySetExporter : EntrySetExporter,
+    IConfigurable<MdDumpEntrySetExporterOptions>,
+    IEntrySetExporter
 {
     private int _fileNr;
     private int _setCount;
@@ -58,7 +60,7 @@ public sealed class MdDumpEntrySetExporter : IEntrySetExporter,
     /// Opens the exporter output. Call this once from outside the pipeline,
     /// when you want to start exporting. This will create the first output file.
     /// </summary>
-    public Task OpenAsync()
+    protected override Task DoOpenAsync()
     {
         _fileNr = 1;
         _setCount = 0;
@@ -81,7 +83,7 @@ public sealed class MdDumpEntrySetExporter : IEntrySetExporter,
     /// Closes the exporter output. Call this once from outside the pipeline,
     /// when you want to end exporting. This will close the output file.
     /// </summary>
-    public Task CloseAsync()
+    protected override Task DoCloseAsync()
     {
         _writer?.Flush();
         _dumper?.Dispose();
@@ -147,7 +149,8 @@ public sealed class MdDumpEntrySetExporter : IEntrySetExporter,
     /// </summary>
     /// <param name="entrySet">The entry set.</param>
     /// <param name="regionSet">The entry regions set.</param>
-    public async Task ExportAsync(EntrySet entrySet, EntryRegionSet regionSet)
+    protected override async Task DoExportAsync(EntrySet entrySet,
+        EntryRegionSet regionSet)
     {
         ArgumentNullException.ThrowIfNull(entrySet);
         ArgumentNullException.ThrowIfNull(regionSet);
@@ -205,9 +208,15 @@ public sealed class MdDumpEntrySetExporter : IEntrySetExporter,
 /// <summary>
 /// Options for <see cref="MdDumpEntrySetExporter"/>.
 /// </summary>
-public class MdDumpEntrySetExporterOptions : DecodedEntryDataWriterOptions
+public class MdDumpEntrySetExporterOptions : DecodedEntryDataWriterOptions,
+    IHasDisabled
 {
     private string _outputDir = "";
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this exporter is disabled.
+    /// </summary>
+    public bool IsDisabled { get; set; }
 
     /// <summary>
     /// Gets or sets the output directory. This can include environment

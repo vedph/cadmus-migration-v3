@@ -1,9 +1,11 @@
-﻿using Cadmus.Core.Config;
-using Cadmus.Core;
+﻿using Cadmus.Core;
+using Cadmus.Core.Config;
 using Cadmus.Mongo;
 using Fusi.Tools.Configuration;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using Proteus.Core.Regions;
+using Proteus.Entries.Export;
 using System;
 using System.Threading.Tasks;
 
@@ -14,11 +16,48 @@ namespace Cadmus.Import.Proteus;
 /// <para>Tag: <c>it.vedph.entry-set-exporter.cadmus.mongo</c>.</para>
 /// </summary>
 [Tag("it.vedph.entry-set-exporter.cadmus.mongo")]
-public sealed class MongoEntrySetExporter : MongoConsumerBase, IEntrySetExporter,
+public sealed class MongoEntrySetExporter : EntrySetExporter, IEntrySetExporter,
     IConfigurable<MongoEntrySetExporterOptions>
 {
     private MongoEntrySetExporterOptions? _options;
     private MongoCadmusRepository? _repository;
+    private string? _currentConnString;
+
+    /// <summary>
+    /// The Mongo client. This gets created by <see cref="EnsureClientCreated(string)"/>
+    /// and cached until the received connection string changes.
+    /// </summary>
+    private MongoClient? _client;
+
+    /// <summary>
+    /// Creates a new instance of <see cref="MongoEntrySetExporter"/>.
+    /// </summary>
+    public MongoEntrySetExporter()
+    {
+        // camel case everything:
+        // https://stackoverflow.com/questions/19521626/mongodb-convention-packs/19521784#19521784
+        ConventionPack pack = new()
+        {
+            new CamelCaseElementNameConvention()
+        };
+        ConventionRegistry.Register("camel case", pack, _ => true);
+    }
+
+    /// <summary>
+    /// Ensures that <see cref="_client"/> is created for the specified
+    /// source.
+    /// </summary>
+    /// <param name="source">The source (connection string).</param>
+    /// <exception cref="ArgumentNullException">source</exception>
+    private void EnsureClientCreated(string source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (_client != null && _currentConnString == source) return;
+
+        _client = new MongoClient(source);
+        _currentConnString = source;
+    }
 
     /// <summary>
     /// Configures this exporter with the specified options.
@@ -36,7 +75,7 @@ public sealed class MongoEntrySetExporter : MongoConsumerBase, IEntrySetExporter
     /// </summary>
     /// <exception cref="InvalidOperationException">No connection string for
     /// MongoEntrySetExporter</exception>
-    public Task OpenAsync()
+    protected override Task DoOpenAsync()
     {
         if (string.IsNullOrEmpty(_options?.ConnectionString))
         {
@@ -60,7 +99,7 @@ public sealed class MongoEntrySetExporter : MongoConsumerBase, IEntrySetExporter
     /// Closes the exporter output. Call this once from outside the pipeline,
     /// when you want to end exporting. Here this method does nothing.
     /// </summary>
-    public Task CloseAsync()
+    protected override Task DoCloseAsync()
     {
         return Task.CompletedTask;
     }
@@ -75,7 +114,8 @@ public sealed class MongoEntrySetExporter : MongoConsumerBase, IEntrySetExporter
     /// No connection string for MongoEntrySetExporter or
     /// Mongo database DBNAME not open.
     /// </exception>
-    public Task ExportAsync(EntrySet entrySet, EntryRegionSet regionSet)
+    protected override Task DoExportAsync(EntrySet entrySet,
+        EntryRegionSet regionSet)
     {
         ArgumentNullException.ThrowIfNull(entrySet);
         ArgumentNullException.ThrowIfNull(regionSet);

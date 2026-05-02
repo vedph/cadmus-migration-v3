@@ -46,7 +46,7 @@ internal sealed class RenderItemsCommand : AsyncCommand<RenderItemsCommandSettin
             });
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context,
+    protected override Task<int> ExecuteAsync(CommandContext context,
         RenderItemsCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);

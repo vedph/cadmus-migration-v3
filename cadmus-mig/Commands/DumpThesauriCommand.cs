@@ -23,7 +23,7 @@ internal sealed class DumpThesauriCommand : AsyncCommand<DumpThesauriCommandSett
         AnsiConsole.MarkupLine($"Indented: [cyan]{settings.Indented}[/]");
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context,
+    protected override async Task<int> ExecuteAsync(CommandContext context,
         DumpThesauriCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);

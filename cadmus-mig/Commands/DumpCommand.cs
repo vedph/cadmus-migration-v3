@@ -88,7 +88,7 @@ internal sealed class DumpCommand : AsyncCommand<DumpCommandSettings>
         return Enum.Parse<FlagMatching>("Bits" + value, true);
     }
 
-    public override Task<int> ExecuteAsync(CommandContext context,
+    protected override Task<int> ExecuteAsync(CommandContext context,
         DumpCommandSettings settings, CancellationToken cancel)
     {
         ShowSettings(settings);

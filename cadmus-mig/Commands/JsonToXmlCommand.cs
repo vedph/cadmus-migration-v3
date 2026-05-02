@@ -12,7 +12,7 @@ namespace Cadmus.Migration.Cli.Commands;
 
 internal sealed class JsonToXmlCommand : AsyncCommand<JsonToXmlCommandSettings>
 {
-    public override Task<int> ExecuteAsync(CommandContext context,
+    protected override Task<int> ExecuteAsync(CommandContext context,
         JsonToXmlCommandSettings settings, CancellationToken cancel)
     {
         AnsiConsole.MarkupLine("[green underline]CONVERT ITEM/PART JSON TO XML[/]");

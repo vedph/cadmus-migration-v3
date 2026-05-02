@@ -14,7 +14,8 @@ namespace Cadmus.Import.Proteus;
 /// <para>Tag: <c>it.vedph.entry-set-context-patcher.cadmus</c>.</para>
 /// </summary>
 [Tag("it.vedph.entry-set-context-patcher.cadmus")]
-public class CadmusEntrySetContextPatcher : IEntrySetContextPatcher
+public class CadmusEntrySetContextPatcher : EntrySetContextPatcher,
+    IEntrySetContextPatcher
 {
     private readonly StandardItemSortKeyBuilder _sortKeyBuilder;
 
@@ -32,7 +33,7 @@ public class CadmusEntrySetContextPatcher : IEntrySetContextPatcher
     /// </summary>
     /// <param name="context">The context.</param>
     /// <exception cref="ArgumentNullException">context</exception>
-    public Task PatchAsync(IEntrySetContext context)
+    protected override Task DoPatchAsync(IEntrySetContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 

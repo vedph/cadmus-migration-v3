@@ -1,4 +1,5 @@
-﻿using Fusi.Tools.Data;
+﻿using Fusi.Tools;
+using Fusi.Tools.Data;
 using Proteus.Core;
 
 namespace Proteus.Rendering;

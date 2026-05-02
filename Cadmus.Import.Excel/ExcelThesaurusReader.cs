@@ -31,7 +31,7 @@ public sealed class ExcelThesaurusReader : IThesaurusReader
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        _workbook = WorkbookFactory.Create(stream, "", true);
+        _workbook = WorkbookFactory.Create(stream);
         _options = new();
         _rowIndex = -1;
     }
@@ -48,7 +48,7 @@ public sealed class ExcelThesaurusReader : IThesaurusReader
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        _workbook = WorkbookFactory.Create(stream, "", true);
+        _workbook = WorkbookFactory.Create(stream);
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _rowIndex = -1;
     }
