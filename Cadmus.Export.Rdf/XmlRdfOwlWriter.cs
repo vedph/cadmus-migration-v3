@@ -251,7 +251,8 @@ public sealed class XmlRdfOwlWriter : RdfWriter
     /// Finds the best split point in a URI to separate namespace from local name.
     /// </summary>
     /// <param name="uri">The URI to split.</param>
-    /// <returns>The index where to split, or -1 if no good split point found.</returns>
+    /// <returns>The index where to split, or -1 if no good split point found.
+    /// </returns>
     private static int GetUriSplitIndex(string uri)
     {
         // prefer splitting after # (fragment identifier)
@@ -294,19 +295,16 @@ public sealed class XmlRdfOwlWriter : RdfWriter
     }
 
     /// <summary>
-    /// <summary>
     /// Checks if a string is a valid XML name.
     /// </summary>
     /// <param name="name">The name to check.</param>
     /// <returns>True if valid XML name.</returns>
     private static bool IsValidXmlName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-            return false;
+        if (string.IsNullOrEmpty(name)) return false;
 
         // basic check: must start with letter or underscore
-        if (!char.IsLetter(name[0]) && name[0] != '_')
-            return false;
+        if (!char.IsLetter(name[0]) && name[0] != '_') return false;
 
         // check remaining characters
         for (int i = 1; i < name.Length; i++)
