@@ -33,6 +33,9 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+### 9.0.7
+
+- 2026-06-09: updated packages.
 - 2026-05-02: updated packages adjusting code to `Proteus` changes.
 - 2026-01-27: fix to `Cadmus.Import.Proteus` data context reset.
 
