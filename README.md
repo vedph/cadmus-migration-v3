@@ -33,6 +33,8 @@ insert into namespace_lookup (id, uri) values('crm', 'http://www.cidoc-crm.org/c
 
 ## History
 
+- 2026-06-27: updated packages.
+
 ### 9.0.7
 
 - 2026-06-09: updated packages.

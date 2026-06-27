@@ -20,10 +20,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Fusi.Tools" Version="8.0.3" />
+		<PackageReference Include="Fusi.Tools" Version="8.0.4" />
 		<PackageReference Include="Fusi.Tools.Configuration" Version="8.0.3" />
-		<PackageReference Include="Proteus.Core" Version="13.0.2" />
-		<PackageReference Include="Proteus.Text.Xml" Version="13.0.2" />
+		<PackageReference Include="Proteus.Core" Version="13.0.3" />
+		<PackageReference Include="Proteus.Text.Xml" Version="13.0.3" />
 	</ItemGroup>
 
 </Project>

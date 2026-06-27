@@ -24,8 +24,8 @@
 		<PackageReference Include="Cadmus.Core" Version="10.0.6" />
 		<PackageReference Include="Cadmus.Mongo" Version="10.0.7" />
 		<PackageReference Include="MongoDB.Driver" Version="3.9.0" />
-		<PackageReference Include="Proteus.Core" Version="13.0.2" />
-		<PackageReference Include="Proteus.Entries" Version="13.0.2" />
+		<PackageReference Include="Proteus.Core" Version="13.0.3" />
+		<PackageReference Include="Proteus.Entries" Version="13.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
