@@ -1,5 +1,7 @@
 # Cadmus Migration V3
 
+⚠️⚠️⚠️ **THIS IS OBSOLETE CODE. SEE <https://github.com/vedph/cadmus-core>** ⚠️⚠️⚠️
+
 Tools for migrating (importing/exporting) Cadmus data. Export tools also include "preview", i.e. a human-friendly, highly customizable output for each Cadmus object, to be integrated in the editor itself.
 
 👉 This is the third generation of Cadmus migration components. For compatibility reasons, the previous generation can be still be reached at its [original repository](https://github.com/vedph/cadmus-migration-v2). This is a complete refactoring of the export section to merge with Proteus and GVE projects. Project Proteus.Rendering is copied from GVE; when stable, it will be moved in the Proteus solution.
